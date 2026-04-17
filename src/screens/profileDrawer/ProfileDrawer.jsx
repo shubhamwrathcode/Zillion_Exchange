@@ -1,0 +1,953 @@
+import React, { useEffect, useState, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  Dimensions,
+  StatusBar,
+  FlatList,
+  Animated,
+  Easing,
+  Platform,
+  Modal,
+} from "react-native";
+import FastImage from "react-native-fast-image";
+// import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons'; // or use react-native-vector-icons
+// import MaterialIcons from 'react-native-vector-icon/MaterialIcons'
+const screenWidth = Dimensions.get("window").width;
+import Feather from "react-native-vector-icons/Feather";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import LottieView from "lottie-react-native";
+import {
+  alarm,
+  arbitary,
+  back_ic,
+  bank_ic,
+  contact,
+  currencyPreferIcon,
+  depositIcon,
+  userPic,
+  depositImage,
+  earning,
+  earningMenuIcon,
+  externalLinkIcon,
+  helpicon,
+  kycixon,
+  lock,
+  logoutIcon,
+  memexIcon,
+  Mode,
+  moreOption,
+  newDepositDarkIcon,
+  newDepositIcon,
+  newWidthrawDarkIcon,
+  newWidthrawIcon,
+  notification_bell_ic,
+  orderIcon,
+  profile_placeholder_ic,
+  rewardHubIcon,
+  right,
+  settings,
+  settings_ic,
+  spottradingIcon,
+  swap,
+  swapHistory,
+  tradehistory,
+  transactionhis,
+  walletIcon,
+  walletTransferIcon,
+  withdrawImage,
+  defaultPic,
+  copyIcon,
+  INFERNAL_TRANSFER,
+} from "../../helper/ImageAssets";
+import AntDesign from "react-native-vector-icons/AntDesign";
+import { AppText, BLACK, DISCLAIMTEXT, ELEVEN, THIRTEEN, TWELVE, YELLOW } from "../../shared";
+import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
+import NavigationService from "../../navigation/NavigationService";
+import { languages } from "../../helper/languages";
+import { checkValue, copyText } from "../../helper/utility";
+import {
+  ACCOUNT_SCREEN,
+  ARBITORY_SCREEN,
+  CONVERT_SCREEN,
+  CURRENCY_PREFERENCE_SCREEN,
+  DEPOSIT_COIN_SCREEN,
+  DEPOSIT_WALLET_SCREEN,
+  EARING_SCREEN,
+  kyc_Details,
+  KYC_STATUS_SCREEN,
+  MARKET_SCREEN,
+  NOTIFICATION_SCREEN,
+  PAYMENT_OPTIONS_SCREEN,
+  SECURITY,
+  SETTING_SCREEN_New,
+  TWO_FACTOR_AUTHENTICATION,
+  WALLET_WITHDRAW_SCREEN,
+  WITHDRAW_Coin_SCREEN,
+} from "../../navigation/routes";
+import { useAppSelector } from "../../store/hooks";
+import { colors } from "../../theme/colors";
+import { useDispatch } from "react-redux";
+import { getUserProfile } from "../../actions/accountActions";
+import { logoutAction } from "../../actions/authActions";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setTheme } from "../../slices/authSlice";
+import { IMAGE_BASE_URL } from "../../helper/Constants";
+
+const Width = Dimensions.get("window").width;
+
+const Data = [
+  {
+    id: "1",
+    title: checkValue(languages?.memex),
+    icon: memexIcon,
+    onPress: () =>
+      NavigationService.navigate(MARKET_SCREEN, { from: "home", tab: "MemeX" }),
+  },
+
+  // {
+  //   id: '2',
+  //   title: 'FIT Bot',
+  //   icon: arbitary,
+  //   onPress: () => NavigationService.navigate(ARBITORY_SCREEN),
+  // },
+  {
+    id: "4",
+    title: "Staking",
+    icon: earning,
+    onPress: () => NavigationService.navigate(ACCOUNT_SCREEN),
+  },
+  {
+    id: "5",
+    title: "Wallet",
+    icon: walletIcon,
+    onPress: () => NavigationService.navigate(EARING_SCREEN),
+  },
+  {
+    id: "6",
+    title: "Settings",
+    icon: settings,
+    onPress: () => {
+      NavigationService.navigate(SETTING_SCREEN_New);
+    },
+  },
+];
+
+const Data2 = [
+  {
+    id: "1",
+    title: "Notification",
+    icon: alarm,
+    onPress: () => NavigationService.navigate(NOTIFICATION_SCREEN),
+  },
+
+  {
+    id: "2",
+    title: "Verification",
+    icon: kycixon,
+    onPress: () =>
+      NavigationService.navigate(KYC_STATUS_SCREEN, { from: "home" }),
+  },
+
+  {
+    id: "4",
+    title: "Security",
+    icon: lock,
+    onPress: () =>
+      NavigationService.navigate(TWO_FACTOR_AUTHENTICATION, { from: "home" }),
+  },
+  // {
+  //   id: '5',
+  //   title: "Bank Account",
+  //   icon: bank_ic,
+  //   onPress: () => NavigationService.navigate(PAYMENT_OPTIONS_SCREEN),
+  // },
+  {
+    id: "6",
+    title: "Help Center",
+    icon: helpicon,
+    onPress: () => NavigationService.navigate("Support"),
+  },
+  {
+    id: "7",
+    title: "Currency Preference",
+    icon: currencyPreferIcon,
+    onPress: () => NavigationService.navigate(CURRENCY_PREFERENCE_SCREEN),
+  },
+];
+const Data3 = [
+  {
+    id: "1",
+    title: "Open Orders",
+    icon: orderIcon,
+    onPress: () => NavigationService.navigate("Open_Order"),
+  },
+
+  {
+    id: "2",
+    title: "Transaction History",
+    icon: walletTransferIcon,
+    onPress: () => NavigationService.navigate("Wallet_History"),
+  },
+  {
+    id: "3",
+    title: "Spot Order",
+    icon: tradehistory,
+    onPress: () => {
+      NavigationService.navigate("Trade_History");
+    },
+  },
+  {
+    id: "4",
+    title: "Swap History",
+    icon: swapHistory,
+    onPress: () => NavigationService.navigate("Swap_History"),
+  },
+  {
+    id: "4",
+    title: "Interal Transfer",
+    icon: INFERNAL_TRANSFER,
+    onPress: () => NavigationService.navigate("Interanl_Trade_History"),
+  },
+  {
+    id: "5",
+    title: "Bonus History",
+    icon: transactionhis,
+    onPress: () => NavigationService.navigate("Admin_Trade"),
+  },
+];
+
+const STAGGER_DELAY = 45;
+const ENTRANCE_DURATION = 380;
+
+const AnimatedIconBox = ({ theme, children }) => {
+  return (
+    <View
+      style={{
+        width: 40,
+        height: 40,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: theme !== "Dark" ? "#F0F0F0" : "#25262B",
+        borderRadius: 5,
+      }}
+    >
+      {children}
+    </View>
+  );
+};
+
+const IconAndLabel = ({ theme, iconSource, title, textStyle = {} }) => {
+  return (
+    <>
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: '#31363d',
+          borderRadius: 5,
+        }}
+      >
+        <FastImage
+          source={iconSource}
+          resizeMode="contain"
+          style={styles.icon}
+        />
+      </View>
+      <View style={{ alignItems: "center" }}>
+        <AppText
+          color={BLACK}
+          style={[{ fontWeight: "700", fontSize: 10, textAlign: "center" }, textStyle]}
+          type={THIRTEEN}
+        >
+          {title}
+        </AppText>
+      </View>
+    </>
+  );
+};
+
+const DepositWithdrawCard = ({ theme, bigImage, smallIcon, label }) => {
+  return (
+    <>
+      <FastImage
+        source={bigImage}
+        style={{ height: 60, width: 60 }}
+        resizeMode="contain"
+      />
+      <View style={{ alignItems: "center" }}>
+        <FastImage
+          source={smallIcon}
+          style={{ height: 24, width: 24, marginBottom: 6 }}
+          resizeMode="contain"
+        />
+        <AppText style={{ fontWeight: "500" }}>{label}</AppText>
+      </View>
+    </>
+  );
+};
+
+const AnimatedMenuItem = ({ index, onPress, style, theme, children }) => {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(1)).current;
+  const translateY = useRef(new Animated.Value(14)).current;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: ENTRANCE_DURATION,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: ENTRANCE_DURATION,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, index * STAGGER_DELAY);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const onPressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.92,
+      useNativeDriver: true,
+      speed: 200,
+    }).start();
+  };
+  const onPressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 200,
+    }).start();
+  };
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          opacity,
+          transform: [{ translateY }, { scale }],
+        },
+      ]}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        activeOpacity={1}
+        style={{ alignItems: "center" }}
+      >
+        {children}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+const AnimatedCard = ({ onPress, theme, delay, children }) => {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(1)).current;
+  const translateY = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 420,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 420,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, delay);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const onPressIn = () => {
+    Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 200 }).start();
+  };
+  const onPressOut = () => {
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 200 }).start();
+  };
+
+  return (
+    <Animated.View
+      style={{
+        flex: 1,
+        opacity,
+        transform: [{ translateY }, { scale }],
+      }}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        activeOpacity={1}
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          borderWidth: 1,
+          borderColor: colors.blackFive,
+          borderRadius: 10,
+          padding: 10,
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: colors.themeElevationColor,
+          // elevation: 3,
+          // shadowColor: "#000",
+          // shadowOffset: { width: 0, height: 2 },
+          // shadowOpacity: 0.2,
+          // shadowRadius: 4,
+        }}
+      >
+        {children}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+const ProfileDrawer = () => {
+  const dispatch = useDispatch();
+  const theme = useAppSelector((state) => state.auth.theme);
+  const userData = useAppSelector((state) => state.auth.userData);
+  const [refresh, setRefresh] = useState(true);
+  const emailTextOpacity = useRef(new Animated.Value(0)).current;
+  const emailTextTranslateY = useRef(new Animated.Value(10)).current;
+
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const logoutAnim = useRef(new Animated.Value(0)).current; // 0 closed → 1 open
+
+  const openLogoutModal = () => {
+    setShowLogoutModal(true);
+    logoutAnim.setValue(0);
+    Animated.timing(logoutAnim, {
+      toValue: 1,
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeLogoutModal = (afterClose) => {
+    Animated.timing(logoutAnim, {
+      toValue: 0,
+      duration: 180,
+      easing: Easing.in(Easing.cubic),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) {
+        setShowLogoutModal(false);
+        if (typeof afterClose === "function") afterClose();
+      }
+    });
+  };
+
+  const confirmLogout = () => {
+    closeLogoutModal(() => dispatch(logoutAction()));
+  };
+
+  useEffect(() => {
+    dispatch(getUserProfile());
+  }, [refresh]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(emailTextOpacity, {
+          toValue: 1,
+          duration: 480,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(emailTextTranslateY, {
+          toValue: 0,
+          duration: 480,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, 180);
+    return () => clearTimeout(timer);
+  }, []);
+
+
+
+  return (
+    <View style={styles.container}>
+      {/* <StatusBar backgroundColor={"#070707"} barStyle={"dark-Content"} /> */}
+      <View
+        style={{ marginTop: 20, marginHorizontal: 16, marginBottom: "10%" }}
+      >
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <TouchableOpacity onPress={() => NavigationService.goBack()}>
+            <FastImage
+              source={back_ic}
+              resizeMode="contain"
+              style={{ width: 20, height: 20 }}
+            />
+          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <TouchableOpacity
+              style={{ marginRight: 10 }}
+              onPress={openLogoutModal}
+            >
+              <FastImage
+                source={logoutIcon}
+                resizeMode="contain"
+                style={{
+                  width: 25,
+                  height: 25,
+                  transform: [{ rotateX: "360deg" }, { rotateZ: "180deg" }],
+                }}
+                tintColor={colors.white}
+              />
+            </TouchableOpacity>
+          
+          </View>
+        </View>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: 20,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View
+              style={{
+                borderRadius: 50,
+                overflow: "hidden",
+                borderWidth: 1,
+                borderColor: colors.disclaimDarText,
+              }}
+            >
+              <FastImage
+                source={
+                  userData?.profilepicture
+                    ? { uri: IMAGE_BASE_URL + userData?.profilepicture }
+                    : defaultPic
+                }
+                style={{ height: 40, width: 40 }}
+                resizeMode="cover"
+              />
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+              <View style={{ marginLeft: 15 }}>
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  <View>
+                  <Animated.View
+                    style={{
+                      opacity: emailTextOpacity,
+                      transform: [{ translateY: emailTextTranslateY }],
+                    }}
+                  >
+                    <AppText
+                      style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}
+                    >
+                      {userData?.emailId ||
+                        `${userData?.country_code} ${userData?.mobileNumber}`}
+                    </AppText>
+                  </Animated.View>
+                  <View style={{flexDirection: "row", alignItems: "center", gap: 5}}>
+                  <AppText color={DISCLAIMTEXT} type={ELEVEN}>UID: {userData?.uuid}</AppText>
+                  <TouchableOpacity onPress={() => copyText(userData?.uuid)}><FastImage source={copyIcon} resizeMode="contain" style={{width: 10, height: 10}} tintColor={colors.disabledText} /></TouchableOpacity>
+                  
+                  </View>
+                  
+                  </View>
+                  
+                  {userData?.kycVerified === 2 ? (
+                    <FastImage
+                      source={right}
+                      style={{ height: 20, width: 20, marginTop: 4 }}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <View style={{ gap: 10, marginTop: 5 }}>
+                      <TouchableOpacity
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 5,
+                        }}
+                        onPress={() =>
+                          NavigationService.navigate(KYC_STATUS_SCREEN)
+                        }
+                      >
+                        <AppText type={TWELVE} color={YELLOW}>
+                          Verify Now
+                        </AppText>
+                        <FastImage
+                          source={externalLinkIcon}
+                          resizeMode="contain"
+                          style={{ width: 10, height: 10 }}
+                          tintColor={colors.buttonBg}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+
+                {/* <AppText style={{ color: "#fff", fontSize: 12 }}>
+                  {userData?.emailId}
+                </AppText> */}
+              </View>
+            </View>
+          </View>
+          {/* <View>
+            <AntDesign name={'right'} color={'#fff'} size={20} />
+          </View> */}
+        </View>
+      </View>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.themeElevationColor,
+          borderTopLeftRadius: 50,
+          borderTopRightRadius: 50,
+          overflow: "hidden",
+        }}
+      >
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingTop: 8,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+        <View
+          style={{
+            marginTop: "10%",
+            marginHorizontal: 20,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginBottom: 20,
+            gap: 12,
+          }}
+        >
+          <AnimatedCard
+            theme={theme}
+            delay={0}
+            onPress={() => NavigationService.navigate(DEPOSIT_COIN_SCREEN)}
+          >
+            <DepositWithdrawCard
+              theme={theme}
+              bigImage={depositImage}
+              smallIcon={
+                theme !== "Dark" ? newDepositIcon : newDepositDarkIcon
+              }
+              label="Deposit"
+            />
+          </AnimatedCard>
+
+          <AnimatedCard
+            theme={theme}
+            delay={80}
+            onPress={() => NavigationService.navigate(WALLET_WITHDRAW_SCREEN)}
+          >
+            <DepositWithdrawCard
+              theme={theme}
+              bigImage={withdrawImage}
+              smallIcon={
+                theme !== "Dark" ? newWidthrawIcon : newWidthrawDarkIcon
+              }
+              label="Withdrawal"
+            />
+          </AnimatedCard>
+        </View>
+        <AppText
+          style={{
+            fontSize: 17,
+            fontWeight: "700",
+            marginHorizontal: 20,
+            marginTop: 10,
+          }}
+        >
+          General Features
+        </AppText>
+        <View style={styles.secondcontainer}>
+          {Data?.map((item, index) => (
+            <AnimatedMenuItem
+              key={item.id}
+              index={index}
+              theme={theme}
+              onPress={item?.onPress}
+              style={styles.singleItem}
+            >
+              <IconAndLabel
+                theme={theme}
+                iconSource={item.icon}
+                title={item.title}
+              />
+            </AnimatedMenuItem>
+          ))}
+        </View>
+
+        <AppText
+          style={{
+            fontSize: 17,
+            fontWeight: "700",
+            marginHorizontal: 20,
+            marginTop: 10,
+          }}
+        >
+          Support Tools
+        </AppText>
+        <View style={styles.secondcontainer}>
+          {Data2.map((item, index) => (
+            <AnimatedMenuItem
+              key={item.id}
+              index={index}
+              theme={theme}
+              onPress={item.onPress}
+              style={styles.singleItem}
+            >
+              <IconAndLabel
+                theme={theme}
+                iconSource={item.icon}
+                title={item.title}
+              />
+            </AnimatedMenuItem>
+          ))}
+        </View>
+        <AppText
+          style={{
+            fontSize: 17,
+            fontWeight: "700",
+            marginHorizontal: 20,
+            marginTop: 10,
+          }}
+        >
+          History
+        </AppText>
+        <View style={styles.secondcontainer}>
+          {Data3.map((item, index) => (
+            <AnimatedMenuItem
+              key={item.id}
+              index={index}
+              theme={theme}
+              onPress={item.onPress}
+              style={styles.singleItem}
+            >
+              <IconAndLabel
+                theme={theme}
+                iconSource={item.icon}
+                title={item.title}
+                textStyle={{ width: 60 }}
+              />
+            </AnimatedMenuItem>
+          ))}
+        </View>
+        </ScrollView>
+      </View>
+
+      <Modal
+        visible={showLogoutModal}
+        transparent
+        statusBarTranslucent
+        animationType="none"
+        onRequestClose={() => closeLogoutModal()}
+      >
+        <Animated.View
+          style={[
+            styles.logoutModalBackdrop,
+            {
+              opacity: logoutAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 1],
+              }),
+            },
+          ]}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={StyleSheet.absoluteFill}
+            onPress={() => closeLogoutModal()}
+          />
+
+          <Animated.View
+            style={[
+              styles.logoutModalCard,
+              {
+                transform: [
+                  {
+                    translateY: logoutAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [12, 0],
+                    }),
+                  },
+                  {
+                    scale: logoutAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.96, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <View style={styles.logoutLottieWrap}>
+              <LottieView
+                source={require("../../../assets/lottie/logout.json")}
+                autoPlay
+                loop
+                style={styles.logoutLottie}
+              />
+            </View>
+
+            <AppText style={styles.logoutTitle}>Logout</AppText>
+            <AppText style={styles.logoutDesc}>
+              Are you sure you want to logout? You’ll need to sign in again to
+              access your account.
+            </AppText>
+
+            <View style={styles.logoutActionsRow}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={[styles.logoutBtn, styles.logoutBtnSecondary]}
+                onPress={() => closeLogoutModal()}
+              >
+                <AppText style={styles.logoutBtnSecondaryText}>Cancel</AppText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={[styles.logoutBtn, styles.logoutBtnPrimary]}
+                onPress={confirmLogout}
+              >
+                <AppText style={styles.logoutBtnPrimaryText}>Logout</AppText>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </Animated.View>
+      </Modal>
+    </View>
+  );
+};
+
+export default ProfileDrawer;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.newThemeColor,
+    width: screenWidth,
+    // padding: 16,
+  },
+  logoutModalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.62)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 18,
+  },
+  logoutModalCard: {
+    backgroundColor: colors.themeElevationColor,
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    overflow: "hidden",
+    width: "100%",
+    maxWidth: 360,
+  },
+  logoutLottieWrap: {
+    width: 120,
+    height: 120,
+    borderRadius: 24,
+    alignSelf: "center",
+    overflow: "hidden",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+    marginBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoutLottie: {
+    width: 140,
+    height: 140,
+  },
+  logoutTitle: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  logoutDesc: {
+    color: "rgba(255,255,255,0.72)",
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 14,
+    textAlign: "center",
+  },
+  logoutActionsRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  logoutBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoutBtnSecondary: {
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+  },
+  logoutBtnSecondaryText: {
+    color: colors.white,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  logoutBtnPrimary: {
+    backgroundColor: colors.buttonBg,
+  },
+  logoutBtnPrimaryText: {
+    color: colors.white,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  secondcontainer: {
+    // width: Width*0.92,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-start",
+    paddingVertical: 10,
+    marginHorizontal: 15,
+  },
+
+  icon: {
+    height: 18,
+    width: 18,
+    // marginBottom: 10,
+  },
+  singleItem: {
+    width: "20%",
+    gap: 8,
+    // justifyContent:"center",
+    // backgroundColor:"orange",
+    alignItems: "center",
+    marginTop: 20,
+    height: 60,
+  },
+});
