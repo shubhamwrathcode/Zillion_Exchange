@@ -15,18 +15,21 @@ import {
   Button,
   Input,
   OtpInput6Digit,
+  BOLD,
+  FOURTEEN,
+  THIRTEEN,
+  SEMI_BOLD,
 } from '../../shared';
-import { colors } from '../../theme/colors';
 import FastImage from 'react-native-fast-image';
-import { back_ic, EMAIL, EMAIL_VERIFY } from '../../helper/ImageAssets';
+import { back_ic, EMAIL_VERIFY } from '../../helper/ImageAssets';
 import {
   sendSecurityOtp,
-  verifySecurityTotp,
   addEmailToAccount,
   getUserProfile,
 } from '../../actions/accountActions';
-import { showSuccess, showError } from '../../helper/logger';
+import { showError } from '../../helper/logger';
 import { SpinnerSecond } from '../../shared/components/SpinnerSecond';
+import { useTheme } from "../../hooks/useTheme";
 
 const CODE_LENGTH = 6;
 
@@ -40,11 +43,10 @@ const maskPhone = (phone) => {
 const AddEmailScreen = () => {
   const navigation = useNavigation();
   const dispatch = useAppDispatch();
+  const { colors: themeColors, isDark } = useTheme();
   const userData = useAppSelector((state) => state.auth.userData);
   const isLoading = useAppSelector((state) => state.auth.isLoading);
   const showButtonLoading = useAppSelector((state) => state.auth.isLoading && state.auth.loadingFor === 'otp');
-  const theme = useAppSelector((state) => state.auth.theme);
-  const isDark = theme === 'Dark';
 
   const profileMobile = userData?.mobileNumber ?? userData?.mobile_number ?? '';
   const profileCountryCode = userData?.country_code ?? userData?.countryCode ?? '';
@@ -59,10 +61,6 @@ const AddEmailScreen = () => {
   const [newEmailOtp, setNewEmailOtp] = useState('');
   const [resendTimerAddEmail, setResendTimerAddEmail] = useState(0);
   const [resendTimerNewEmail, setResendTimerNewEmail] = useState(0);
-
-  const borderClr = isDark ? colors.inputBorder : '#DDDDDD';
-  const textPrimary = isDark ? colors.white : '#222';
-  const textSecondary = isDark ? colors.descText : '#666';
 
   useEffect(() => {
     if (resendTimerAddEmail <= 0) return;
@@ -134,11 +132,10 @@ const AddEmailScreen = () => {
   };
 
   return (
-    <AppSafeAreaView style={[styles.container, { backgroundColor: colors.newThemeColor }]}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
       >
         <View style={styles.header}>
           <TouchableOpacity
@@ -150,7 +147,7 @@ const AddEmailScreen = () => {
             style={styles.backBtn}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <FastImage source={back_ic} style={styles.backIcon} tintColor={colors.white} resizeMode="contain" />
+            <FastImage source={back_ic} style={styles.backIcon} tintColor={themeColors.text} resizeMode="contain" />
           </TouchableOpacity>
         </View>
 
@@ -160,14 +157,14 @@ const AddEmailScreen = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={[styles.content, step === 0 && styles.contentStep0]}>
+          <View style={styles.content}>
             {step === 0 && (
               <>
-                <AppText style={[styles.title, { color: textPrimary }]}>Add Email Address</AppText>
+                <AppText type={FOURTEEN} weight={BOLD} style={{ color: themeColors.text }}>Add Email Address</AppText>
                 <View style={styles.imageWrap}>
                   <FastImage source={EMAIL_VERIFY} style={styles.emailImage} resizeMode="contain" />
                 </View>
-                <AppText style={[styles.desc, { color: textSecondary }]}>
+                <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, textAlign: 'center' }}>
                   Add an email address to your account for secure login and notifications.
                 </AppText>
               </>
@@ -175,9 +172,11 @@ const AddEmailScreen = () => {
 
             {step === 1 && hasGoogleAuth && (
               <>
-                <AppText style={[styles.title, { color: textPrimary }]}>Add Email Address</AppText>
-                <AppText style={[styles.subtitle, { color: textSecondary }]}>Step 1: Verify Google Authenticator</AppText>
-                <OtpInput6Digit label="Google Authenticator Code" value={googleCode} onChangeText={setGoogleCode} isDark={isDark} />
+                <AppText type={FOURTEEN} weight={BOLD} style={{ color: themeColors.text }}>Add Email Address</AppText>
+                <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginTop: 4 }}>Step 1: Verify Google Authenticator</AppText>
+                <View style={{ marginTop: 24 }}>
+                  <OtpInput6Digit label="Google Authenticator Code" value={googleCode} onChangeText={setGoogleCode} isDark={isDark} />
+                </View>
                 <Button
                   children="Continue"
                   onPress={handleVerifyIdentity}
@@ -189,23 +188,25 @@ const AddEmailScreen = () => {
 
             {step === 2 && hasMobile && (
               <>
-                <AppText style={[styles.title, { color: textPrimary }]}>Add Email Address</AppText>
-                <AppText style={[styles.subtitle, { color: textSecondary }]}>Step 2: Verify your mobile number</AppText>
-                <AppText style={[styles.bodyText, { color: textPrimary }]}>
-                  Click "Send OTP" to receive a code on <AppText style={styles.bold}>{maskPhone(mobileNumber)}</AppText>
+                <AppText type={FOURTEEN} weight={BOLD} style={{ color: themeColors.text }}>Add Email Address</AppText>
+                <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginTop: 4 }}>Step 2: Verify your mobile number</AppText>
+                <AppText type={THIRTEEN} style={{ color: themeColors.text, marginTop: 16 }}>
+                  Click "Send OTP" to receive a code on <AppText weight={SEMI_BOLD}>{maskPhone(mobileNumber)}</AppText>
                 </AppText>
-                <OtpInput6Digit
-                  label="Mobile Verification Code"
-                  value={mobileOtp}
-                  onChangeText={setMobileOtp}
-                  isDark={isDark}
-                />
+                <View style={{ marginTop: 20 }}>
+                  <OtpInput6Digit
+                    label="Mobile Verification Code"
+                    value={mobileOtp}
+                    onChangeText={setMobileOtp}
+                    isDark={isDark}
+                  />
+                </View>
                 <View style={styles.resendRow}>
                   {resendTimerAddEmail > 0 ? (
-                    <AppText style={{ color: textSecondary }}>Resend ({resendTimerAddEmail}s)</AppText>
+                    <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText }}>Resend ({resendTimerAddEmail}s)</AppText>
                   ) : (
                     <TouchableOpacity onPress={handleSendOtpMobile} disabled={isLoading}>
-                      <AppText style={{ color: colors.buttonBg, fontSize: 14, fontWeight: '600' }}>Send OTP</AppText>
+                      <AppText weight={SEMI_BOLD} style={{ color: themeColors.button, fontSize: 13 }}>Send OTP</AppText>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -221,15 +222,14 @@ const AddEmailScreen = () => {
 
             {step === 3 && (
               <>
-                <AppText style={[styles.title, { color: textPrimary }]}>Add Email Address</AppText>
-                <AppText style={[styles.subtitle, { color: textSecondary }]}>Step 3: Enter your email address</AppText>
-                <AppText style={[styles.inputLabel, { color: textPrimary }]}>Email Address</AppText>
+                <AppText type={FOURTEEN} weight={BOLD} style={{ color: themeColors.text }}>Add Email Address</AppText>
+                <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginTop: 4 }}>Step 3: Enter your email address</AppText>
                 <Input
+                  title="Email Address"
                   value={newEmail}
                   onChangeText={setNewEmail}
                   placeholder="Enter your email address"
-                  containerStyle={styles.inputWrap}
-                  inputStyle={{ color: textPrimary }}
+                  mainContainer={{ marginTop: 24 }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
@@ -244,23 +244,25 @@ const AddEmailScreen = () => {
 
             {step === 4 && (
               <>
-                <AppText style={[styles.title, { color: textPrimary }]}>Add Email Address</AppText>
-                <AppText style={[styles.subtitle, { color: textSecondary }]}>Step 4: Verify your email address</AppText>
-                <AppText style={[styles.bodyText, { color: textPrimary }]}>
-                  Click "Send OTP" to receive a code on <AppText style={styles.bold}>{newEmail}</AppText>
+                <AppText type={FOURTEEN} weight={BOLD} style={{ color: themeColors.text }}>Add Email Address</AppText>
+                <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginTop: 4 }}>Step 4: Verify your email address</AppText>
+                <AppText type={THIRTEEN} style={{ color: themeColors.text, marginTop: 16 }}>
+                  Click "Send OTP" to receive a code on <AppText weight={SEMI_BOLD}>{newEmail}</AppText>
                 </AppText>
-                <OtpInput6Digit
-                  label="Email Verification Code"
-                  value={newEmailOtp}
-                  onChangeText={setNewEmailOtp}
-                  isDark={isDark}
-                />
+                <View style={{ marginTop: 20 }}>
+                  <OtpInput6Digit
+                    label="Email Verification Code"
+                    value={newEmailOtp}
+                    onChangeText={setNewEmailOtp}
+                    isDark={isDark}
+                  />
+                </View>
                 <View style={styles.resendRow}>
                   {resendTimerNewEmail > 0 ? (
-                    <AppText style={{ color: textSecondary }}>Resend ({resendTimerNewEmail}s)</AppText>
+                    <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText }}>Resend ({resendTimerNewEmail}s)</AppText>
                   ) : (
                     <TouchableOpacity onPress={handleSendOtpNewEmail} disabled={isLoading}>
-                      <AppText style={{ color: colors.buttonBg, fontSize: 14, fontWeight: '600' }}>Send OTP</AppText>
+                      <AppText weight={SEMI_BOLD} style={{ color: themeColors.button, fontSize: 13 }}>Send OTP</AppText>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -290,9 +292,10 @@ const AddEmailScreen = () => {
   );
 };
 
+export default AddEmailScreen;
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -308,21 +311,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 34,
     paddingTop: 16,
-    backgroundColor: colors.newThemeColor,
   },
   bottomBtn: {},
   content: { borderRadius: 16, overflow: 'hidden' },
-  title: { fontSize: 18, fontWeight: '700', letterSpacing: 0.2, marginHorizontal: 2 },
-  subtitle: { fontSize: 14, marginTop: 6, lineHeight: 20 },
-  imageWrap: { alignItems: 'center', justifyContent: 'center' },
-  emailImage: { width: 150, height: 150 },
-  desc: { fontSize: 13, lineHeight: 21, marginHorizontal: 2 },
-  btn: { marginTop: 20 },
-  inputLabel: { fontSize: 14, fontWeight: '500', marginTop: 18, marginBottom: 2 },
-  inputWrap: { marginTop: 8 },
-  bodyText: { fontSize: 14, marginTop: 14, lineHeight: 21 },
-  bold: { fontWeight: '600' },
+  imageWrap: { alignItems: 'center', justifyContent: 'center', marginVertical: 30 },
+  emailImage: { width: 180, height: 180 },
+  btn: { marginTop: 30 },
   resendRow: { marginTop: 12, alignItems: 'flex-end' },
 });
-
-export default AddEmailScreen;

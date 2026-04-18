@@ -8,6 +8,7 @@ import {
   WHITE,
 } from "../../shared";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 import { useAppSelector } from "../../store/hooks";
 import FastImage from "react-native-fast-image";
 import { folder, NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
@@ -23,7 +24,7 @@ const InternalWalletHistory = ({
   totalAllInvestment = 0,
 }) => {
   const dispatch = useDispatch();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   const interalWalletHistoryRedux = useAppSelector(
     (state) => state.wallet.interalWalletHistory
   );
@@ -100,14 +101,16 @@ const InternalWalletHistory = ({
         style={[
           styles.card,
           {
-            backgroundColor: colors.themeElevationColor,
+            backgroundColor: themeColors.background,
+            borderColor: themeColors.border,
+            borderWidth: 1,
           },
         ]}
       >
-        <View style={styles.cardHeader}>
+        <View style={[styles.cardHeader, { borderBottomColor: themeColors.border }]}>
           <View style={styles.cardHeaderLeft}>
            
-            <AppText style={[styles.cardDate, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardDate, { color: themeColors.secondaryText }]}>
               {moment(inv?.createdAt).format("MMM DD, YYYY • hh:mm A")}
             </AppText>
           </View>
@@ -126,37 +129,37 @@ const InternalWalletHistory = ({
         <View style={styles.cardBody}>
           {/* Always show first 5 fields */}
           <View style={styles.cardRow}>
-            <AppText style={[styles.cardLabel, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardLabel, { color: themeColors.secondaryText }]}>
               Sr no.:
             </AppText>
-            <AppText style={[styles.cardValue, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardValue, { color: themeColors.text }]}>
               {idx + 1}
             </AppText>
           </View>
 
           <View style={styles.cardRow}>
-            <AppText style={[styles.cardLabel, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardLabel, { color: themeColors.secondaryText }]}>
               Amount:
             </AppText>
-            <AppText style={[styles.cardValue, { color: theme === "Dark" ? "#999" : "#666", fontWeight: "bold" }]}>
+            <AppText style={[styles.cardValue, { color: themeColors.text, fontWeight: "bold" }]}>
               {inv?.amount} {inv?.short_name}
             </AppText>
           </View>
 
           <View style={styles.cardRow}>
-            <AppText style={[styles.cardLabel, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardLabel, { color: themeColors.secondaryText }]}>
               Currency:
             </AppText>
-            <AppText style={[styles.cardValue, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardValue, { color: themeColors.text }]}>
               {inv?.short_name || "---"}
             </AppText>
           </View>
 
           <View style={styles.cardRow}>
-            <AppText style={[styles.cardLabel, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardLabel, { color: themeColors.secondaryText }]}>
               Transfer:
             </AppText>
-            <AppText style={[styles.cardValue, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardValue, { color: themeColors.text }]}>
               {walletTransfer}
             </AppText>
           </View>
@@ -169,7 +172,7 @@ const InternalWalletHistory = ({
     <AppSafeAreaView
       style={[
         styles.container,
-        { backgroundColor: colors.newThemeColor },
+        { backgroundColor: themeColors.background },
       ]}
     >
       <Toolbar
@@ -229,7 +232,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: colors.overlayColor,
   },
 
   cardHeaderLeft: {

@@ -14,14 +14,19 @@ import {
   AppText,
   Button,
   OtpInput6Digit,
+  BOLD,
+  FOURTEEN,
+  THIRTEEN,
+  SEMI_BOLD,
+  EIGHTEEN,
 } from '../../shared';
-import { colors } from '../../theme/colors';
 import FastImage from 'react-native-fast-image';
 import TouchableOpacityView from '../../shared/components/TouchableOpacityView';
 import { back_ic, EMAIL, PHONE, KEY_ICON } from '../../helper/ImageAssets';
 import { disable2fa, sendSecurityOtp } from '../../actions/accountActions';
 import { showError } from '../../helper/logger';
 import { SpinnerSecond } from '../../shared/components/SpinnerSecond';
+import { useTheme } from "../../hooks/useTheme";
 
 const CODE_LENGTH = 6;
 const maskEmail = (email) => {
@@ -40,10 +45,11 @@ const maskPhone = (phone) => {
 const Disable2FAScreen = () => {
   const navigation = useNavigation();
   const dispatch = useAppDispatch();
+  const { colors: themeColors, isDark } = useTheme();
   const userData = useAppSelector((state) => state.auth.userData);
   const isLoading = useAppSelector((state) => state.auth.isLoading);
   const showButtonLoading = useAppSelector((state) => state.auth.isLoading && state.auth.loadingFor !== 'otp');
-  const theme = useAppSelector((state) => state.auth.theme);
+
   const emailId = userData?.emailId ?? userData?.email_id ?? '';
   const profileMobile = userData?.mobileNumber ?? userData?.mobile_number ?? '';
   const profileCountryCode = userData?.country_code ?? userData?.countryCode ?? '';
@@ -55,11 +61,6 @@ const Disable2FAScreen = () => {
   const [code, setCode] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
 
-  const isDark = theme === 'Dark';
-  const textPrimary = isDark ? colors.white : colors.black;
-  const textSecondary = isDark ? '#888' : '#666';
-  const borderClr = isDark ? colors.dividerColor : colors.secondBorder;
-
   useEffect(() => {
     if (resendTimer <= 0) return;
     const t = setTimeout(() => setResendTimer((r) => r - 1), 1000);
@@ -67,15 +68,15 @@ const Disable2FAScreen = () => {
   }, [resendTimer]);
 
   const getTitle = () => {
-    if (authMethod === 2) return 'Enter Google Authenticator Code';
-    if (authMethod === 1) return 'Enter Email Verification Code';
-    if (authMethod === 3) return 'Enter Mobile Verification Code';
-    return 'Disable Google Authenticator';
+    if (authMethod === 2) return 'Authenticator Code';
+    if (authMethod === 1) return 'Email verification';
+    if (authMethod === 3) return 'Mobile verification';
+    return 'Disable Google Auth';
   };
   const getDesc = () => {
     if (authMethod === 2) return 'Enter the 6-digit code from your authenticator app';
-    if (authMethod === 1) return `We'll send a verification code to ${maskEmail(emailId)}`;
-    if (authMethod === 3) return `We'll send a verification code to ${maskPhone(mobileNumber)}`;
+    if (authMethod === 1) return `Enter verification code sent to ${maskEmail(emailId)}`;
+    if (authMethod === 3) return `Enter verification code sent to ${maskPhone(mobileNumber)}`;
     return 'Choose how you want to verify your identity';
   };
 
@@ -102,17 +103,17 @@ const Disable2FAScreen = () => {
   };
 
   return (
-    <AppSafeAreaView style={{ flex: 1, backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={[styles.header, { borderBottomColor: borderClr }]}>
+        <View style={[styles.header, { borderBottomColor: themeColors.border }]}>
           <TouchableOpacity
             onPress={() => (authMethod ? setAuthMethod(null) : navigation.goBack())}
             style={styles.backBtn}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <FastImage source={back_ic} style={styles.backIcon} tintColor={textPrimary} resizeMode="contain" />
+            <FastImage source={back_ic} style={styles.backIcon} tintColor={themeColors.text} resizeMode="contain" />
           </TouchableOpacity>
-          <AppText style={[styles.headerTitle, { color: textPrimary }]}>{getTitle()}</AppText>
+          <AppText weight={BOLD} type={EIGHTEEN} style={[styles.headerTitle, { color: themeColors.text }]}>{getTitle()}</AppText>
         </View>
 
         <ScrollView
@@ -123,62 +124,77 @@ const Disable2FAScreen = () => {
         >
           {!authMethod ? (
             <View style={styles.formContent}>
-              <AppText style={[styles.subtitle, { color: textSecondary }]}>{getDesc()}</AppText>
+              <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginBottom: 24 }}>{getDesc()}</AppText>
+              
               {hasEmail && (
                 <TouchableOpacityView
+                  activeOpacity={0.8}
                   onPress={() => { setAuthMethod(1); setCode(''); setResendTimer(0); }}
-                  style={[styles.methodRow, { borderColor: borderClr }]}
+                  style={[styles.methodRow, { borderColor: themeColors.border, backgroundColor: themeColors.card }]}
                 >
-                  <FastImage source={EMAIL} style={styles.methodIcon} tintColor={colors.white} resizeMode="contain" />
+                  <View style={[styles.iconWrap, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }]}>
+                    <FastImage source={EMAIL} style={styles.methodIcon} tintColor={themeColors.button} resizeMode="contain" />
+                  </View>
                   <View style={styles.methodTextWrap}>
-                    <AppText style={[styles.methodLabel, { color: textPrimary }]}>Email Verification</AppText>
-                    <AppText style={[styles.methodDesc, { color: textSecondary }]}>{`Send code to ${maskEmail(emailId)}`}</AppText>
+                    <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.text }}>Email Verification</AppText>
+                    <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginTop: 2 }}>{`Send code to ${maskEmail(emailId)}`}</AppText>
                   </View>
                 </TouchableOpacityView>
               )}
               {hasMobile && (
                 <TouchableOpacityView
+                   activeOpacity={0.8}
                   onPress={() => { setAuthMethod(3); setCode(''); setResendTimer(0); }}
-                  style={[styles.methodRow, { borderColor: borderClr }]}
+                  style={[styles.methodRow, { borderColor: themeColors.border, backgroundColor: themeColors.card }]}
                 >
-                  <FastImage source={PHONE} style={styles.methodIcon} tintColor={colors.white} resizeMode="contain" />
+                  <View style={[styles.iconWrap, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }]}>
+                    <FastImage source={PHONE} style={styles.methodIcon} tintColor={themeColors.button} resizeMode="contain" />
+                  </View>
                   <View style={styles.methodTextWrap}>
-                    <AppText style={[styles.methodLabel, { color: textPrimary }]}>Mobile Verification</AppText>
-                    <AppText style={[styles.methodDesc, { color: textSecondary }]}>{`Send code to ${maskPhone(mobileNumber)}`}</AppText>
+                    <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.text }}>Mobile Verification</AppText>
+                    <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginTop: 2 }}>{`Send code to ${maskPhone(mobileNumber)}`}</AppText>
                   </View>
                 </TouchableOpacityView>
               )}
               <TouchableOpacityView
+                 activeOpacity={0.8}
                 onPress={() => { setAuthMethod(2); setCode(''); }}
-                style={[styles.methodRow, { borderColor: borderClr }]}
+                style={[styles.methodRow, { borderColor: themeColors.border, backgroundColor: themeColors.card }]}
               >
-                <FastImage source={KEY_ICON} style={styles.methodIcon} tintColor={colors.white} resizeMode="contain" />
+                <View style={[styles.iconWrap, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }]}>
+                  <FastImage source={KEY_ICON} style={styles.methodIcon} tintColor={themeColors.button} resizeMode="contain" />
+                </View>
                 <View style={styles.methodTextWrap}>
-                  <AppText style={[styles.methodLabel, { color: textPrimary }]}>Google Authenticator</AppText>
-                  <AppText style={[styles.methodDesc, { color: textSecondary }]}>Use your authenticator app</AppText>
+                  <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.text }}>Authenticator App</AppText>
+                  <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginTop: 2 }}>Use your authenticator app</AppText>
                 </View>
               </TouchableOpacityView>
             </View>
           ) : (
             <View style={styles.formContent}>
-              <AppText style={[styles.subtitle, { color: textSecondary }]}>{getDesc()}</AppText>
+              <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginBottom: 24 }}>{getDesc()}</AppText>
+              
+              <View style={{ marginTop: 12 }}>
+                <OtpInput6Digit
+                  label={authMethod === 2 ? 'Authenticator Code' : 'Verification Code'}
+                  value={code}
+                  onChangeText={setCode}
+                  isDark={isDark}
+                />
+              </View>
+
               {(authMethod === 1 || authMethod === 3) && (
                 <View style={styles.resendRow}>
                   {resendTimer > 0 ? (
-                    <AppText style={{ color: textSecondary }}>Resend ({resendTimer}s)</AppText>
+                    <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText }}>Resend ({resendTimer}s)</AppText>
                   ) : (
                     <TouchableOpacityView onPress={handleSendOtp} disabled={isLoading}>
-                      <AppText style={{ color: colors.buttonBg, fontWeight: '600' }}>Send OTP</AppText>
+                      <AppText weight={SEMI_BOLD} style={{ color: themeColors.button, fontSize: 13 }}>Send OTP</AppText>
                     </TouchableOpacityView>
                   )}
                 </View>
               )}
-              <OtpInput6Digit
-                label={authMethod === 2 ? 'Authenticator Code' : 'Verification Code'}
-                value={code}
-                onChangeText={setCode}
-                isDark={isDark}
-              />
+
               <Button
                 children="Disable"
                 onPress={handleDisable}
@@ -195,6 +211,8 @@ const Disable2FAScreen = () => {
   );
 };
 
+export default Disable2FAScreen;
+
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
@@ -204,26 +222,32 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   backBtn: { padding: 4 },
-  backIcon: { width: 24, height: 24 },
-  headerTitle: { fontSize: 18, fontWeight: '700', marginLeft: 12 },
+  backIcon: { width: 22, height: 22 },
+  headerTitle: { fontSize: 18, marginLeft: 12 },
   scroll: { flex: 1 },
   scrollContent: { padding: 20, paddingBottom: 40 },
   formContent: { paddingTop: 8 },
-  subtitle: { fontSize: 14, marginBottom: 20 },
   methodRow: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 12,
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8 },
+      android: { elevation: 1.5 },
+    }),
   },
-  methodIcon: { width: 20, height: 20 },
-  methodTextWrap: { marginLeft: 12 },
-  methodLabel: { fontSize: 15, fontWeight: '600' },
-  methodDesc: { fontSize: 13, marginTop: 2 },
-  resendRow: { marginBottom: 14, alignItems: 'center' },
-  btn: { marginTop: 24 },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  methodIcon: { width: 22, height: 22 },
+  methodTextWrap: { marginLeft: 16, flex: 1 },
+  resendRow: { marginTop: 14, alignItems: 'flex-end' },
+  btn: { marginTop: 30 },
 });
-
-export default Disable2FAScreen;

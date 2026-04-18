@@ -32,6 +32,7 @@ import {
   usdtearn_vector,
 } from "../../helper/ImageAssets";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 import NavigationService from "../../navigation/NavigationService";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useDispatch } from "react-redux";
@@ -84,7 +85,7 @@ const howToReferSteps = [
 
 const RefferalReward = () => {
   const dispatch = useDispatch();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   const referCode = useAppSelector((state) => state.home.referCode);
   const referralList = useAppSelector((state) => state.home.referralList);
 
@@ -146,7 +147,7 @@ const RefferalReward = () => {
   const getKycStatusColor = (item) => {
     const status = getKycStatus(item);
     if (status?.toLowerCase().includes("verified") && !status?.toLowerCase().includes("not"))
-      return colors.green;
+      return colors.buttonBg;
     if (
       status?.toLowerCase().includes("submitted") ||
       status?.toLowerCase().includes("pending")
@@ -156,7 +157,7 @@ const RefferalReward = () => {
   };
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <KeyBoardAware>
         {/* Header */}
         <View style={styles.headerRow}>
@@ -165,10 +166,10 @@ const RefferalReward = () => {
               source={back_ic}
               resizeMode="contain"
               style={styles.backIcon}
-              tintColor={theme !== "Dark" ? colors.black : colors.white}
+              tintColor={themeColors.text}
             />
           </TouchableOpacity>
-          <AppText weight={SEMI_BOLD} type={SIXTEEN}>
+          <AppText weight={SEMI_BOLD} type={SIXTEEN} color={themeColors.text}>
             Referral/Rewards Hub
           </AppText>
         </View>
@@ -185,31 +186,31 @@ const RefferalReward = () => {
               <AppText style={styles.cardTitle} color={YELLOW} weight={SEMI_BOLD}>
                 Exciting Referral Reward
               </AppText>
-              <AppText style={styles.cardSubtitle} weight={SEMI_BOLD}>
+              <AppText style={[styles.cardSubtitle, { color: themeColors.text }]} weight={SEMI_BOLD}>
                 Invite your friends and earn amazing rewards!
               </AppText>
-              <AppText style={styles.cardDesc} color={DISCLAIMTEXT}>
+              <AppText style={styles.cardDesc} color={themeColors.secondaryText}>
                 Get rewarded when they sign up and unlock additional bonuses after
                 they complete verification.
               </AppText>
             </View>
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: themeColors.background, borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1 }]}>
 
               {/* Referral link row */}
               <View style={styles.refRow}>
                 <View style={styles.refLabelRow}>
                   <FastImage
-                    tintColor={colors.secondaryText}
+                    tintColor={themeColors.secondaryText}
                     source={linkIcon}
                     style={styles.refIconImg}
                     resizeMode="contain"
                   />
-                  <AppText type={TWELVE} style={{ color: colors.descText }}>
+                  <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>
                     Referral link:
                   </AppText>
                 </View>
                 <View style={styles.refValueRow}>
-                  <AppText type={TWELVE} color={colors.descText} numberOfLines={1} style={styles.refValue}>
+                  <AppText type={TWELVE} color={themeColors.text} numberOfLines={1} style={styles.refValue}>
                     {referralLink || "—"}
                   </AppText>
                   <TouchableOpacity
@@ -227,15 +228,15 @@ const RefferalReward = () => {
                   <FastImage
                     source={peopleIcon}
                     style={styles.refIconImg}
-                    tintColor={colors.secondaryText}
+                    tintColor={themeColors.secondaryText}
                     resizeMode="contain"
                   />
-                  <AppText type={TWELVE} style={{ color: colors.descText }}>
+                  <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>
                     Referral code:
                   </AppText>
                 </View>
                 <View style={styles.refValueRow}>
-                  <AppText type={TWELVE} color={colors.descText}>
+                  <AppText type={TWELVE} color={themeColors.text}>
                     {referCode || "—"}
                   </AppText>
                   <TouchableOpacity
@@ -250,17 +251,17 @@ const RefferalReward = () => {
               {/* Code input + Copy button */}
               <View style={styles.copyFieldWrap}>
                 <TextInput
-                  style={styles.copyFieldInput}
+                  style={[styles.copyFieldInput, { color: themeColors.text }]}
                   value={referCode ?? ""}
                   editable={false}
                   placeholder="Referral code"
-                  placeholderTextColor={colors.placeholderColor}
+                  placeholderTextColor={themeColors.secondaryText}
                 />
                 <TouchableOpacity
-                  style={styles.copyBtn}
+                  style={[styles.copyBtn, { backgroundColor: isDark ? colors.overlayColor : "#EEE" }]}
                   onPress={() => copyToClipboard(referCode)}
                 >
-                  <AppText type={TWELVE} weight={SEMI_BOLD}>
+                  <AppText type={TWELVE} weight={SEMI_BOLD} color={isDark ? colors.white : colors.black}>
                     {isCopied ? "Copied!" : "Copy"}
                   </AppText>
                 </TouchableOpacity>
@@ -292,27 +293,27 @@ const RefferalReward = () => {
                 onSnapToItem={(index) => setCurrentSlide(index)}
                 renderItem={({ item: event }) => (
                   <View style={[styles.eventCard, { width: CONTENT_WIDTH }]}>
-                    <View style={styles.eventCardInner}>
+                    <View style={[styles.eventCardInner, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1 }]}>
                       <FastImage
                         source={event.image}
                         resizeMode="contain"
                         style={styles.eventCardImage}
                       />
-                      <AppText style={styles.eventCardTitle} weight={SEMI_BOLD}>
+                      <AppText style={[styles.eventCardTitle, { color: themeColors.text }]} weight={SEMI_BOLD}>
                         {event.title}
                       </AppText>
                       <AppText
                         type={TWELVE}
-                        color={colors.descText}
+                        color={themeColors.secondaryText}
                         style={styles.eventCardDesc}
                       >
                         {event.description}
                       </AppText>
                       <TouchableOpacity
-                        style={styles.inviteNowBtn}
+                        style={[styles.inviteNowBtn, { backgroundColor: colors.buttonBg }]}
                         onPress={() => copyToClipboard(referralLink)}
                       >
-                        <AppText type={TWELVE} weight={SEMI_BOLD}>
+                        <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: colors.white }}>
                           Invite Now
                         </AppText>
                       </TouchableOpacity>
@@ -327,7 +328,7 @@ const RefferalReward = () => {
                     key={index}
                     style={[
                       styles.dot,
-                      currentSlide === index && styles.dotActive,
+                      currentSlide === index && [styles.dotActive, { backgroundColor: isDark ? colors.white : colors.buttonBg }],
                     ]}
                   />
                 ))}
@@ -336,22 +337,22 @@ const RefferalReward = () => {
             {/* How to Refer and Earn Rewards */}
 
             <View style={styles.howToSection}>
-              <AppText style={styles.sectionTitle} weight={SEMI_BOLD}>
+              <AppText style={[styles.sectionTitle, { color: themeColors.text }]} weight={SEMI_BOLD}>
                 How to Refer and Earn Rewards
               </AppText>
               {howToReferSteps.map((step, index) => (
                 <View key={index} style={styles.howToItem}>
                   <FastImage
-                    tintColor={colors.secondaryText}
+                    tintColor={themeColors.secondaryText}
                     source={step.icon}
                     style={styles.howToIconImg}
                     resizeMode="contain"
                   />
                   <View style={styles.howToContent}>
-                    <AppText style={styles.howToTitle} weight={SEMI_BOLD}>
+                    <AppText style={[styles.howToTitle, { color: themeColors.text }]} weight={SEMI_BOLD}>
                       {step.title}
                     </AppText>
-                    <AppText type={TWELVE} color={colors.descText}>
+                    <AppText type={TWELVE} color={themeColors.secondaryText}>
                       {step.desc}
                     </AppText>
                   </View>
@@ -364,19 +365,20 @@ const RefferalReward = () => {
             {/* Referral History */}
             <View style={styles.historySection}>
               <View style={styles.historyHeader}>
-                <AppText style={styles.sectionTitle} weight={SEMI_BOLD}>
+                <AppText style={[styles.sectionTitle, { color: themeColors.text }]} weight={SEMI_BOLD}>
                   Referral History
                 </AppText>
                 <View style={styles.searchWrap}>
                   <FastImage
+                    tintColor={themeColors.secondaryText}
                     source={searchIcon}
                     style={styles.searchIconImg}
                     resizeMode="contain"
                   />
                   <TextInput
-                    style={styles.searchInput}
+                    style={[styles.searchInput, { color: themeColors.text }]}
                     placeholder="Search by ID"
-                    placeholderTextColor={colors.placeholderColor}
+                    placeholderTextColor={themeColors.secondaryText}
                     value={searchTerm}
                     onChangeText={setSearchTerm}
                   />
@@ -385,21 +387,21 @@ const RefferalReward = () => {
 
               {filteredList?.length > 0 ? (
                 filteredList.map((item, index) => (
-                  <View key={item?._id ?? index} style={styles.historyCard}>
+                  <View key={item?._id ?? index} style={[styles.historyCard, { backgroundColor: themeColors.background, borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1 }]}>
                     <View style={styles.historyRow}>
-                      <AppText type={TWELVE} color={colors.descText}>
+                      <AppText type={TWELVE} color={themeColors.secondaryText}>
                         Name
                       </AppText>
-                      <AppText type={TWELVE}>{getDisplayName(item)}</AppText>
+                      <AppText type={TWELVE} color={themeColors.text}>{getDisplayName(item)}</AppText>
                     </View>
                     <View style={styles.historyRow}>
-                      <AppText type={TWELVE} color={colors.descText}>
+                      <AppText type={TWELVE} color={themeColors.secondaryText}>
                         Referral ID
                       </AppText>
-                      <AppText type={TWELVE}>{getDisplayId(item)}</AppText>
+                      <AppText type={TWELVE} color={themeColors.text}>{getDisplayId(item)}</AppText>
                     </View>
                     <View style={styles.historyRow}>
-                      <AppText type={TWELVE} color={colors.descText}>
+                      <AppText type={TWELVE} color={themeColors.secondaryText}>
                         KYC Status
                       </AppText>
                       <AppText
@@ -410,10 +412,10 @@ const RefferalReward = () => {
                       </AppText>
                     </View>
                     <View style={styles.historyRow}>
-                      <AppText type={TWELVE} color={colors.descText}>
+                      <AppText type={TWELVE} color={themeColors.secondaryText}>
                         Join Date
                       </AppText>
-                      <AppText type={TWELVE}>
+                      <AppText type={TWELVE} color={themeColors.text}>
                         {getJoinDateTime(item)}
                       </AppText>
                     </View>
@@ -459,7 +461,7 @@ const styles = StyleSheet.create({
     marginHorizontal: CONTENT_PADDING,
     marginTop: 4,
     padding: 16,
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 12,
   },
   cardTitle: { fontSize: 14, marginBottom: 4 },
@@ -498,7 +500,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   copyBtn: {
-    backgroundColor: colors.overlayColor,
+    backgroundColor: "transparent",
     paddingVertical: 12,
     paddingHorizontal: 20,
     right: 5,
@@ -507,7 +509,7 @@ const styles = StyleSheet.create({
   bannerWrap: {
     marginHorizontal: CONTENT_PADDING,
     marginTop: 16,
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 12,
   },
   bannerImage: {
@@ -539,7 +541,6 @@ const styles = StyleSheet.create({
 
   },
   eventCardInner: {
-    backgroundColor: '#2b313c',
     borderRadius: 12,
     padding: 16,
   },
@@ -552,7 +553,7 @@ const styles = StyleSheet.create({
   eventCardDesc: { fontSize: 12, marginBottom: 8 },
   inviteNowBtn: {
     alignSelf: "flex-start",
-    backgroundColor: colors.sheetColor,
+    backgroundColor: "transparent",
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -582,7 +583,7 @@ const styles = StyleSheet.create({
   searchWrap: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 8,
     paddingHorizontal: 10,
     height: 40,
@@ -596,7 +597,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   historyCard: {
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 10,
     padding: 14,
     marginBottom: 10,

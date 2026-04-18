@@ -6,6 +6,7 @@ import {
   Toolbar,
 } from "../../shared";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 import { useAppSelector } from "../../store/hooks";
 import FastImage from "react-native-fast-image";
 import { NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
@@ -24,7 +25,7 @@ const NewWalletHistory = ({
   totalAllInvestment = 0,
 }) => {
   const dispatch = useDispatch();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   const walletHistoryRedux = useAppSelector((state) => state.wallet.walletHistory);
   const [walletHistory, setWalletHistory] = useState([]);
   const [skip, setSkip] = useState(0);
@@ -84,8 +85,8 @@ const NewWalletHistory = ({
   };
 
   const renderCard = (inv, idx) => {
-    const textColor = theme === "Dark" ? colors.white : colors.black;
-    const labelColor = theme === "Dark" ? colors.descText : colors.textGray;
+    const textColor = themeColors.text;
+    const labelColor = themeColors.secondaryText;
     const typeLabel = inv?.transaction_type || "Transaction";
     const isDeposit = (typeLabel || "").toLowerCase().includes("deposit");
     const typeColor = isDeposit ? colors.green : (typeLabel || "").toLowerCase().includes("withdraw") ? colors.red : labelColor;
@@ -132,7 +133,7 @@ const NewWalletHistory = ({
           <AppText style={[styles.cardValue, { color: getStatusColor(inv?.status) }]}>{inv?.status || "---"}</AppText>
         </View>
 
-        <View style={styles.cardDivider} />
+        <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
       </TouchableOpacity>
     );
   };
@@ -141,7 +142,7 @@ const NewWalletHistory = ({
     <AppSafeAreaView
       style={[
         styles.container,
-        { backgroundColor: colors.newThemeColor },
+        { backgroundColor: themeColors.background },
       ]}
     >
       <Toolbar
@@ -193,7 +194,6 @@ const styles = StyleSheet.create({
   },
   cardDivider: {
     height: 1,
-    backgroundColor: colors.overlayColor,
     marginTop: 14,
   },
   topRow: {

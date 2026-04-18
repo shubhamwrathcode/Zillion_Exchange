@@ -17,6 +17,7 @@ import Animated, {
   Extrapolate,
 } from 'react-native-reanimated';
 import { colors } from '../theme/colors';
+import { useTheme } from '../hooks/useTheme';
 import { AppText, BOLD, SEMI_BOLD } from './AppText';
 import FastImage from 'react-native-fast-image';
 import { closeIcon } from '../helper/ImageAssets';
@@ -24,7 +25,8 @@ import { closeIcon } from '../helper/ImageAssets';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const AnimatedView = Animated.createAnimatedComponent(View);
 
-const WalletTypeModal = ({ visible, data, onSelect, onClose, theme }) => {
+const WalletTypeModal = ({ visible, data, onSelect, onClose }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const opacity = useSharedValue(0);
 
@@ -85,14 +87,14 @@ const WalletTypeModal = ({ visible, data, onSelect, onClose, theme }) => {
               style={[
                 styles.modalContent,
                 modalStyle,
-                { backgroundColor: colors.newThemeColor },
+                { backgroundColor: themeColors.background },
               ]}
             >
               <View style={styles.header}>
                 <AppText
                   style={[
                     styles.title,
-                    { color: theme === 'Dark' ? '#fff' : '#000' },
+                    { color: themeColors.text },
                   ]}
                   weight={BOLD}
                 >
@@ -103,8 +105,7 @@ const WalletTypeModal = ({ visible, data, onSelect, onClose, theme }) => {
                   style={[
                     styles.closeButton,
                     {
-                      backgroundColor:
-                        theme === 'Dark'
+                      backgroundColor: isDark
                           ? 'rgba(255,255,255,0.1)'
                           : 'rgba(0,0,0,0.05)',
                     },
@@ -115,9 +116,7 @@ const WalletTypeModal = ({ visible, data, onSelect, onClose, theme }) => {
                     source={closeIcon}
                     resizeMode="contain"
                     style={{ width: 15, height: 15 }}
-                    tintColor={
-                      theme !== 'Dark' ? colors.black : colors.white
-                    }
+                    tintColor={themeColors.text}
                   />
                 </TouchableOpacity>
               </View>
@@ -129,7 +128,7 @@ const WalletTypeModal = ({ visible, data, onSelect, onClose, theme }) => {
                   <TouchableOpacity
                     style={[
                       styles.item,
-                      { backgroundColor: colors.themeElevationColor },
+                      { backgroundColor: isDark ? "#1A1A1A" : "#F5F5F5", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1 },
                     ]}
                     onPress={() => handleSelectItem(item)}
                     activeOpacity={0.7}
@@ -137,7 +136,7 @@ const WalletTypeModal = ({ visible, data, onSelect, onClose, theme }) => {
                     <AppText
                       style={[
                         styles.itemText,
-                        { color: theme === 'Dark' ? '#fff' : '#000' },
+                        { color: themeColors.text },
                       ]}
                       weight={SEMI_BOLD}
                     >

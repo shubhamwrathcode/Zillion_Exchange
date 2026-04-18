@@ -1,4 +1,4 @@
-import { StyleSheet, View, TextInput,  TouchableOpacity, FlatList, Keyboard, ScrollView} from "react-native";
+import { StyleSheet, View, TextInput, TouchableOpacity, FlatList, Keyboard, ScrollView } from "react-native";
 import {
   AppSafeAreaView,
   AppText,
@@ -41,17 +41,18 @@ import {
 import NavigationService from "../../navigation/NavigationService";
 import FastImage from "react-native-fast-image";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { useFocusEffect, useRoute } from "@react-navigation/native";
 import { BASE_URL } from "../../helper/Constants";
 import { SETTING_SCREEN_New, SETTINGS_SCREEN, WITHDRAW_SCREEN, NOTIFICATION_SCREEN } from "../../navigation/routes";
 import { useAppSelector } from "../../store/hooks";
-import { 
-  getWithdrawActiveCoins, 
-  getUserMainWallet, 
+import {
+  getWithdrawActiveCoins,
+  getUserMainWallet,
   withdrawCoin,
-  getAllCoins 
+  getAllCoins
 } from "../../actions/walletActions";
 import { forgotOtp } from "../../actions/authActions";
 import { showError } from "../../helper/logger";
@@ -66,7 +67,7 @@ import moment from "moment";
 const WithdrawWallet = () => {
   const dispatch = useDispatch();
   const route = useRoute();
-  const theme = useAppSelector(state => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   const routeCoin = route?.params?.data;
   const userData = useAppSelector((state) => state.auth.userData);
   const userMainWallet = useAppSelector((state) => state.wallet.userMainWallet);
@@ -345,18 +346,18 @@ const WithdrawWallet = () => {
   const _renderAnnouncementHeader = (section, index, isActive) => {
     return (
       <View style={[styles.faqHeader, {
-        backgroundColor: theme !== "Dark" ? "#F5F5F5" : "#1A1A1A",
-        borderColor: theme !== "Dark" ? "#D4D4D4" : "#595959"
+        backgroundColor: isDark ? "#1A1A1A" : "#F5F5F5",
+        borderColor: isDark ? themeColors.border : "#EEE"
       }]}>
-        <View style={{flex: 1}}>
-          <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{marginBottom: 3}}>
+        <View style={{ flex: 1 }}>
+          <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ marginBottom: 3 }}>
             {section.title}
           </AppText>
           <AppText color={DISCLAIMTEXT} type={TEN}>
             {section.date}
           </AppText>
         </View>
-        <AppText weight={SEMI_BOLD} color={BLACK} type={EIGHTEEN}>
+        <AppText weight={SEMI_BOLD} color={themeColors.text} type={EIGHTEEN}>
           {isActive ? "−" : "+"}
         </AppText>
       </View>
@@ -366,10 +367,10 @@ const WithdrawWallet = () => {
   const _renderAnnouncementContent = (section) => {
     return (
       <View style={[styles.faqContent, {
-        backgroundColor: theme !== "Dark" ? "#FFFFFF" : "#0A0A0A",
-        borderColor: theme !== "Dark" ? "#D4D4D4" : "#595959"
+        backgroundColor: isDark ? themeColors.background : "#FFFFFF",
+        borderColor: isDark ? themeColors.border : "#EEE"
       }]}>
-        <AppText color={DISCLAIMTEXT} type={TEN} style={styles.faqText}>
+        <AppText color={themeColors.secondaryText} type={TEN} style={styles.faqText}>
           {section.content}
         </AppText>
       </View>
@@ -383,17 +384,17 @@ const WithdrawWallet = () => {
 
   if (withdrawFlowPhase === "selectCoin") {
     return (
-      <AppSafeAreaView style={{ flex: 1, backgroundColor: colors.newThemeColor }}>
+      <AppSafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
         <View style={[styles.headerView, { paddingHorizontal: 25 }]}>
           <TouchableOpacity onPress={() => NavigationService.goBack()}>
             <FastImage
               source={BACK_ICON}
               resizeMode="contain"
               style={{ width: 20, height: 20 }}
-              tintColor={theme === "Dark" ? colors.white : colors.black}
+              tintColor={themeColors.text}
             />
           </TouchableOpacity>
-          <AppText color={colors.white} weight={SEMI_BOLD} type={TWENTY}>
+          <AppText color={themeColors.text} weight={SEMI_BOLD} type={EIGHTEEN}>
             Select Coin
           </AppText>
           <TouchableOpacity
@@ -404,14 +405,14 @@ const WithdrawWallet = () => {
               source={printIcon}
               resizeMode="contain"
               style={{ width: 24, height: 20 }}
-              tintColor={theme === "Dark" ? colors.white : colors.black}
+              tintColor={themeColors.text}
             />
           </TouchableOpacity>
         </View>
         <View style={{ flex: 1, minHeight: 0 }}>
           <WithdrawCoinPickerPanel
             coins={withdrawActiveCoins || []}
-            theme={theme}
+            isDark={isDark}
             onSelect={handleSelectCurrency}
             loading={withdrawCoinsLoading}
           />
@@ -421,7 +422,7 @@ const WithdrawWallet = () => {
   }
 
   return (
-    <AppSafeAreaView style={{ flex: 1, backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
       <KeyBoardAware>
         <View style={{ paddingHorizontal: 20 }}>
           <View style={styles.headerView}>
@@ -430,10 +431,10 @@ const WithdrawWallet = () => {
                 source={BACK_ICON}
                 resizeMode="contain"
                 style={{ width: 20, height: 20 }}
-                tintColor={theme === "Dark" ? colors.white : colors.black}
+                tintColor={themeColors.text}
               />
             </TouchableOpacity>
-            <AppText color={BLACK} weight={SEMI_BOLD} type={TWENTY}>
+            <AppText color={themeColors.text} weight={SEMI_BOLD} type={EIGHTEEN}>
               {withdrawFormHeaderTitle}
             </AppText>
             <TouchableOpacity
@@ -444,7 +445,7 @@ const WithdrawWallet = () => {
                 source={printIcon}
                 resizeMode="contain"
                 style={{ width: 24, height: 20 }}
-                tintColor={theme === "Dark" ? colors.white : colors.black}
+                tintColor={themeColors.text}
               />
             </TouchableOpacity>
           </View>
@@ -453,7 +454,7 @@ const WithdrawWallet = () => {
             <AppText type={EIGHTEEN} weight={SEMI_BOLD} style={{ marginTop: 20, marginBottom: 10 }}>
               Selected Coin
             </AppText>
-            <View style={[styles.nameView]}>
+            <View style={[styles.nameView, { backgroundColor: themeColors.background, borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1 }]}>
               <View
                 style={{
                   flexDirection: "row",
@@ -477,7 +478,7 @@ const WithdrawWallet = () => {
                     </AppText>
                   </AppText>
                   {!!network && (
-                    <AppText type={TWELVE} color={colors.white} style={{ marginTop: 4 }}>
+                    <AppText type={TWELVE} color={themeColors.secondaryText} style={{ marginTop: 4 }}>
                       Network: {network}
                     </AppText>
                   )}
@@ -490,23 +491,23 @@ const WithdrawWallet = () => {
               </TouchableOpacity>
             </View>
             {Object.keys(selectedCurrency).length > 0 && (
-              <View style={{flexDirection: "row", gap: 5, marginTop: 10, flexWrap: "wrap"}}>
+              <View style={{ flexDirection: "row", gap: 5, marginTop: 10, flexWrap: "wrap" }}>
                 {withdrawActiveCoins?.slice(0, 4)?.map((coin) => (
                   <TouchableOpacity
                     key={coin._id}
                     style={[styles.chainView, {
-                      borderColor: selectedCurrency?._id === coin._id ? theme !== "Dark" ? colors.buttonBg : colors.buttonBg : theme !== "Dark" ? "#D4D4D4" : "#595959",
-                      backgroundColor: selectedCurrency?._id === coin._id ? (theme !== "Dark" ? "#FFF9E6" : "#2A2A2A") : "transparent",
+                      borderColor: selectedCurrency?._id === coin._id ? colors.buttonBg : (isDark ? themeColors.border : "#EEE"),
+                      backgroundColor: selectedCurrency?._id === coin._id ? (isDark ? "#2A2A2A" : "#FFF9E6") : "transparent",
                     }]}
                     onPress={() => handleSelectCurrency(coin)}
                   >
-                    <View style={{flexDirection: "row", alignItems: "center", gap: 5}}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                       <FastImage
                         source={{ uri: BASE_URL + coin?.icon_path }}
                         style={{ width: 20, height: 20 }}
                         resizeMode="cover"
                       />
-                      <AppText weight={SEMI_BOLD} color={colors.white}>
+                      <AppText weight={SEMI_BOLD} color={themeColors.text}>
                         {coin?.short_name}
                       </AppText>
                     </View>
@@ -517,7 +518,7 @@ const WithdrawWallet = () => {
           </View>
           {/* Network Selection */}
           {Object.keys(selectedCurrency).length > 0 && (
-            <View style={[styles.networkView, {borderColor: theme !== "Dark" ? "#D4D4D4" : "#595959"}]}>
+            <View style={[styles.networkView, { borderColor: isDark ? themeColors.border : "#EEE" }]}>
               <AppText type={SIXTEEN} weight={SEMI_BOLD}>
                 Select network
               </AppText>
@@ -537,7 +538,7 @@ const WithdrawWallet = () => {
                     style={[
                       styles.chainView,
                       {
-                        borderColor: network === chainKey ? theme !== "Dark" ?  "#F3BB2B" : colors.buttonBg : theme !== "Dark" ? "#D4D4D4" : "#595959",
+                        borderColor: network === chainKey ? (isDark ? colors.buttonBg : colors.buttonBg) : (isDark ? themeColors.border : "#EEE"),
                       },
                     ]}
                     onPress={() => setNetwork(chainKey)}
@@ -553,12 +554,12 @@ const WithdrawWallet = () => {
                           top: -1,
                         }}
                         resizeMode="contain"
-                        tintColor={theme !== "Dark" ? colors.buttonBg : colors.buttonBg}
+                        tintColor={colors.buttonBg}
                       />
                     )}
                     <AppText
                       weight={SEMI_BOLD}
-                      color={colors.white}
+                      color={themeColors.text}
                     >
                       {chainKey}
                     </AppText>
@@ -572,23 +573,25 @@ const WithdrawWallet = () => {
               />
             </View>
           )}
-          
+
           {/* Withdraw To */}
           {Object.keys(selectedCurrency).length > 0 && (
             <>
-              <AppText style={{marginVertical: 20}} type={EIGHTEEN} weight={SEMI_BOLD}>Withdraw To</AppText>
-              <View style={{height: 55, width: "100%", backgroundColor:colors.themeElevationColor, justifyContent: "center", borderRadius: 8, paddingHorizontal: 20, marginBottom: 10}}>
-                <AppText style={{color: theme === "Dark" ? colors.white : "#5E6272", fontSize: 14}}>{network ? network: 'Select Network'}</AppText>
+              <AppText style={{ marginVertical: 20 }} type={EIGHTEEN} weight={SEMI_BOLD}>Withdraw To</AppText>
+              <View style={{ height: 55, width: "100%", backgroundColor: themeColors.background, borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1, justifyContent: "center", borderRadius: 8, paddingHorizontal: 20, marginBottom: 10 }}>
+                <AppText style={{ color: isDark ? colors.white : "#5E6272", fontSize: 14 }}>{network ? network : 'Select Network'}</AppText>
               </View>
             </>
           )}
-         {network && (
+          {network && (
             <View
               style={{
                 marginVertical: 10,
                 flexDirection: "row",
-                backgroundColor: colors.themeElevationColor,
-                borderRadius: 5,
+                backgroundColor: isDark ? "#1A1A1A" : "#FFF9E6",
+                borderColor: isDark ? themeColors.border : colors.buttonBg,
+                borderWidth: 1,
+                borderRadius: 8,
                 padding: 15,
                 alignItems: "center",
                 gap: 10
@@ -599,185 +602,185 @@ const WithdrawWallet = () => {
                 style={{ width: 20, height: 20 }}
                 resizeMode="contain"
               />
-              <View  style={{ paddingHorizontal: 10, flex: 1}} >
-                <AppText weight={SEMI_BOLD} type={NINE} style={{color: "#DE7520"}}>Please enter valid wallet address for the selected network!</AppText>
-                <AppText  color={DISCLAIMTEXT} type={NINE} style={{ marginRight: 10, marginTop: 5, color: theme === "Dark" ? "#B1B1B1" : undefined }}>The network you selected is <AppText weight={SEMI_BOLD} style={{ color: colors.buttonBg }} type={NINE}>{network}</AppText>, please ensure that the withdrawal address supports the {network} network. You will potentially lose your assets if the chosen platform does not support refunds of wrongfully deposited assets.</AppText>
+              <View style={{ paddingHorizontal: 10, flex: 1 }} >
+                <AppText weight={SEMI_BOLD} type={NINE} style={{ color: "#DE7520" }}>Please enter valid wallet address for the selected network!</AppText>
+                <AppText color={themeColors.secondaryText} type={NINE} style={{ marginRight: 10, marginTop: 5 }}>The network you selected is <AppText weight={SEMI_BOLD} style={{ color: colors.buttonBg }} type={NINE}>{network}</AppText>, please ensure that the withdrawal address supports the {network} network. You will potentially lose your assets if the chosen platform does not support refunds of wrongfully deposited assets.</AppText>
               </View>
             </View>
           )}
-              <Input 
-                placeholder="Enter Wallet Address" 
-                value={withdrawAddress} 
-                onChangeText={(value) => handleWithdrawalAddress(value)}
-                editable={!!network}
+          <Input
+            placeholder="Enter Wallet Address"
+            value={withdrawAddress}
+            onChangeText={(value) => handleWithdrawalAddress(value)}
+            editable={!!network}
+          />
+          {!isValidWalletAddress && <AppText weight={SEMI_BOLD} type={TEN} style={{ color: "#DE7520", marginTop: 5 }}>Invalid wallet address for the selected network!</AppText>}
+
+          {/* Withdraw Amount */}
+          {Object.keys(selectedCurrency).length > 0 && network && (
+            <>
+              <AppText style={{ marginVertical: 20 }} type={EIGHTEEN} weight={SEMI_BOLD}>Withdraw Amount</AppText>
+              <Input
+                placeholder={`Minimal ${chainMinWithdrawal ?? 0}`}
+                keyboardType="numeric"
+                value={withdrawAmount}
+                onChangeText={(value) => setWithdrawAmount(value)}
+                max
+                onMax={handleMaxWithdrawal}
               />
-              {!isValidWalletAddress &&  <AppText weight={SEMI_BOLD} type={TEN} style={{color: "#DE7520", marginTop: 5}}>Invalid wallet address for the selected network!</AppText>}
-              
-              {/* Withdraw Amount */}
-              {Object.keys(selectedCurrency).length > 0 && network && (
-                <>
-                  <AppText style={{marginVertical: 20}} type={EIGHTEEN} weight={SEMI_BOLD}>Withdraw Amount</AppText>
-                  <Input 
-                    placeholder={`Minimal ${chainMinWithdrawal ?? 0}`}
-                    keyboardType="numeric"
-                    value={withdrawAmount}
-                    onChangeText={(value) => setWithdrawAmount(value)}
-                    max
-                    onMax={handleMaxWithdrawal}
-                  />
-                  {!!withdrawAmount &&
-                    parseNum(withdrawAmount, 0) > 0 &&
-                    (parseNum(availableBalance, 0) < chainWithdrawalFee ||
-                      parseNum(withdrawAmount, 0) > parseNum(availableBalance, 0)) && (
-                      <AppText
-                        weight={SEMI_BOLD}
-                        type={TEN}
-                        style={{ color: 'red', marginTop: 5 }}
-                      >
-                        Insufficient funds
-                      </AppText>
-                    )}
-                  
-                  {/* Balance and Fee Info */}
-                  <View style={styles.networkView}>
-                    <View style={{flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10}}>
-                      <AppText weight={SEMI_BOLD}>Available Balance</AppText>
-                      <AppText weight={SEMI_BOLD}>{availableBalance} {selectedCurrency?.short_name}</AppText>
-                    </View>
-                    <View style={{flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10}}>
-                      <AppText weight={SEMI_BOLD}>Withdrawal Fee</AppText>
-                      <AppText weight={SEMI_BOLD}>
-                        {valueForChain(selectedCurrency, "withdrawal_fee", network) ?? "—"}{" "}
-                        {selectedCurrency?.short_name}
-                      </AppText>
-                    </View>
-                    <View style={{flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10}}>
-                      <AppText weight={SEMI_BOLD}>Maximum Withdrawal</AppText>
-                      <AppText weight={SEMI_BOLD}>
-                        {chainMaxWithdrawal ?? "—"} {selectedCurrency?.short_name}
-                      </AppText>
-                    </View>
-                       {/* Receive Amount */}
-              {withdrawAmount && Object.keys(selectedCurrency).length > 0 && (
-                <View style={{marginTop: 10, flexDirection: "row", gap: 20, alignItems: "center",justifyContent:"space-between"}}>
-                  <AppText weight={SEMI_BOLD}>Receive Amount: </AppText>
-                  <AppText weight={SEMI_BOLD}>
-                    {parseFloat(withdrawAmount) - chainWithdrawalFee < 0 
-                      ? 0 
-                      : (parseFloat(withdrawAmount) - chainWithdrawalFee || "---")} {selectedCurrency?.short_name}
-                  </AppText>
-                </View>
-              )}
-                  </View>
-                </>
-              )}
-              
-              {/* OTP Verification */}
-              {Object.keys(selectedCurrency).length > 0 && network && isValidWalletAddress && withdrawAddress && withdrawAmount && (
-                <>
-                  <AppText style={{marginVertical: 20}} type={EIGHTEEN} weight={SEMI_BOLD}>OTP Verification</AppText>
-                  <Input
-                    placeholder="Get Code"
-                    value={otp}
-                    onChangeText={(text) => setOtp(text)}
-                    keyboardType="numeric"
-                    isOtp
-                    onSendOtp={handleGetOtp}
-                    otpText={disableBtn ? `Resend OTP (${timer}s)` : otpText}
-                  />
-                </>
-              )}
-              
-           
-              
-              {Object.keys(selectedCurrency).length > 0 &&
-                network &&
-                isValidWalletAddress &&
-                withdrawAddress &&
-                withdrawAmount &&
-                !emailId && (
+              {!!withdrawAmount &&
+                parseNum(withdrawAmount, 0) > 0 &&
+                (parseNum(availableBalance, 0) < chainWithdrawalFee ||
+                  parseNum(withdrawAmount, 0) > parseNum(availableBalance, 0)) && (
                   <AppText
                     weight={SEMI_BOLD}
                     type={TEN}
-                    style={{color: "#DE7520", marginTop: 5}}
-                    onPress={() =>
-                      NavigationService.navigate(SETTING_SCREEN_New)
-                    }>
-                    Please Update Email ID first &gt;
+                    style={{ color: 'red', marginTop: 5 }}
+                  >
+                    Insufficient funds
                   </AppText>
                 )}
-              
-              <Button 
-                children="Withdraw" 
-                containerStyle={{marginVertical: 15}} 
-                disabled={!network || !withdrawAddress || !isValidWalletAddress || !emailId || !withdrawAmount || !otp || parseFloat(withdrawAmount) > parseFloat(availableBalance) || parseFloat(availableBalance) < chainWithdrawalFee}
-                onPress={handleWithdraw}
-              />
 
-              {/* Announcements Section */}
-              {formattedAnnouncements?.length > 0 && (
-                <View style={{marginTop: 30, marginBottom: 20}}>
-                  <View style={{flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15}}>
-                    <AppText type={EIGHTEEN} weight={SEMI_BOLD}>Announcements</AppText>
-                    <TouchableOpacity onPress={() => NavigationService.navigate(NOTIFICATION_SCREEN)}>
-                      <AppText type={FOURTEEN} color={YELLOW}>More &gt;</AppText>
-                    </TouchableOpacity>
-                  </View>
-                  <Accordion
-                    sections={formattedAnnouncements}
-                    activeSections={activeAnnouncementSections}
-                    renderHeader={_renderAnnouncementHeader}
-                    renderContent={_renderAnnouncementContent}
-                    onChange={_updateAnnouncementSections}
-                    underlayColor={colors.transparent}
-                    containerStyle={{gap: 10}}
-                  />
+              {/* Balance and Fee Info */}
+              <View style={[styles.networkView, { borderColor: isDark ? themeColors.border : "#EEE" }]}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+                  <AppText weight={SEMI_BOLD}>Available Balance</AppText>
+                  <AppText weight={SEMI_BOLD}>{availableBalance} {selectedCurrency?.short_name}</AppText>
                 </View>
-              )}
-
-              {/* FAQ Section - same card UI as KycStatus */}
-              <View style={styles.faqSectionWrap}>
-                <View style={[styles.faqSectionCard, { backgroundColor: colors.themeElevationColor }]}>
-                  <AppText type={FIFTEEN} weight={SEMI_BOLD} style={[styles.faqSectionCardTitle, { color: theme === "Dark" ? colors.white : colors.black }]}>
-                    FAQ
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+                  <AppText weight={SEMI_BOLD}>Withdrawal Fee</AppText>
+                  <AppText weight={SEMI_BOLD}>
+                    {valueForChain(selectedCurrency, "withdrawal_fee", network) ?? "—"}{" "}
+                    {selectedCurrency?.short_name}
                   </AppText>
-                  <FlatList
-                    data={faqData}
-                    keyExtractor={(_, index) => String(index)}
-                    style={styles.faqListWrap}
-                    contentContainerStyle={styles.faqScrollContent}
-                    scrollEnabled={false}
-                    renderItem={({ item, index }) => (
-                      <View style={[styles.faqItemInner, index === faqData.length - 1 && styles.faqItemInnerLast]}>
-                        <TouchableOpacity
-                          style={styles.faqQuestionRow}
-                          onPress={() => setFaqActiveIndex(faqActiveIndex === index ? null : index)}
-                          activeOpacity={0.7}
-                        >
-                          <AppText type={THIRTEEN} weight={SEMI_BOLD} style={[styles.faqQuestion, { color: theme === "Dark" ? "#999" : "#666" }]}>
-                            {item.title}
+                </View>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+                  <AppText weight={SEMI_BOLD}>Maximum Withdrawal</AppText>
+                  <AppText weight={SEMI_BOLD}>
+                    {chainMaxWithdrawal ?? "—"} {selectedCurrency?.short_name}
+                  </AppText>
+                </View>
+                {/* Receive Amount */}
+                {withdrawAmount && Object.keys(selectedCurrency).length > 0 && (
+                  <View style={{ marginTop: 10, flexDirection: "row", gap: 20, alignItems: "center", justifyContent: "space-between" }}>
+                    <AppText weight={SEMI_BOLD}>Receive Amount: </AppText>
+                    <AppText weight={SEMI_BOLD}>
+                      {parseFloat(withdrawAmount) - chainWithdrawalFee < 0
+                        ? 0
+                        : (parseFloat(withdrawAmount) - chainWithdrawalFee || "---")} {selectedCurrency?.short_name}
+                    </AppText>
+                  </View>
+                )}
+              </View>
+            </>
+          )}
+
+          {/* OTP Verification */}
+          {Object.keys(selectedCurrency).length > 0 && network && isValidWalletAddress && withdrawAddress && withdrawAmount && (
+            <>
+              <AppText style={{ marginVertical: 20 }} type={EIGHTEEN} weight={SEMI_BOLD}>OTP Verification</AppText>
+              <Input
+                placeholder="Get Code"
+                value={otp}
+                onChangeText={(text) => setOtp(text)}
+                keyboardType="numeric"
+                isOtp
+                onSendOtp={handleGetOtp}
+                otpText={disableBtn ? `Resend OTP (${timer}s)` : otpText}
+              />
+            </>
+          )}
+
+
+
+          {Object.keys(selectedCurrency).length > 0 &&
+            network &&
+            isValidWalletAddress &&
+            withdrawAddress &&
+            withdrawAmount &&
+            !emailId && (
+              <AppText
+                weight={SEMI_BOLD}
+                type={TEN}
+                style={{ color: "#DE7520", marginTop: 5 }}
+                onPress={() =>
+                  NavigationService.navigate(SETTING_SCREEN_New)
+                }>
+                Please Update Email ID first &gt;
+              </AppText>
+            )}
+
+          <Button
+            children="Withdraw"
+            containerStyle={{ marginVertical: 15 }}
+            disabled={!network || !withdrawAddress || !isValidWalletAddress || !emailId || !withdrawAmount || !otp || parseFloat(withdrawAmount) > parseFloat(availableBalance) || parseFloat(availableBalance) < chainWithdrawalFee}
+            onPress={handleWithdraw}
+          />
+
+          {/* Announcements Section */}
+          {formattedAnnouncements?.length > 0 && (
+            <View style={{ marginTop: 30, marginBottom: 20 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
+                <AppText type={EIGHTEEN} weight={SEMI_BOLD}>Announcements</AppText>
+                <TouchableOpacity onPress={() => NavigationService.navigate(NOTIFICATION_SCREEN)}>
+                  <AppText type={FOURTEEN} color={YELLOW}>More &gt;</AppText>
+                </TouchableOpacity>
+              </View>
+              <Accordion
+                sections={formattedAnnouncements}
+                activeSections={activeAnnouncementSections}
+                renderHeader={_renderAnnouncementHeader}
+                renderContent={_renderAnnouncementContent}
+                onChange={_updateAnnouncementSections}
+                underlayColor={colors.transparent}
+                containerStyle={{ gap: 10 }}
+              />
+            </View>
+          )}
+
+          {/* FAQ Section - same card UI as KycStatus */}
+          <View style={styles.faqSectionWrap}>
+            <View style={[styles.faqSectionCard, { backgroundColor: themeColors.background, borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1 }]}>
+              <AppText type={FIFTEEN} weight={SEMI_BOLD} style={[styles.faqSectionCardTitle, { color: themeColors.text }]}>
+                FAQ
+              </AppText>
+              <FlatList
+                data={faqData}
+                keyExtractor={(_, index) => String(index)}
+                style={styles.faqListWrap}
+                contentContainerStyle={styles.faqScrollContent}
+                scrollEnabled={false}
+                renderItem={({ item, index }) => (
+                  <View style={[styles.faqItemInner, index === faqData.length - 1 && styles.faqItemInnerLast]}>
+                    <TouchableOpacity
+                      style={styles.faqQuestionRow}
+                      onPress={() => setFaqActiveIndex(faqActiveIndex === index ? null : index)}
+                      activeOpacity={0.7}
+                    >
+                      <AppText type={THIRTEEN} weight={SEMI_BOLD} style={[styles.faqQuestion, { color: themeColors.text }]}>
+                        {item.title}
+                      </AppText>
+                      <FastImage
+                        source={faqActiveIndex === index ? upIcon : downIcon}
+                        resizeMode="contain"
+                        style={styles.faqArrow}
+                        tintColor={themeColors.text}
+                      />
+                    </TouchableOpacity>
+                    {faqActiveIndex === index && (
+                      <View style={styles.faqAnswer}>
+                        {item.content.split("\n").map((line, lineIndex) => (
+                          <AppText key={lineIndex} type={TWELVE} style={{ color: themeColors.secondaryText, lineHeight: 18 }}>
+                            {line}
                           </AppText>
-                          <FastImage
-                            source={faqActiveIndex === index ? upIcon : downIcon}
-                            resizeMode="contain"
-                            style={styles.faqArrow}
-                            tintColor={theme === "Dark" ? "#999" : "#666"}
-                          />
-                        </TouchableOpacity>
-                        {faqActiveIndex === index && (
-                          <View style={styles.faqAnswer}>
-                            {item.content.split("\n").map((line, lineIndex) => (
-                              <AppText key={lineIndex} type={TWELVE} style={{ color: theme === "Dark" ? "#999" : "#666", lineHeight: 18 }}>
-                                {line}
-                              </AppText>
-                            ))}
-                          </View>
-                        )}
+                        ))}
                       </View>
                     )}
-                  />
-                </View>
-              </View>
+                  </View>
+                )}
+              />
+            </View>
+          </View>
         </View>
       </KeyBoardAware>
     </AppSafeAreaView>
@@ -798,15 +801,15 @@ const styles = StyleSheet.create({
     // justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#00000033",
+    borderColor: "#EEE",
     width: "100%",
     borderRadius: 10,
     height: 58,
-    marginRight:10
+    marginRight: 10
   },
   networkView: {
     borderWidth: 1,
-    borderColor:colors.overlayColor,
+    borderColor: "#EEE",
     marginTop: 20,
     padding: 15,
     borderRadius: 10,
@@ -820,7 +823,7 @@ const styles = StyleSheet.create({
   },
   addressView: {
     borderWidth: 1,
-    borderColor: "#D4D4D4",
+    borderColor: "#EEE",
     padding: 12,
     borderRadius: 10,
     marginTop: 10
@@ -833,7 +836,7 @@ const styles = StyleSheet.create({
     // padding: 20,
     padding: 15,
     borderRadius: 10,
-    backgroundColor:colors.themeElevationColor,
+    backgroundColor: "transparent",
     // gap: 10
   },
   faqSectionWrap: {

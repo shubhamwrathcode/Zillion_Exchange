@@ -97,6 +97,7 @@ import { setLoading } from "../../slices/authSlice";
 import OptionsScreen from "../Options";
 import { fontFamilyBold, fontFamilySemiBold } from "../../theme/typography";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const Width = Dimensions.get("window").width;
 const CHART_HEIGHT = 300;
@@ -114,18 +115,18 @@ const ORDER_BOOK_SHIMMER_STRIP_WIDTH = 240;
 
 // ShimmerBox – same as Spot (wider strip for order book via shimmerStripWidth)
 const ShimmerBox = ({
-  width, height, borderRadius = 8, theme, colors: colorsProp, style,
+  width, height, borderRadius = 8, colors: colorsProp, style,
   shimmerStripWidth = SHIMMER_STRIP_WIDTH_DEFAULT,
   shimmerDuration = 700,
   shimmerToValue,
   shimmerColorsOverride
 }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const stripW = typeof shimmerStripWidth === "number" ? shimmerStripWidth : SHIMMER_STRIP_WIDTH_DEFAULT;
-  const isDark = theme === "Dark";
-  const boneColor = colorsProp?.themeElevationColor ?? (isDark ? "rgba(100, 130, 180, 0.22)" : "rgba(160, 185, 220, 0.35)");
-  const shimmerColors = shimmerColorsOverride || (colorsProp
-    ? ["transparent", "rgba(255,255,255,0.12)", "transparent"]
-    : ["transparent", "rgba(200, 220, 255, 0.35)", "transparent"]);
+  const boneColor = isDark ? "#2A2A2A" : "#E1E9EE";
+  const shimmerColors = shimmerColorsOverride || (isDark
+    ? ["transparent", "rgba(255,255,255,0.06)", "transparent"]
+    : ["transparent", "rgba(255,255,255,0.6)", "transparent"]);
   const shimmerX = useRef(new Animated.Value(-stripW)).current;
   useEffect(() => {
     shimmerX.setValue(-stripW);
@@ -191,35 +192,35 @@ const SKELETON_CANDLES = [
   { bodyH: 25, bodyBot: 55, wickH: 40, wickBot: 45 },
 ];
 
-const ChartSkeleton = ({ theme, colors, height = CHART_HEIGHT, width = Width }) => {
-  const bg = colors?.newThemeColor ?? CHART_BG_FALLBACK;
+const ChartSkeleton = ({ height = CHART_HEIGHT, width = Width }) => {
+  const { colors: themeColors, isDark } = useTheme();
+  const bg = themeColors.background;
   return (
     <View style={{ width, height, backgroundColor: bg, paddingTop: 12, paddingHorizontal: 12, paddingBottom: 15, justifyContent: 'space-between' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
-        <ShimmerBox width={24} height={24} borderRadius={4} theme={theme} colors={colors} style={{ marginRight: 15 }} />
+        <ShimmerBox width={24} height={24} borderRadius={4} style={{ marginRight: 15 }} />
         {['1min', '5min', '15min', '1H', '1D'].map((v, i) => (
-          <ShimmerBox key={i} width={50} height={24} borderRadius={4} theme={theme} colors={colors} style={{ marginRight: 10 }} />
+          <ShimmerBox key={i} width={50} height={24} borderRadius={4} style={{ marginRight: 10 }} />
         ))}
       </View>
 
       <View style={{ flex: 1, flexDirection: 'row' }}>
         <View style={{ flex: 1, paddingRight: 15 }}>
-          <ShimmerBox width={140} height={16} borderRadius={4} theme={theme} colors={colors} style={{ marginBottom: 8 }} />
-          <ShimmerBox width={180} height={12} borderRadius={4} theme={theme} colors={colors} style={{ marginBottom: 16 }} />
+          <ShimmerBox width={140} height={16} borderRadius={4} style={{ marginBottom: 8 }} />
+          <ShimmerBox width={180} height={12} borderRadius={4} style={{ marginBottom: 16 }} />
 
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', flex: 1, paddingBottom: 15, marginTop: 10 }}>
             {SKELETON_CANDLES.map((candle, i) => {
-              const candleColors = { ...colors, themeElevationColor: theme === "Dark" ? "#444444" : "#D0D0D0" };
-              const candleShimmers = ["transparent", theme === "Dark" ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.8)", "transparent"];
+              const candleShimmers = ["transparent", isDark ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.8)", "transparent"];
               return (
                 <View key={i} style={{ alignItems: 'center', width: 8, height: '100%', justifyContent: 'flex-end' }}>
                   <ShimmerBox
-                    width={1.5} height={candle.wickH} borderRadius={1} theme={theme} colors={candleColors}
+                    width={1.5} height={candle.wickH} borderRadius={1}
                     style={{ position: 'absolute', bottom: candle.wickBot }}
                     shimmerDuration={1500} shimmerToValue={60} shimmerStripWidth={60} shimmerColorsOverride={candleShimmers}
                   />
                   <ShimmerBox
-                    width={6} height={candle.bodyH} borderRadius={2} theme={theme} colors={candleColors}
+                    width={6} height={candle.bodyH} borderRadius={2}
                     style={{ position: 'absolute', bottom: candle.bodyBot }}
                     shimmerDuration={1500} shimmerToValue={60} shimmerStripWidth={60} shimmerColorsOverride={candleShimmers}
                   />
@@ -230,10 +231,10 @@ const ChartSkeleton = ({ theme, colors, height = CHART_HEIGHT, width = Width }) 
         </View>
 
         <View style={{ width: 45, justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: 25 }}>
-          <ShimmerBox width={40} height={12} borderRadius={4} theme={theme} colors={colors} />
-          <ShimmerBox width={40} height={12} borderRadius={4} theme={theme} colors={colors} />
-          <ShimmerBox width={40} height={12} borderRadius={4} theme={theme} colors={colors} />
-          <ShimmerBox width={40} height={12} borderRadius={4} theme={theme} colors={colors} />
+          <ShimmerBox width={40} height={12} borderRadius={4} />
+          <ShimmerBox width={40} height={12} borderRadius={4} />
+          <ShimmerBox width={40} height={12} borderRadius={4} />
+          <ShimmerBox width={40} height={12} borderRadius={4} />
         </View>
       </View>
     </View>
@@ -289,14 +290,15 @@ FuturesChartWebView.displayName = "FuturesChartWebView";
 
 // Chart section with skeleton (Spot-style): skeleton until webViewReady + delay, then reveal chart
 const FuturesChartSection = memo(
-  ({ chartUri, webViewReady, chartRevealed, theme, colors, onChartLoaded, chartRef }) => {
+  ({ chartUri, webViewReady, chartRevealed, onChartLoaded, chartRef }) => {
     const showChartSkeleton = !chartRevealed;
-    const bg = colors?.newThemeColor ?? CHART_BG_FALLBACK;
+    const { colors: themeColors } = useTheme();
+    const bg = themeColors.background;
     return (
       <View style={{ position: "relative", backgroundColor: bg, overflow: "hidden" }}>
         {showChartSkeleton ? (
           <View style={{ width: Width, height: CHART_HEIGHT, backgroundColor: bg }} pointerEvents="none">
-            <ChartSkeleton theme={theme} colors={colors} height={CHART_HEIGHT} width={Width} />
+            <ChartSkeleton height={CHART_HEIGHT} width={Width} />
           </View>
         ) : null}
         <View
@@ -329,7 +331,8 @@ function SecondContainerView({ children, style }) {
 }
 
 // Order book skeleton: ShimmerBox rows (Spot-style), Price/Quantity text shown by parent
-const OrderBookSkeleton = ({ theme, colors: skeletonColors }) => {
+const OrderBookSkeleton = () => {
+  const { colors: themeColors, isDark } = useTheme();
   const ROWS = 8;
   const ROW_HEIGHT = 22;
   const BONE_HEIGHT = 15;
@@ -347,8 +350,8 @@ const OrderBookSkeleton = ({ theme, colors: skeletonColors }) => {
             paddingHorizontal: 4,
           }}
         >
-          <ShimmerBox width="43%" height={BONE_HEIGHT} borderRadius={BONE_RADIUS} theme={theme} colors={skeletonColors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
-          <ShimmerBox width="43%" height={BONE_HEIGHT} borderRadius={BONE_RADIUS} theme={theme} colors={skeletonColors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} style={{ marginLeft: 3 }} />
+          <ShimmerBox width="43%" height={BONE_HEIGHT} borderRadius={BONE_RADIUS} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
+          <ShimmerBox width="43%" height={BONE_HEIGHT} borderRadius={BONE_RADIUS} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} style={{ marginLeft: 3 }} />
         </View>
       ))}
     </View>
@@ -434,8 +437,8 @@ const formatOrderPair = (item) => {
   return "--";
 };
 
-const getOrderSideColor = (side) => {
-  if (!side) return colors.white;
+const getOrderSideColor = (side, isDark = true) => {
+  if (!side) return isDark ? "#fff" : "#222";
   const normalized = side.toString().toLowerCase();
   if (normalized.includes("buy") || normalized.includes("long")) {
     return colors.green;
@@ -443,7 +446,7 @@ const getOrderSideColor = (side) => {
   if (normalized.includes("sell") || normalized.includes("short")) {
     return colors.red;
   }
-  return colors.white;
+  return isDark ? "#fff" : "#222";
 };
 
 const getOrderStatusColor = (status, fallback = colors.white) => {
@@ -481,7 +484,8 @@ const Futures = () => {
   const rbSheetFuturePairList = useRef();
   const rbSheetFuture3 = useRef();
   const rbSheetlimit = useRef();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
+  const theme = isDark ? "Dark" : "Light";
   const coinData = useAppSelector((state) => state.home.coinData);
   const coinBalance = useAppSelector((state) => state.home.coinBalance);
   const [currency, setCurrency] = useState(null);
@@ -601,7 +605,7 @@ const Futures = () => {
           onPress={() => selectNumber(item)}
           style={styles.selectContainer}
         >
-          <AppText>{item.label}</AppText>
+          <AppText style={{ color: themeColors.text }}>{item.label}</AppText>
           {numberSelect == item.label ? (
             <FastImage
               source={checkIc}
@@ -625,13 +629,13 @@ const Futures = () => {
           onPress={() => selectNumberLimitOn(item)}
           style={styles.selectContainer}
         >
-          <AppText type={THIRTEEN} weight={BOLD}>
+          <AppText type={THIRTEEN} weight={BOLD} style={{ color: themeColors.text }}>
             {item.name}
           </AppText>
           {numberSelectLimit == item.name ? (
             <FastImage
               source={checkIc}
-              tintColor={theme !== "Dark" ? colors.black : colors.white}
+              tintColor={themeColors.text}
               resizeMode="contain"
               style={styles.checkImage}
             />
@@ -669,7 +673,7 @@ const Futures = () => {
   const reconnectIntervalRef = useRef(null);
 
   // Updated base URL for mobile chart (web: same chart base)
-  const CHART_BASE_URL = "https://zillion.wrathcode.com/futures-chart/dark/";
+  const CHART_BASE_URL = isDark ? "https://zillion.wrathcode.com/futures-chart/dark/" : "https://zillion.wrathcode.com/futures-chart/light/";
   const [chartUri, setChartUri] = useState("");
   const [webViewReady, setWebViewReady] = useState(false);
   const [chartRevealed, setChartRevealed] = useState(false);
@@ -1697,12 +1701,8 @@ const Futures = () => {
               fontWeight: "600",
               color:
                 mainTab === "Options"
-                  ? theme !== "Dark"
-                    ? "#F3BB2B"
-                    : colors.buttonDarkBg
-                  : theme !== "Dark"
-                  ? "#222"
-                  : "#9D9D9D",
+                  ? themeColors.buttonBg
+                  : themeColors.secondaryText,
             }}
           >
             Options
@@ -1717,7 +1717,7 @@ const Futures = () => {
           <ScrollView
             contentContainerStyle={[
               styles.container,
-              { backgroundColor: colors.newThemeColor },
+              { backgroundColor: themeColors.background },
             ]}
           >
 
@@ -1750,15 +1750,15 @@ const Futures = () => {
                   <AppText
                     type={TWENTY}
                     weight={BOLD}
-                    style={[{ color: theme !== "Dark" ? "#222" : "#fff" }]}
+                    style={[{ color: themeColors.text }]}
                   >
                     {selectedCoin.short_name}/{selectedCoin.margin_asset}
                   </AppText>
                 ) : (
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <ShimmerBox width={64} height={22} borderRadius={6} theme={theme} colors={colors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
-                    <ShimmerBox width={8} height={16} borderRadius={4} theme={theme} colors={colors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
-                    <ShimmerBox width={48} height={22} borderRadius={6} theme={theme} colors={colors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
+                    <ShimmerBox width={64} height={22} borderRadius={6} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
+                    <ShimmerBox width={8} height={16} borderRadius={4} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
+                    <ShimmerBox width={48} height={22} borderRadius={6} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
                   </View>
                 )}
                 <View
@@ -1774,7 +1774,7 @@ const Futures = () => {
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 5,
-                      backgroundColor: "#D9D9D933",
+                      backgroundColor: themeColors.themeElevationColor,
                       borderRadius: 5,
                       paddingHorizontal: 5,
                       justifyContent: "center",
@@ -1785,7 +1785,7 @@ const Futures = () => {
                   <FastImage
                     source={downIcon}
                     style={{ width: 5, height: 5 }}
-                    tintColor={theme !== "Dark" ? "#222" : "#fff"}
+                    tintColor={themeColors.text}
                   />
                 </View>
               </TouchableOpacity>
@@ -1798,7 +1798,7 @@ const Futures = () => {
                   source={candle}
                   style={{ width: 20, height: 20 }}
                   resizeMode="contain"
-                  tintColor={colors.white}
+                  tintColor={themeColors.text}
                 />
               </TouchableOpacity>
             </View>
@@ -1811,7 +1811,7 @@ const Futures = () => {
             >
               <View style={{ gap: 20 }}>
                 <View>
-                  <AppText style={{ color: "#BDBDBD" }} type={ELEVEN}>
+                  <AppText style={{ color: themeColors.secondaryText }} type={ELEVEN}>
                     Current Price
                   </AppText>
                   <View
@@ -1829,7 +1829,7 @@ const Futures = () => {
                         {toFixedFive(selectedCoin.buy_price)}
                       </AppText>
                     ) : (
-                      <ShimmerBox width={80} height={20} borderRadius={4} theme={theme} colors={colors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
+                      <ShimmerBox width={80} height={20} borderRadius={4} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
                     )}
                   </View>
                 </View>
@@ -1863,7 +1863,7 @@ const Futures = () => {
                         />
                       </>
                     ) : (
-                      <ShimmerBox width={48} height={16} borderRadius={4} theme={theme} colors={colors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
+                      <ShimmerBox width={48} height={16} borderRadius={4} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
                     )}
                   </View>
                 </View>
@@ -1877,10 +1877,10 @@ const Futures = () => {
                   }}
                 >
                   <View style={styles.contain}>
-                    <AppText style={{ color: "#898989" }}>24h High</AppText>
+                    <AppText style={{ color: themeColors.secondaryText }} type={ELEVEN}>24h High</AppText>
                     <AppText
                       style={{
-                        color: theme !== "Dark" ? "#222" : "#fff",
+                        color: themeColors.text,
                         fontWeight: "500",
                       }}
                       weight={SEMI_BOLD}
@@ -1889,10 +1889,10 @@ const Futures = () => {
                     </AppText>
                   </View>
                   <View style={styles.contain}>
-                    <AppText style={{ color: "#898989" }}>24h Low</AppText>
+                    <AppText style={{ color: themeColors.secondaryText }} type={ELEVEN}>24h Low</AppText>
                     <AppText
                       style={{
-                        color: theme !== "Dark" ? "#222" : "#fff",
+                        color: themeColors.text,
                         fontWeight: "500",
                       }}
                       weight={SEMI_BOLD}
@@ -1920,10 +1920,10 @@ const Futures = () => {
                   }}
                 >
                   <View style={styles.contain}>
-                    <AppText style={{ color: "#898989" }}>24h Change</AppText>
+                    <AppText style={{ color: themeColors.secondaryText }} type={ELEVEN}>24h Change</AppText>
                     <AppText
                       style={{
-                        color: theme !== "Dark" ? "#222" : "#fff",
+                        color: themeColors.text,
                         fontWeight: "500",
                       }}
                       weight={SEMI_BOLD}
@@ -1937,7 +1937,7 @@ const Futures = () => {
                     </AppText>
                     <AppText
                       style={{
-                        color: theme !== "Dark" ? "#222" : "#fff",
+                        color: themeColors.text,
                         fontWeight: "500",
                       }}
                       weight={SEMI_BOLD}
@@ -1966,8 +1966,6 @@ const Futures = () => {
                   chartUri={chartUri}
                   webViewReady={webViewReady}
                   chartRevealed={chartRevealed}
-                  theme={theme}
-                  colors={colors}
                   onChartLoaded={onChartLoaded}
                   chartRef={webview}
                 />
@@ -1980,23 +1978,14 @@ const Futures = () => {
                 {/* Tab */}
                 <View style={styles.tabContainer}>
                   <TouchableOpacity
-                  disabled
+                    disabled
                     onPress={() => {
                       setTab("Cross");
                       // setIsBuy(true);
                     }}
                     style={[
                       styles.tab,
-                      {
-                        borderWidth: 0,
-                        // borderColor: "#FFFFFF80",
-                      },
-                      // {
-                      //   backgroundColor:
-                      //     tab === "Cross" && colors.white_fifteen,
-                      // },
-
-                      // tab === item && styles.activeTab,
+                      { borderColor: isDark ? "#302F2F" : "#EEE" },
                     ]}
                   >
                     <AppText
@@ -2005,7 +1994,7 @@ const Futures = () => {
                       style={[
                         styles.tabText,
                         {
-                          color: colors.white,
+                          color: themeColors.text,
                         },
                         // tab === item && styles.activeTabText,
                       ]}
@@ -2017,6 +2006,7 @@ const Futures = () => {
                     onPress={() => rbSheetFuture2?.current?.open()}
                     style={[
                       styles.tab,
+                      { borderColor: isDark ? "#302F2F" : "#EEE" },
 
                       // tab === item && styles.activeTab,
                     ]}
@@ -2026,7 +2016,7 @@ const Futures = () => {
                       style={[
                         styles.tabText,
                         {
-                          color: "#fff",
+                          color: themeColors.text,
                         },
                         // tab === item && styles.activeTabText,
                       ]}
@@ -2048,7 +2038,7 @@ const Futures = () => {
                       styles.type,
                       {
                         backgroundColor:
-                          orderType === "Limit" ? colors.buttonDarkBg : colors.overlayColor,
+                          orderType === "Limit" ? colors.buttonBg : (isDark ? colors.overlayColor : "#F0F0F0"),
                       },
 
                       // tab === item && styles.activeTab,
@@ -2060,7 +2050,7 @@ const Futures = () => {
                         styles.tabText,
                         {
                           fontFamily: fontFamilySemiBold,
-                          color: orderType === "Limit" ? colors.black : colors.white,
+                          color: orderType === "Limit" ? colors.white : themeColors.secondaryText,
                         },
                         // tab === item && styles.activeTabText,
                       ]}
@@ -2080,7 +2070,7 @@ const Futures = () => {
                       styles.type,
                       {
                         backgroundColor:
-                          orderType === "Market" ? colors.buttonDarkBg : colors.overlayColor,
+                          orderType === "Market" ? colors.buttonBg : (isDark ? colors.overlayColor : "#F0F0F0"),
                         fontFamily: fontFamilySemiBold,
                       },
 
@@ -2092,7 +2082,7 @@ const Futures = () => {
                       style={[
                         styles.tabText,
                         {
-                          color: orderType === "Market" ? colors.black : colors.white,
+                          color: orderType === "Market" ? colors.white : themeColors.secondaryText,
                         },
                         // tab === item && styles.activeTabText,
                       ]}
@@ -2106,7 +2096,7 @@ const Futures = () => {
                 <AppText style={{ color: "#9D9D9D" }} type={NINE}>
                   Price
                 </AppText>
-                <View style={styles.input}>
+                <View style={[styles.input, { backgroundColor: isDark ? "#FFFFFF1A" : "#F5F5F5" }]}>
                   <TextInput
                     value={
                       orderType === "Limit"
@@ -2115,9 +2105,9 @@ const Futures = () => {
                           : limitPrice?.toString()
                         : "Market Price"
                     }
-                    placeholderTextColor={colors.secondaryText}
+                    placeholderTextColor={isDark ? "#888" : "#999"}
                     keyboardType="numeric"
-                    style={{ color: "#FFFFFF", width: "90%", fontSize: 12, }}
+                    style={{ color: themeColors.text, width: "90%", fontSize: 12 }}
                     editable={orderType === "Limit"}
                     onChangeText={(text) => {
                       if (text === "") {
@@ -2172,14 +2162,14 @@ const Futures = () => {
                     ({selectedCoin?.short_name})
                   </AppText>
                 </AppText>
-                <View style={styles.input}>
+                <View style={[styles.input, { backgroundColor: isDark ? "#FFFFFF1A" : "#F5F5F5" }]}>
                   <TextInput
                     value={quantity?.toString()}
                     keyboardType="numeric"
 
                     placeholder={"Enter Quantity"}
-                    placeholderTextColor={colors.secondaryText}
-                    style={{ color: "#fff", width: "90%", fontSize: 12 }}
+                    placeholderTextColor={isDark ? "#888" : "#999"}
+                    style={{ color: themeColors.text, width: "90%", fontSize: 12 }}
                     onChangeText={(text) => {
                       if (text === "") {
                         setQuantity("");
@@ -2222,7 +2212,7 @@ const Futures = () => {
                         styles.percentBtn,
                         {
                           backgroundColor:
-                            percentage === value ? colors.buttonDarkBg : "#FFFFFF1A",
+                            percentage === value ? colors.buttonDarkBg : (isDark ? "#FFFFFF1A" : "#F5F5F5"),
                         },
                       ]}
                     >
@@ -2231,9 +2221,7 @@ const Futures = () => {
                           color:
                             percentage === value
                               ? "#fff"
-                              : theme !== "Dark"
-                                ? "#FFFFFF80"
-                                : "#FFFFFF80",
+                              : themeColors.secondaryText,
                           // fontSize: 8,
                         }}
                         type={TWELVE}
@@ -2251,13 +2239,13 @@ const Futures = () => {
                     marginBottom: 10,
                   }}
                 >
-                  <AppText color={BLACK} type={TWELVE}>
+                  <AppText style={{ color: themeColors.secondaryText }} type={TWELVE}>
                     Avail.
                   </AppText>
                   <View
                     style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
                   >
-                    <AppText color={BLACK} type={TWELVE}>
+                    <AppText style={{ color: themeColors.text }} type={TWELVE}>
                       {toFixedFive(balance?.quoteCurrency)}
                     </AppText>
                     <FastImage
@@ -2286,7 +2274,7 @@ const Futures = () => {
                         height: 15,
                         width: 15,
                         borderWidth: 1,
-                        borderColor: "#FFFFFFB2",
+                        borderColor: themeColors.border,
                         borderRadius: 10,
                         justifyContent: "center",
                         alignItems: "center",
@@ -2298,18 +2286,17 @@ const Futures = () => {
                             height: 8,
                             width: 8,
                             borderWidth: 1,
-                            borderColor: "#FFFFFFB2",
+                            borderColor: themeColors.border,
                             borderRadius: 10,
                             backgroundColor: colors.buttonBg,
                           }}
                         ></View>
                       )}
                     </View>
-                    <AppText style={{ color: "#FFFFFFB2" }} type={TWELVE}>
+                    <AppText style={{ color: themeColors.secondaryText }} type={TWELVE}>
                       TP/SL
                     </AppText>
                   </TouchableOpacity>
-
                 </View>
 
                 {balance?.quoteCurrency < futuresRisk?.cost ||
@@ -2348,19 +2335,19 @@ const Futures = () => {
                     style={{ flexDirection: "row", justifyContent: "space-between" }}
                   >
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      <AppText type={TWELVE} style={{ color: "#FFFFFF66" }}>
+                      <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>
                         Cost
                       </AppText>
-                      <AppText type={TWELVE} style={{ color: "#FFFFFF" }}>
+                      <AppText type={TWELVE} style={{ color: themeColors.text }}>
                         {" "}
                         {futuresRisk?.cost || "---"}
                       </AppText>
                     </View>
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      <AppText type={TWELVE} style={{ color: "#FFFFFF66" }}>
+                      <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>
                         Cost{' '}
                       </AppText>
-                      <AppText type={TWELVE} style={{ color: "#FFFFFF" }}>
+                      <AppText type={TWELVE} style={{ color: themeColors.text }}>
                         {futuresRisk?.cost || "---"}
                       </AppText>
                     </View>
@@ -2373,19 +2360,19 @@ const Futures = () => {
                   }}
                 >
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <AppText type={TWELVE} style={{ color: "#FFFFFF66" }}>
+                    <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>
                       Max long
                     </AppText>
-                    <AppText type={TWELVE} style={{ color: "#FFFFFF" }}>
+                    <AppText type={TWELVE} style={{ color: themeColors.text }}>
                       {" "}
                       NL
                     </AppText>
                   </View>
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <AppText type={TWELVE} style={{ color: "#FFFFFF66" }}>
+                    <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>
                       Max short
                     </AppText>
-                    <AppText type={TWELVE} style={{ color: "#FFFFFF" }}>
+                    <AppText type={TWELVE} style={{ color: themeColors.text }}>
                       {" "}
                       NL
                     </AppText>
@@ -2428,19 +2415,19 @@ const Futures = () => {
                     style={{ flexDirection: "row", justifyContent: "space-between" }}
                   >
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      <AppText type={TWELVE} style={{ color: "#FFFFFF66" }}>
+                      <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>
                         Liq Price
                       </AppText>
-                      <AppText type={TWELVE} style={{ color: "#FFFFFF" }}>
+                      <AppText type={TWELVE} style={{ color: themeColors.text }}>
                         {" "}
                         {futuresRisk?.shortLiq || "---"}
                       </AppText>
                     </View>
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      <AppText type={TWELVE} style={{ color: "#FFFFFF66" }}>
+                      <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>
                         Liq Price
                       </AppText>
-                      <AppText type={TWELVE} style={{ color: "#FFFFFF" }}>
+                      <AppText type={TWELVE} style={{ color: themeColors.text }}>
                         {" "}
                         {futuresRisk?.longLiq || "---"}
                       </AppText>
@@ -2454,19 +2441,19 @@ const Futures = () => {
                     }}
                   >
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      <AppText type={TWELVE} style={{ color: "#FFFFFF66" }}>
+                      <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>
                         Taker Fee
                       </AppText>
-                      <AppText type={TWELVE} style={{ color: "#FFFFFF" }}>
+                      <AppText type={TWELVE} style={{ color: themeColors.text }}>
                         {" "}
                         0.4%
                       </AppText>
                     </View>
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      <AppText type={TWELVE} style={{ color: "#FFFFFF66" }}>
+                      <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>
                         Maker Fee
                       </AppText>
-                      <AppText type={TWELVE} style={{ color: "#FFFFFF" }}>
+                      <AppText type={TWELVE} style={{ color: themeColors.text }}>
                         {" "}
                         0.2%
                       </AppText>
@@ -2478,12 +2465,12 @@ const Futures = () => {
               <View style={styles.rightPanel}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                   <View>
-                    <AppText style={{ color: "#9D9D9D", fontSize: 11 }}>Price</AppText>
-                    <AppText style={{ color: "#9D9D9D", fontSize: 11 }}>({selectedCoin?.margin_asset})</AppText>
+                    <AppText style={{ color: themeColors.secondaryText, fontSize: 11 }}>Price</AppText>
+                    <AppText style={{ color: themeColors.secondaryText, fontSize: 11 }}>({selectedCoin?.margin_asset})</AppText>
                   </View>
                   <View>
-                    <AppText style={{ color: "#9D9D9D", fontSize: 11, textAlign: "right" }}>Quantity</AppText>
-                    <AppText style={{ color: "#9D9D9D", fontSize: 11, textAlign: "right" }}>({selectedCoin?.short_name})</AppText>
+                    <AppText style={{ color: themeColors.secondaryText, fontSize: 11, textAlign: "right" }}>Quantity</AppText>
+                    <AppText style={{ color: themeColors.secondaryText, fontSize: 11, textAlign: "right" }}>({selectedCoin?.short_name})</AppText>
                   </View>
                 </View>
                 <FlatList
@@ -2511,14 +2498,9 @@ const Futures = () => {
                         <LinearGradient
                           style={styles.orderRow}
                           colors={
-                            theme !== "Dark"
-                              ? [
-                                "#FFD9DB80",
-                                "#FFD9DB80",
-                                "transparent",
-                                "transparent",
-                              ]
-                              : ["#301e27", "#301e27", "transparent", "transparent"]
+                            isDark
+                              ? ["#301e27", "#301e27", "transparent", "transparent"]
+                              : ["#FFD9DB", "#FFD9DB", "transparent", "transparent"]
                           }
                           start={{ x: 1, y: 0 }}
                           end={{ x: 0, y: 0 }}
@@ -2546,7 +2528,7 @@ const Futures = () => {
                   ListEmptyComponent={() => (
                     <View style={styles.emptyOrderBook}>
                       {showOrderBookSkeleton ? (
-                        <OrderBookSkeleton theme={theme} colors={colors} />
+                        <OrderBookSkeleton />
                       ) : (
                         <AppText type={TWELVE} style={{ color: "grey" }}>No ask data</AppText>
                       )}
@@ -2556,12 +2538,12 @@ const Futures = () => {
                 <View style={styles.currentPriceBox}>
                   {showOrderBookSkeleton ? (
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                      <ShimmerBox width="52%" height={20} borderRadius={4} theme={theme} colors={colors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
-                      <ShimmerBox width="50%" height={16} borderRadius={4} theme={theme} colors={colors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} style={{ marginLeft: 3 }} />
+                      <ShimmerBox width="52%" height={20} borderRadius={4} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
+                      <ShimmerBox width="50%" height={16} borderRadius={4} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} style={{ marginLeft: 3 }} />
                     </View>
                   ) : (
                     <>
-                      <AppText style={[styles.currentPrice]}>
+                      <AppText style={[styles.currentPrice, { color: themeColors.text }]}>
                         {toFixedFive(selectedCoin?.buy_price)}
                       </AppText>
                       <AppText
@@ -2605,20 +2587,15 @@ const Futures = () => {
                         <LinearGradient
                           style={styles.orderRow}
                           colors={
-                            theme !== "Dark"
-                              ? [
-                                "#C6F9E980",
-                                "#C6F9E980",
-                                "transparent",
-                                "transparent",
-                              ]
-                              : ["#1c2a2b", "#1c2a2b", "transparent", "transparent"]
+                            isDark
+                              ? ["#1c2a2b", "#1c2a2b", "transparent", "transparent"]
+                              : ["#C6F9E9", "#C6F9E9", "transparent", "transparent"]
                           }
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           locations={[0, a, b, 1]}
                         >
-                          <AppText style={[styles.orderPrice, { color: "#00BD83" }]}>
+                          <AppText style={[styles.orderPrice, { color: colors.green }]}>
                             {toFixedFive(item?.price)}
                           </AppText>
                           <AppText style={styles.orderSize}>
@@ -2640,7 +2617,7 @@ const Futures = () => {
                   ListEmptyComponent={() => (
                     <View style={styles.emptyOrderBook}>
                       {showOrderBookSkeleton ? (
-                        <OrderBookSkeleton theme={theme} colors={colors} />
+                        <OrderBookSkeleton />
                       ) : (
                         <AppText type={TWELVE} style={{ color: "grey" }}>No bid data</AppText>
                       )}
@@ -2653,35 +2630,35 @@ const Futures = () => {
             {/* Assets section - above Positions/Orders tabs (web parity) */}
             {mainTab === "Futures" && (
               <View style={styles.assetsSection}>
-                <AppText style={styles.assetsSectionTitle} weight={SEMI_BOLD}>
+                <AppText style={[styles.assetsSectionTitle, { color: themeColors.text }]} weight={SEMI_BOLD}>
                   Assets
                 </AppText>
-                <View style={styles.assetsCard}>
-                  <AppText type={TWELVE} style={{ color: "#9D9D9D", marginBottom: 8 }}>
+                <View style={[styles.assetsCard, { backgroundColor: isDark ? "#1a1a1a" : "#F8F8F8", borderColor: isDark ? "#302F2F" : "#EEE" }]}>
+                  <AppText type={TWELVE} style={{ color: themeColors.secondaryText, marginBottom: 8 }}>
                     USDT-Perp
                   </AppText>
                   <View style={styles.assetsRow}>
-                    <AppText type={TWELVE} style={{ color: "#9D9D9D" }}>Total Assets</AppText>
-                    <AppText type={TWELVE} style={{ color: "#FFFFFF" }}>
+                    <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>Total Assets</AppText>
+                    <AppText type={TWELVE} style={{ color: themeColors.text }}>
                       {toFixedFive(Number(estimatedportfolio) + Number(totalIsolatedMargin)) || 0}{" "}
                       {selectedCoin?.margin_asset || "USDT"}
                     </AppText>
                   </View>
                   <View style={styles.assetsRow}>
-                    <AppText type={TWELVE} style={{ color: "#9D9D9D" }}>Available</AppText>
-                    <AppText type={TWELVE} style={{ color: "#FFFFFF" }}>
+                    <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>Available</AppText>
+                    <AppText type={TWELVE} style={{ color: themeColors.text }}>
                       {toFixedFive(Number(balance?.quoteCurrency) + Number(totalIsolatedMargin)) || 0}{" "}
                       {selectedCoin?.margin_asset || "USDT"}
                     </AppText>
                   </View>
-                  <View style={[styles.assetsRow, { marginTop: 8, paddingTop: 8, borderTopWidth: 0.7, borderTopColor: colors.lightGrey }]}>
-                    <AppText type={TWELVE} style={{ color: "#9D9D9D" }}>Maintenance Margin</AppText>
-                    <AppText type={TWELVE} style={{ color: "#FFFFFF" }}>
+                  <View style={[styles.assetsRow, { marginTop: 8, paddingTop: 8, borderTopWidth: 0.7, borderTopColor: themeColors.border }]}>
+                    <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>Maintenance Margin</AppText>
+                    <AppText type={TWELVE} style={{ color: themeColors.text }}>
                       {totalMaintenanceMargin || 0} {selectedCoin?.margin_asset || "USDT"}
                     </AppText>
                   </View>
                   <View style={styles.assetsRow}>
-                    <AppText type={TWELVE} style={{ color: "#9D9D9D" }}>Unrealized PNL</AppText>
+                    <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>Unrealized PNL</AppText>
                     <AppText
                       type={TWELVE}
                       style={{
@@ -2691,7 +2668,7 @@ const Futures = () => {
                       {totalUnrealizedPnl || 0} USDT
                     </AppText>
                   </View>
-                  <View style={styles.assetsActionsRow}>
+                  <View style={[styles.assetsActionsRow, { borderTopColor: isDark ? "#302F2F" : "#EEE" }]}>
                     <TouchableOpacity
                       onPress={() => NavigationService.navigate(routes.DEPOSIT_COIN_SCREEN)}
                     >
@@ -2712,7 +2689,7 @@ const Futures = () => {
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.bottomTabsScroll}
+                contentContainerStyle={[styles.bottomTabsScroll, { borderColor: isDark ? "#302F2F" : "#EEE" }]}
                 style={styles.bottomTabsScrollView}
               >
                 <TouchableOpacity
@@ -2805,7 +2782,7 @@ const Futures = () => {
                     source={printIcon}
                     resizeMode="contain"
                     style={{ width: 18, height: 18 }}
-                    tintColor={"#9D9D9D"}
+                    tintColor={themeColors.secondaryText}
                   />
                 </TouchableOpacity>
               </ScrollView>
@@ -2876,19 +2853,19 @@ const Futures = () => {
                         .join(" • ");
 
                       return (
-                        <View key={position?._id || index} style={styles.orderCard}>
+                        <View style={[styles.orderCard, { backgroundColor: isDark ? "#0f0f0f" : "#FFFFFF", borderColor: isDark ? "#1a1a1a" : "#EEE", borderTopWidth: 1 }]}>
                           <View style={styles.orderHeader}>
                             <View style={styles.headerLeft}>
-                              <AppText style={styles.symbolText}>
+                              <AppText style={[styles.symbolText, { color: themeColors.text }]}>
                                 {formatOrderPair(position)}
                               </AppText>
                               {marginMode && (
-                                <View style={styles.perpBadge}>
-                                  <AppText style={styles.perpText}>{marginMode}</AppText>
+                                <View style={[styles.perpBadge, { backgroundColor: isDark ? "#2b2b2b" : "#EEE" }]}>
+                                  <AppText style={[styles.perpText, { color: themeColors.secondaryText }]}>{marginMode}</AppText>
                                 </View>
                               )}
                             </View>
-                            <AppText style={styles.timeText}>
+                            <AppText style={[styles.timeText, { color: themeColors.secondaryText }]}>
                               {formatOrderDate(time)}
                             </AppText>
                           </View>
@@ -2906,38 +2883,38 @@ const Futures = () => {
 
                           <View style={styles.infoRow}>
                             <View style={styles.labels}>
-                              <AppText style={styles.label}>PnL</AppText>
-                              <AppText style={styles.label}>Quantity</AppText>
-                              <AppText style={styles.label}>Filled</AppText>
-                              <AppText style={styles.label}>Entry Price</AppText>
-                              <AppText style={styles.label}>Mark Price</AppText>
-                              <AppText style={styles.label}>Liq. Price</AppText>
-                              <AppText style={styles.label}>Isolated Margin</AppText>
-                              <AppText style={styles.label}>Maintenance Margin</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>PnL</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Quantity</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Filled</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Entry Price</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Mark Price</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Liq. Price</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Isolated Margin</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Maintenance Margin</AppText>
                             </View>
                             <View style={styles.values}>
                               <AppText style={[styles.value, { color: pnlColor }]}>
                                 {formatOrderNumber(pnlValue)}
                               </AppText>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {formatOrderNumber(quantity)}
                               </AppText>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {formatOrderNumber(filled)}
                               </AppText>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {formatOrderNumber(entryPrice)}
                               </AppText>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {formatOrderNumber(markPrice)}
                               </AppText>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {formatOrderNumber(liquidationPrice)}
                               </AppText>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {formatOrderNumber(isolatedMargin)}
                               </AppText>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {formatOrderNumber(maintenanceMargin)}
                               </AppText>
                             </View>
@@ -2954,13 +2931,13 @@ const Futures = () => {
                             <TouchableOpacity
                               style={{
                                 flex: 1,
-                                backgroundColor: "#FFFFFF0A",
+                                backgroundColor: isDark ? "#FFFFFF0A" : "#F5F5F5",
                                 height: 36,
                                 alignItems: "center",
                                 justifyContent: "center",
                                 borderRadius: 6,
                                 borderWidth: 1,
-                                borderColor: "#23262F",
+                                borderColor: themeColors.border,
                                 marginLeft: 6,
                               }}
                               onPress={() => closePosition(position?._id)}
@@ -3037,27 +3014,27 @@ const Futures = () => {
                       }
 
                       return (
-                        <View key={orderId || index} style={styles.orderCard}>
+                        <View key={orderId || index} style={[styles.orderCard, { backgroundColor: isDark ? "#0f0f0f" : "#FFFFFF", borderColor: isDark ? "#1a1a1a" : "#EEE", borderTopWidth: 1 }]}>
                           {/* Header */}
                           <View style={styles.orderHeader}>
                             <View style={styles.headerLeft}>
-                              <AppText style={styles.symbolText}>
+                              <AppText style={[styles.symbolText, { color: themeColors.text }]}>
                                 {formatOrderPair(order)}
                               </AppText>
                               {type && (
-                                <View style={styles.perpBadge}>
-                                  <AppText style={styles.perpText}>{type}</AppText>
+                                <View style={[styles.perpBadge, { backgroundColor: isDark ? "#2b2b2b" : "#EEE" }]}>
+                                  <AppText style={[styles.perpText, { color: themeColors.secondaryText }]}>{type}</AppText>
                                 </View>
                               )}
                             </View>
-                            <AppText style={styles.timeText}>
+                            <AppText style={[styles.timeText, { color: themeColors.secondaryText }]}>
                               {formatOrderDate(time)}
                             </AppText>
                           </View>
 
                           <View style={styles.typeRow}>
                             <AppText
-                              style={[styles.typeText, { color: getOrderSideColor(side) }]}
+                              style={[styles.typeText, { color: getOrderSideColor(side, isDark) }]}
                             >
                               {`${type || "--"} / ${side || "--"}`}
                             </AppText>
@@ -3065,33 +3042,33 @@ const Futures = () => {
 
                           <View style={styles.infoRow}>
                             <View style={styles.labels}>
-                              <AppText style={styles.label}>Quantity</AppText>
-                              <AppText style={styles.label}>Filled</AppText>
-                              <AppText style={styles.label}>Price</AppText>
-                              <AppText style={styles.label}>Trigger</AppText>
-                              <AppText style={styles.label}>TP/SL</AppText>
-                              <AppText style={styles.label}>Reduce</AppText>
-                              <AppText style={styles.label}>Post</AppText>
-                              <AppText style={styles.label}>Status</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Quantity</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Filled</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Price</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Trigger</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>TP/SL</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Reduce</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Post</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Status</AppText>
                             </View>
                             <View style={styles.values}>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {formatOrderNumber(quantity)}
                               </AppText>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {formatOrderNumber(filled)}
                               </AppText>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {formatOrderNumber(price)}
                               </AppText>
-                              <AppText style={styles.value}>{triggerCondition}</AppText>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>{triggerCondition}</AppText>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {takeProfit ?? stopLoss ?? "---"}
                               </AppText>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {reduceOnly ? "Yes" : "No"}
                               </AppText>
-                              <AppText style={styles.value}>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>
                                 {postOnly ? "Yes" : "No"}
                               </AppText>
                               <AppText
@@ -3140,20 +3117,22 @@ const Futures = () => {
                 ) : activePositionTab === "order_history" ? (
                   ordersHistory?.length === 0 ? (
                     <View style={styles.emptyHistoryView}>
-                      <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={{ width: 80, height: 80, marginBottom: 16 }} />
-                      {/* <TouchableOpacity onPress={() => NavigationService.navigate(routes.FUTURE_ORDER_HISTORY, { selectedCoin })}>
-                        <AppText type={TWELVE} style={{ color: colors.green }}>View Order History</AppText>
-                      </TouchableOpacity> */}
+                      <FastImage 
+                        source={NO_NOTIFICATION_ICON} 
+                        resizeMode="contain" 
+                        style={{ width: 80, height: 80, marginBottom: 16 }} 
+                        tintColor={themeColors.secondaryText}
+                      />
                     </View>
                   ) : (
                     <>
                       {(ordersHistory || []).slice(0, 20).map((order, index) => (
-                        <View key={order?.orderId || index} style={styles.orderCard}>
+                        <View key={order?.orderId || index} style={[styles.orderCard, { backgroundColor: isDark ? "#0f0f0f" : "#FFFFFF", borderColor: isDark ? "#1a1a1a" : "#EEE", borderTopWidth: 1 }]}>
                           <View style={styles.orderHeader}>
                             <View style={styles.headerLeft}>
-                              <AppText style={styles.symbolText}>{formatOrderPair(order)}</AppText>
+                              <AppText style={[styles.symbolText, { color: themeColors.text }]}>{formatOrderPair(order)}</AppText>
                             </View>
-                            <AppText style={styles.timeText}>{formatOrderDate(order?.createdAt ?? order?.updatedAt)}</AppText>
+                            <AppText style={[styles.timeText, { color: themeColors.secondaryText }]}>{formatOrderDate(order?.createdAt ?? order?.updatedAt)}</AppText>
                           </View>
                           <View style={styles.typeRow}>
                             <AppText style={[styles.typeText, { color: getOrderSideColor(order?.side ?? order?.order_side) }]}>
@@ -3162,14 +3141,14 @@ const Futures = () => {
                           </View>
                           <View style={styles.infoRow}>
                             <View style={styles.labels}>
-                              <AppText style={styles.label}>Quantity</AppText>
-                              <AppText style={styles.label}>Price</AppText>
-                              <AppText style={styles.label}>Status</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Quantity</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Price</AppText>
+                              <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Status</AppText>
                             </View>
                             <View style={styles.values}>
-                              <AppText style={styles.value}>{formatOrderNumber(order?.quantity)}</AppText>
-                              <AppText style={styles.value}>{formatOrderNumber(order?.price)}</AppText>
-                              <AppText style={styles.value}>{order?.status ?? order?.order_status ?? "--"}</AppText>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>{formatOrderNumber(order?.quantity)}</AppText>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>{formatOrderNumber(order?.price)}</AppText>
+                              <AppText style={[styles.value, { color: themeColors.text }]}>{order?.status ?? order?.order_status ?? "--"}</AppText>
                             </View>
                           </View>
                         </View>
@@ -3186,21 +3165,21 @@ const Futures = () => {
                     </View>
                   ) : (
                     (tradeHistory || []).slice(0, 20).map((item, index) => (
-                      <View key={item?.tradeId || index} style={styles.orderCard}>
+                      <View key={item?.tradeId || index} style={[styles.orderCard, { backgroundColor: isDark ? "#0f0f0f" : "#FFFFFF", borderColor: isDark ? "#1a1a1a" : "#EEE", borderTopWidth: 1 }]}>
                         <View style={styles.orderHeader}>
-                          <AppText style={styles.symbolText}>{formatOrderPair(item)}</AppText>
-                          <AppText style={styles.timeText}>{formatOrderDate(item?.time ?? item?.createdAt)}</AppText>
+                          <AppText style={[styles.symbolText, { color: themeColors.text }]}>{formatOrderPair(item)}</AppText>
+                          <AppText style={[styles.timeText, { color: themeColors.secondaryText }]}>{formatOrderDate(item?.time ?? item?.createdAt)}</AppText>
                         </View>
                         <View style={styles.infoRow}>
                           <View style={styles.labels}>
-                            <AppText style={styles.label}>Side</AppText>
-                            <AppText style={styles.label}>Quantity</AppText>
-                            <AppText style={styles.label}>Price</AppText>
+                            <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Side</AppText>
+                            <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Quantity</AppText>
+                            <AppText style={[styles.label, { color: isDark ? "#5c5c5c" : "#888" }]}>Price</AppText>
                           </View>
                           <View style={styles.values}>
-                            <AppText style={[styles.value, { color: getOrderSideColor(item?.side) }]}>{item?.side ?? "--"}</AppText>
-                            <AppText style={styles.value}>{formatOrderNumber(item?.quantity ?? item?.qty)}</AppText>
-                            <AppText style={styles.value}>{formatOrderNumber(item?.price)}</AppText>
+                            <AppText style={[styles.value, { color: getOrderSideColor(item?.side, isDark) }]}>{item?.side ?? "--"}</AppText>
+                            <AppText style={[styles.value, { color: themeColors.text }]}>{formatOrderNumber(item?.quantity ?? item?.qty)}</AppText>
+                            <AppText style={[styles.value, { color: themeColors.text }]}>{formatOrderNumber(item?.price)}</AppText>
                           </View>
                         </View>
                       </View>
@@ -3213,10 +3192,10 @@ const Futures = () => {
                     </View>
                   ) : (
                     (closePositions || []).slice(0, 20).map((position, index) => (
-                      <View key={position?._id || index} style={styles.orderCard}>
+                      <View key={position?._id || index} style={[styles.orderCard, { backgroundColor: isDark ? "#0f0f0f" : "#FFFFFF", borderColor: isDark ? "#1a1a1a" : "#EEE", borderTopWidth: 1 }]}>
                         <View style={styles.orderHeader}>
-                          <AppText style={styles.symbolText}>{formatOrderPair(position)}</AppText>
-                          <AppText style={styles.timeText}>{formatOrderDate(position?.closedAt ?? position?.updatedAt)}</AppText>
+                          <AppText style={[styles.symbolText, { color: themeColors.text }]}>{formatOrderPair(position)}</AppText>
+                          <AppText style={[styles.timeText, { color: themeColors.secondaryText }]}>{formatOrderDate(position?.closedAt ?? position?.updatedAt)}</AppText>
                         </View>
                         <View style={styles.infoRow}>
                           <View style={styles.labels}>
@@ -3257,7 +3236,7 @@ const Futures = () => {
               animationType="none"
               customStyles={{
                 container: {
-                  backgroundColor: "#1D1D1D",
+                  backgroundColor: themeColors.background,
                   height: 300,
                   borderRadius: 10,
                   paddingHorizontal: universalPaddingHorizontal,
@@ -3280,7 +3259,7 @@ const Futures = () => {
               animationType="none"
               customStyles={{
                 container: {
-                  backgroundColor: colors.themeElevationColor,
+                  backgroundColor: themeColors.background,
                   height: 400,
                   borderRadius: 20,
                   paddingHorizontal: universalPaddingHorizontal,
@@ -3303,7 +3282,7 @@ const Futures = () => {
               animationType="none"
               customStyles={{
                 container: {
-                  backgroundColor: colors.themeElevationColor,
+                  backgroundColor: themeColors.background,
                   height: 300,
                   borderRadius: 20,
                   paddingHorizontal: universalPaddingHorizontal,
@@ -3330,7 +3309,7 @@ const Futures = () => {
               animationType="none"
               customStyles={{
                 container: {
-                  backgroundColor: colors.themeElevationColor,
+                  backgroundColor: themeColors.background,
                   height: 450,
                   borderRadius: 20,
                   paddingHorizontal: universalPaddingHorizontal,
@@ -3360,7 +3339,7 @@ const Futures = () => {
               animationType="none"
               customStyles={{
                 container: {
-                  backgroundColor: colors.themeElevationColor,
+                  backgroundColor: themeColors.background,
                   height: 350,
                   borderRadius: 20,
                   paddingHorizontal: universalPaddingHorizontal,
@@ -3390,7 +3369,7 @@ const Futures = () => {
               animationType="none"
               customStyles={{
                 container: {
-                  backgroundColor: "#1D1D1D",
+                  backgroundColor: themeColors.background,
                   height: 150,
                   borderRadius: 10,
                   paddingHorizontal: universalPaddingHorizontal,
@@ -3471,8 +3450,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 4,
     marginRight: 6,
-    borderWidth: 0.5,
-    borderColor: "#FFFFFF80",
+    borderWidth: 1,
   },
   typeContainer: {
     flexDirection: "row",
@@ -3539,7 +3517,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#302F2F",
   },
   assetsRow: {
     flexDirection: "row",
@@ -3554,7 +3531,6 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: "#302F2F",
   },
   bottomTabsScrollView: {
     maxHeight: 56,
@@ -3566,7 +3542,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderBottomWidth: 0.5,
-    borderColor: "#302F2F",
     gap: 4,
   },
   bottomTab: {
@@ -3595,12 +3570,10 @@ const styles = StyleSheet.create({
   dropdown: {
     flexDirection: "row",
     borderWidth: 1,
-    borderColor: "#23262F",
     padding: 6,
     borderRadius: 6,
     justifyContent: "space-between",
     marginBottom: 10,
-    backgroundColor: "#141414",
     alignItems: "center",
   },
   dropdownText: {
@@ -3619,7 +3592,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     // width: "100%",
     marginBottom: 10,
-    backgroundColor: "#FFFFFF1A",
     // fontWeight: "600",
     marginTop: 3,
   },
@@ -3635,7 +3607,6 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     paddingVertical: 7,
     paddingHorizontal: 12,
-    backgroundColor: "#FFFFFF1A",
   },
   selectedPercentBtn: (theme) => ({
     backgroundColor: colors.buttonDarkBg,
@@ -3763,16 +3734,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     fontSize: 12,
     textAlign: "center",
-    // color:
   },
   headerCell: { fontWeight: "bold", fontSize: 13 },
   orderCard: {
-    backgroundColor: "#0f0f0f",
     borderRadius: 6,
     padding: 14,
     marginBottom: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#1a1a1a",
   },
   orderHeader: {
     flexDirection: "row",
@@ -3786,7 +3753,7 @@ const styles = StyleSheet.create({
   },
   symbolText: {
     color: "#FFFFFF",
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "700",
     marginRight: 8,
   },
@@ -3802,13 +3769,13 @@ const styles = StyleSheet.create({
   },
   timeText: {
     color: "#77797a",
-    fontSize: 13,
+    fontSize: 11,
   },
   typeRow: {
     marginVertical: 6,
   },
   typeText: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: "600",
   },
   infoRow: {
@@ -3827,12 +3794,12 @@ const styles = StyleSheet.create({
   },
   label: {
     color: "#5c5c5c",
-    fontSize: 14,
+    fontSize: 11,
     marginBottom: 10,
   },
   value: {
     color: "#FFFFFF",
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: "600",
     marginBottom: 6,
   },

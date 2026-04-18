@@ -1,23 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
-import { AppSafeAreaView, AppText, Button } from '../../shared';
-import { colors } from '../../theme/colors';
+import {
+  AppSafeAreaView,
+  AppText,
+  Button,
+  BOLD,
+  FOURTEEN,
+  THIRTEEN,
+  SEMI_BOLD,
+  EIGHTEEN,
+  TEN,
+} from '../../shared';
 import FastImage from 'react-native-fast-image';
-import { back_ic } from '../../helper/ImageAssets';
+import { back_ic, FINGERPRINT } from '../../helper/ImageAssets';
 import { getPasskeyList } from '../../actions/accountActions';
 import { ADD_PASSKEY_SCREEN } from '../../navigation/routes';
+import { useTheme } from "../../hooks/useTheme";
 
 const ViewPasskeysScreen = () => {
   const navigation = useNavigation();
   const dispatch = useAppDispatch();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   const [passkeys, setPasskeys] = useState([]);
   const isLoading = useAppSelector((state) => state.auth.isLoading);
-  const isDark = theme === 'Dark';
-  const textPrimary = isDark ? colors.white : colors.black;
-  const textSecondary = isDark ? '#888' : '#666';
 
   useEffect(() => {
     (async () => {
@@ -27,13 +34,12 @@ const ViewPasskeysScreen = () => {
   }, [dispatch]);
 
   return (
-    <AppSafeAreaView style={{ flex: 1, backgroundColor: colors.newThemeColor }}>
-      <View style={[styles.header, { borderBottomColor: isDark ? colors.dividerColor : colors.secondBorder }]}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
+      <View style={[styles.header, { borderBottomColor: themeColors.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-          <FastImage source={back_ic} style={styles.backIcon} tintColor={textPrimary} resizeMode="contain" />
+          <FastImage source={back_ic} style={styles.backIcon} tintColor={themeColors.text} resizeMode="contain" />
         </TouchableOpacity>
-        <AppText style={[styles.headerTitle, { color: textPrimary }]}>Registered Passkeys</AppText>
-        <View></View>
+        <AppText weight={BOLD} type={EIGHTEEN} style={[styles.headerTitle, { color: themeColors.text }]}>Registered Passkeys</AppText>
       </View>
 
       <ScrollView
@@ -41,44 +47,50 @@ const ViewPasskeysScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.content, { backgroundColor: colors.themeElevationColor }]}>
-          <AppText style={[styles.title, { color: textPrimary }]}>Registered Passkeys</AppText>
-          <AppText style={[styles.subtitle, { color: textSecondary }]}>Manage your passkeys for passwordless login</AppText>
-          {passkeys.length > 0 ? (
-            <ScrollView style={styles.passkeyList} showsVerticalScrollIndicator={false}>
-              {passkeys.map((passkey) => (
-                <View key={passkey._id} style={[styles.passkeyItem, { backgroundColor: isDark ? '#2F3542' : '#E8E8E8' }]}>
-                  <View style={styles.passkeyItemLeft}>
-                    <AppText style={[styles.passkeyName, { color: textPrimary }]}>{passkey.name || 'Passkey'}</AppText>
-                    <AppText style={[styles.passkeyDevice, { color: textSecondary }]}>
-                      {passkey.deviceInfo?.browser || 'Unknown'} • {passkey.deviceInfo?.os || 'Unknown'}
-                    </AppText>
-                    {(passkey.createdAt || passkey.lastUsedAt) && (
-                      <AppText style={[styles.passkeyDate, { color: textSecondary }]}>
-                        {passkey.createdAt && `Added ${new Date(passkey.createdAt).toLocaleDateString()}`}
-                        {passkey.lastUsedAt && ` • Last used ${new Date(passkey.lastUsedAt).toLocaleDateString()}`}
-                      </AppText>
-                    )}
-                  </View>
+        <AppText type={FOURTEEN} weight={BOLD} style={{ color: themeColors.text }}>Manage Passkeys</AppText>
+        <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginTop: 4, marginBottom: 24 }}>Manage your passkeys for passwordless login</AppText>
+        
+        {passkeys.length > 0 ? (
+          <View style={styles.passkeyList}>
+            {passkeys.map((passkey) => (
+              <View key={passkey._id} style={[styles.passkeyItem, { borderColor: themeColors.border, backgroundColor: themeColors.card }]}>
+                <View style={[styles.iconWrap, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }]}>
+                   <FastImage source={FINGERPRINT} style={{ width: 22, height: 22 }} tintColor={themeColors.button} resizeMode="contain" />
                 </View>
-              ))}
-            </ScrollView>
-          ) : (
-            <View style={styles.passkeyEmpty}>
-              <AppText style={[styles.passkeyEmptyText, { color: textSecondary }]}>No passkeys registered yet</AppText>
-            </View>
-          )}
-          <Button
-            children="Add New Passkey"
-            onPress={() => navigation.navigate(ADD_PASSKEY_SCREEN)}
-            containerStyle={styles.btn}
-            disabled={isLoading}
-          />
-        </View>
+                <View style={styles.passkeyItemContent}>
+                  <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.text }}>{passkey.name || 'Passkey'}</AppText>
+                  <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginTop: 2 }}>
+                    {passkey.deviceInfo?.browser || 'Unknown'} • {passkey.deviceInfo?.os || 'Unknown'}
+                  </AppText>
+                  {(passkey.createdAt || passkey.lastUsedAt) && (
+                    <AppText type={TEN} style={{ color: themeColors.secondaryText, marginTop: 6 }}>
+                      {passkey.createdAt && `Added ${new Date(passkey.createdAt).toLocaleDateString()}`}
+                      {passkey.lastUsedAt && ` • Last used ${new Date(passkey.lastUsedAt).toLocaleDateString()}`}
+                    </AppText>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={[styles.passkeyEmpty, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <FastImage source={FINGERPRINT} style={{ width: 44, height: 44, opacity: 0.3, marginBottom: 12 }} tintColor={themeColors.text} resizeMode="contain" />
+            <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, textAlign: 'center' }}>No passkeys registered yet</AppText>
+          </View>
+        )}
+        
+        <Button
+          children="Add New Passkey"
+          onPress={() => navigation.navigate(ADD_PASSKEY_SCREEN)}
+          containerStyle={styles.btn}
+          disabled={isLoading}
+        />
       </ScrollView>
     </AppSafeAreaView>
   );
 };
+
+export default ViewPasskeysScreen;
 
 const styles = StyleSheet.create({
   header: {
@@ -86,29 +98,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    paddingHorizontal:20
+    paddingHorizontal: 16
   },
   backBtn: { padding: 4 },
   backIcon: { width: 22, height: 22 },
-  headerTitle: { fontSize: 18, fontWeight: '700', marginLeft: 12 },
+  headerTitle: { fontSize: 18, marginLeft: 12 },
   scroll: { flex: 1 },
   scrollContent: { padding: 20, paddingBottom: 40 },
-  content: { borderRadius: 16, padding: 24 },
-  title: { fontSize: 19, fontWeight: '700', marginBottom: 6 },
-  subtitle: { fontSize: 14, marginBottom: 20 },
-  passkeyList: { maxHeight: 400 },
+  passkeyList: { marginBottom: 10 },
   passkeyItem: {
-    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8 },
+      android: { elevation: 1.5 },
+    }),
   },
-  passkeyItemLeft: {},
-  passkeyName: { fontSize: 15, fontWeight: '600' },
-  passkeyDevice: { fontSize: 13, marginTop: 4 },
-  passkeyDate: { fontSize: 12, marginTop: 4 },
-  passkeyEmpty: { paddingVertical: 32, alignItems: 'center' },
-  passkeyEmptyText: { fontSize: 14 },
-  btn: { marginTop: 24 },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  passkeyItemContent: { marginLeft: 16, flex: 1 },
+  passkeyEmpty: { 
+    paddingVertical: 40, 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    marginBottom: 20
+  },
+  btn: { marginTop: 20 },
 });
-
-export default ViewPasskeysScreen;

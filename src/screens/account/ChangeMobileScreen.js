@@ -15,8 +15,12 @@ import {
   Button,
   Input,
   OtpInput6Digit,
+  BOLD,
+  FOURTEEN,
+  THIRTEEN,
+  SEMI_BOLD,
+  EIGHTEEN,
 } from '../../shared';
-import { colors } from '../../theme/colors';
 import FastImage from 'react-native-fast-image';
 import TouchableOpacityView from '../../shared/components/TouchableOpacityView';
 import PickerSelect from '../../shared/components/PickerSelect';
@@ -32,6 +36,7 @@ import {
 import { showError } from '../../helper/logger';
 import { VerificationOptionsSheet } from '../../shared/components/VerificationOptionsSheet';
 import { SpinnerSecond } from '../../shared/components/SpinnerSecond';
+import { useTheme } from "../../hooks/useTheme";
 
 const CODE_LENGTH = 6;
 const countryCodePickerData = countriesList || [];
@@ -51,10 +56,11 @@ const maskPhone = (phone) => {
 const ChangeMobileScreen = () => {
   const navigation = useNavigation();
   const dispatch = useAppDispatch();
+  const { colors: themeColors, isDark } = useTheme();
   const userData = useAppSelector((state) => state.auth.userData);
   const isLoading = useAppSelector((state) => state.auth.isLoading);
   const showButtonLoading = useAppSelector((state) => state.auth.isLoading && state.auth.loadingFor === 'otp');
-  const theme = useAppSelector((state) => state.auth.theme);
+
   const emailId = userData?.emailId ?? userData?.email_id ?? '';
   const profileMobile = userData?.mobileNumber ?? userData?.mobile_number ?? '';
   const profileCountryCode = userData?.country_code ?? userData?.countryCode ?? '';
@@ -77,10 +83,6 @@ const ChangeMobileScreen = () => {
   const [optionsSheetVisible, setOptionsSheetVisible] = useState(false);
 
   const optionsSheetRef = useRef(null);
-  const isDark = theme === 'Dark';
-  const textPrimary = isDark ? colors.white : colors.black;
-  const textSecondary = isDark ? '#888' : '#666';
-  const borderClr = isDark ? colors.dividerColor : colors.secondBorder;
 
   // Fetch passkey list to know if user has passkey
   useEffect(() => {
@@ -123,16 +125,16 @@ const ChangeMobileScreen = () => {
   const handleProceedFromNotice = () => setStep(1);
 
   const getVerifyTitle = () => {
-    if (verifyMethod === 'passkey') return 'Passkey Verification';
+    if (verifyMethod === 'passkey') return 'Passkey verification';
     if (verifyMethod === 'totp') return 'Google Authenticator';
-    if (verifyMethod === 'email') return 'Email Verification';
-    return 'Mobile Verification';
+    if (verifyMethod === 'email') return 'Email verification';
+    return 'Mobile verification';
   };
   const getVerifyDesc = () => {
     if (verifyMethod === 'passkey') return 'Use your fingerprint or Face ID to verify your identity';
     if (verifyMethod === 'totp') return 'Enter the 6-digit code from your authenticator app';
-    if (verifyMethod === 'email') return `We'll send a verification code to ${maskEmail(emailId)}`;
-    return `We'll send a verification code to ${maskPhone(mobileNumber)}`;
+    if (verifyMethod === 'email') return `Enter verification code sent to ${maskEmail(emailId)}`;
+    return `Enter verification code sent to ${maskPhone(mobileNumber)}`;
   };
 
   const getPasskeySignId = () => emailId || mobileNumber || '';
@@ -209,18 +211,18 @@ const ChangeMobileScreen = () => {
   const countryCodeStr = typeof newCountryCode === 'string' ? newCountryCode : (newCountryCode?.value ?? '+91');
 
   return (
-    <AppSafeAreaView style={{ flex: 1, backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={[styles.header, { borderBottomColor: borderClr }]}>
+        <View style={[styles.header, { borderBottomColor: themeColors.border }]}>
           <TouchableOpacity
             onPress={() => (step > 0 ? setStep(step - 1) : navigation.goBack())}
             style={styles.backBtn}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <FastImage source={back_ic} style={styles.backIcon} tintColor={textPrimary} resizeMode="contain" />
+            <FastImage source={back_ic} style={styles.backIcon} tintColor={themeColors.text} resizeMode="contain" />
           </TouchableOpacity>
-          <AppText style={[styles.headerTitle, { color: textPrimary }]}>
-            {step === 0 ? 'Security Notice' : step === 1 ? getVerifyTitle() : 'Change Mobile Number'}
+          <AppText weight={BOLD} type={EIGHTEEN} style={[styles.headerTitle, { color: themeColors.text }]}>
+            {step === 0 ? 'Security Notice' : step === 1 ? getVerifyTitle() : 'Change Mobile'}
           </AppText>
         </View>
 
@@ -233,28 +235,34 @@ const ChangeMobileScreen = () => {
           {step === 0 && (
             <View style={styles.noticeContent}>
               <View style={styles.noticeIconWrap}>
-                <FastImage source={PHONE} style={styles.noticeIcon} tintColor={colors.white} resizeMode="contain" />
+                <FastImage source={PHONE} style={styles.noticeIcon} tintColor="#FFF" resizeMode="contain" />
               </View>
-              <AppText style={[styles.title, { color: textPrimary }]}>Security Notice</AppText>
-              <AppText style={[styles.subtitle, { color: textSecondary }]}>Please read carefully before proceeding</AppText>
-              <AppText style={[styles.bodyText, { color: textPrimary }]}>
-                Withdrawals and P2P transactions might be disabled for 24 hours after changing your phone verification to ensure the safety of your assets.
-              </AppText>
-              <AppText style={[styles.bodyText, { color: textPrimary }]}>
-                The old phone number cannot be used to re-register for 30 days after updating it.
-              </AppText>
+              <AppText type={FOURTEEN} weight={BOLD} style={{ color: themeColors.text, textAlign: 'center' }}>Security Notice</AppText>
+              <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, textAlign: 'center', marginTop: 4 }}>Please read carefully before proceeding</AppText>
+              
+               <View style={[styles.infoBox, { backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)", borderColor: themeColors.border }]}>
+                <AppText type={THIRTEEN} style={{ color: themeColors.text, lineHeight: 21 }}>
+                    Withdrawals and P2P transactions might be disabled for 24 hours after changing your phone verification to ensure the safety of your assets.
+                </AppText>
+                <AppText type={THIRTEEN} style={{ color: themeColors.text, lineHeight: 21, marginTop: 12 }}>
+                    The old phone number cannot be used to re-register for 30 days after updating it.
+                </AppText>
+               </View>
+               
               <Button children="I Understand, Continue" onPress={handleProceedFromNotice} containerStyle={styles.btn} />
             </View>
           )}
 
           {step === 1 && (
             <View style={styles.formContent}>
-              <AppText style={[styles.subtitle, { color: textSecondary }]}>Choose how you want to verify your identity</AppText>
-              <AppText style={[styles.bodyText, { color: textPrimary }]}>{getVerifyDesc()}</AppText>
+              <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginBottom: 24 }}>Choose how you want to verify your identity</AppText>
+              <AppText type={THIRTEEN} style={{ color: themeColors.text }}>{getVerifyDesc()}</AppText>
               {verifyMethod === 'passkey' ? (
                 <>
-                  <View style={{ alignItems: 'center', marginVertical: 24 }}>
-                    <FastImage source={FINGERPRINT} style={{ width: 64, height: 64 }} resizeMode="contain" tintColor={colors.buttonBg} />
+                  <View style={{ alignItems: 'center', marginVertical: 30 }}>
+                    <View style={[styles.passkeyIconWrap, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }]}>
+                       <FastImage source={FINGERPRINT} style={{ width: 44, height: 44 }} resizeMode="contain" tintColor={themeColors.button} />
+                    </View>
                   </View>
                   <Button
                     children={passkeyUserId ? 'Verified - Continue' : 'Verify with Passkey'}
@@ -265,19 +273,21 @@ const ChangeMobileScreen = () => {
                 </>
               ) : (
                 <>
-                  <OtpInput6Digit
-                    label={verifyMethod === 'totp' ? 'Authenticator Code' : (verifyMethod === 'email' ? 'Email Verification Code' : 'Mobile Verification Code')}
-                    value={currentCode}
-                    onChangeText={setCurrentCode}
-                    isDark={isDark}
-                  />
+                  <View style={{ marginTop: 24 }}>
+                    <OtpInput6Digit
+                        label={verifyMethod === 'totp' ? 'Authenticator Code' : (verifyMethod === 'email' ? 'Email Verification Code' : 'Mobile Verification Code')}
+                        value={currentCode}
+                        onChangeText={setCurrentCode}
+                        isDark={isDark}
+                    />
+                  </View>
                   {verifyMethod !== 'totp' && (
                     <View style={styles.resendRow}>
                       {resendTimer > 0 ? (
-                        <AppText style={{ color: textSecondary }}>Resend ({resendTimer}s)</AppText>
+                        <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText }}>Resend ({resendTimer}s)</AppText>
                       ) : (
-                        <TouchableOpacityView onPress={handleSendOtp} disabled={isLoading} style={{alignSelf:"flex-end",}}>
-                          <AppText style={{ color: colors.buttonBg, fontWeight: '600' }}>Get OTP</AppText>
+                        <TouchableOpacityView onPress={handleSendOtp} disabled={isLoading}>
+                          <AppText weight={SEMI_BOLD} style={{ color: themeColors.button, fontSize: 13 }}>Get OTP</AppText>
                         </TouchableOpacityView>
                       )}
                     </View>
@@ -293,10 +303,10 @@ const ChangeMobileScreen = () => {
               )}
               {availableMethods.length > 1 && (
                 <TouchableOpacityView onPress={() => setOptionsSheetVisible(true)} style={styles.switchWrap}>
-                  <AppText style={{ color: colors.buttonBg, fontWeight: '600' }}>Switch to Another Verification Option</AppText>
+                  <AppText type={THIRTEEN} weight={SEMI_BOLD} style={{ color: themeColors.button }}>Switch to Another Verification Option</AppText>
                   <FastImage source={SHARE_NEW_ICON} 
-                     style={{ width: 14, height: 14,marginLeft: 5 }}
-                    resizeMode="contain" tintColor={colors.buttonBg} />
+                     style={{ width: 14, height: 14, marginLeft: 8 }}
+                    resizeMode="contain" tintColor={themeColors.button} />
                 </TouchableOpacityView>
               )}
             </View>
@@ -304,24 +314,27 @@ const ChangeMobileScreen = () => {
 
           {step === 2 && (
             <View style={styles.formContent}>
-              <AppText style={[styles.subtitle, { color: textSecondary }]}>Step 2: Enter new mobile number</AppText>
-              <AppText style={[styles.inputLabel, { color: textPrimary }]}>Country Code</AppText>
-              <PickerSelect
-                data={countryCodePickerData}
-                selected={newCountryCode}
-                onSelect={(item) => setNewCountryCode(item?.value ?? item ?? '+91')}
-                placeholder="Select country code"
-                theme={theme}
-                style={[styles.picker, { borderColor: borderClr, backgroundColor: colors.themeElevationColor }]}
-                flag={true}
-              />
-              <AppText style={[styles.inputLabel, { color: textPrimary }]}>New Mobile Number</AppText>
+              <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginBottom: 24 }}>Step 2: Enter new mobile number</AppText>
+              
+               <View style={{ marginTop: 8 }}>
+                  <AppText type={THIRTEEN} weight={SEMI_BOLD} style={{ color: themeColors.text, marginBottom: 8 }}>Country Code</AppText>
+                  <PickerSelect
+                    data={countryCodePickerData}
+                    selected={newCountryCode}
+                    onSelect={(item) => setNewCountryCode(item?.value ?? item ?? '+91')}
+                    placeholder="Select country code"
+                    theme={isDark ? "Dark" : "Light"}
+                    style={[styles.picker, { borderColor: themeColors.border, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)" }]}
+                    flag={true}
+                  />
+               </View>
+
               <Input
+                title="New Mobile Number"
                 value={newMobileNumber}
                 onChangeText={(t) => setNewMobileNumber((t || '').replace(/\D/g, ''))}
                 placeholder="Enter new mobile number"
-                containerStyle={styles.input}
-                inputStyle={{ color: textPrimary }}
+                mainContainer={{ marginTop: 16 }}
                 keyboardType="phone-pad"
               />
               <Button
@@ -336,17 +349,19 @@ const ChangeMobileScreen = () => {
 
           {step === 3 && (
             <View style={styles.formContent}>
-              <AppText style={[styles.subtitle, { color: textSecondary }]}>Step 3: Verify new mobile</AppText>
-              <AppText style={[styles.bodyText, { color: textPrimary }]}>
-                Click "Send OTP" to receive a code on <AppText style={styles.bold}>{countryCodeStr} {newMobileNumber}</AppText>
+              <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginBottom: 24 }}>Step 3: Verify new mobile</AppText>
+              <AppText type={THIRTEEN} style={{ color: themeColors.text }}>
+                Click "Send OTP" to receive a code on <AppText weight={SEMI_BOLD}>{countryCodeStr} {newMobileNumber}</AppText>
               </AppText>
-              <OtpInput6Digit label="New Mobile Verification Code" value={newMobileOtp} onChangeText={setNewMobileOtp} isDark={isDark} />
+              <View style={{ marginTop: 24 }}>
+                <OtpInput6Digit label="New Mobile Verification Code" value={newMobileOtp} onChangeText={setNewMobileOtp} isDark={isDark} />
+              </View>
               <View style={styles.resendRow}>
                 {resendTimerNew > 0 ? (
-                  <AppText style={{ color: textSecondary }}>Resend ({resendTimerNew}s)</AppText>
+                  <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText }}>Resend ({resendTimerNew}s)</AppText>
                 ) : (
-                  <TouchableOpacityView onPress={handleSendNewMobileOtp} disabled={isLoading} style={{alignSelf:"flex-end"}}>
-                    <AppText style={{ color: colors.buttonBg, fontWeight: '600' }}>Send OTP</AppText>
+                  <TouchableOpacityView onPress={handleSendNewMobileOtp} disabled={isLoading}>
+                    <AppText weight={SEMI_BOLD} style={{ color: themeColors.button, fontSize: 13 }}>Send OTP</AppText>
                   </TouchableOpacityView>
                 )}
               </View>
@@ -362,11 +377,13 @@ const ChangeMobileScreen = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <VerificationOptionsSheet sheetRef={optionsSheetRef} options={availableMethods} onSelect={handleOptionsSelect} borderClr={borderClr} />
+      <VerificationOptionsSheet sheetRef={optionsSheetRef} options={availableMethods} onSelect={handleOptionsSelect} />
       <SpinnerSecond />
     </AppSafeAreaView>
   );
 };
+
+export default ChangeMobileScreen;
 
 const styles = StyleSheet.create({
   header: {
@@ -377,33 +394,38 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   backBtn: { padding: 4 },
-  backIcon: { width: 24, height: 24 },
-  headerTitle: { fontSize: 18, fontWeight: '700', marginLeft: 12 },
+  backIcon: { width: 22, height: 22 },
+  headerTitle: { fontSize: 18, marginLeft: 12 },
   scroll: { flex: 1 },
   scrollContent: { padding: 20, paddingBottom: 40 },
-  noticeContent: { paddingTop: 24 },
+  noticeContent: { paddingTop: 10 },
   noticeIconWrap: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: '#FF9800',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
     marginBottom: 20,
   },
-  noticeIcon: { width: 36, height: 36 },
-  title: { fontSize: 19, fontWeight: '700', marginBottom: 6 },
-  subtitle: { fontSize: 14, marginBottom: 14 },
-  bodyText: { fontSize: 14, lineHeight: 21, marginBottom: 12 },
-  bold: { fontWeight: '600' },
+  noticeIcon: { width: 32, height: 32 },
+  infoBox: {
+    marginTop: 24,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
   formContent: { paddingTop: 8 },
-  inputLabel: { fontSize: 14, fontWeight: '500', marginBottom: 2 },
-  picker: { marginBottom: 16, borderRadius: 10, borderWidth: 1 },
-  input: { marginBottom: 16 },
-  btn: { marginTop: 20 },
-  resendRow: { marginTop: 14, alignItems: 'flex-end' },
-  switchWrap: { marginTop: 18,flexDirection:"row",alignItems:"center",},
+  btn: { marginTop: 30 },
+  resendRow: { marginTop: 12, alignItems: 'flex-end' },
+  switchWrap: { marginTop: 24, flexDirection: "row", alignItems: "center", justifyContent: 'center' },
+  passkeyIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  picker: { borderRadius: 10, borderWidth: 1, paddingVertical: 12, paddingHorizontal: 12 },
 });
-
-export default ChangeMobileScreen;

@@ -499,6 +499,7 @@ const ProfileDrawer = () => {
               source={back_ic}
               resizeMode="contain"
               style={{ width: 20, height: 20 }}
+              tintColor={themeColors.text}
             />
           </TouchableOpacity>
           <View style={{ flexDirection: "row", gap: 10, alignItems: 'center' }}>

@@ -17,6 +17,7 @@ import {
 } from '../../helper/ImageAssets';
 import NavigationService from '../../navigation/NavigationService';
 import { colors } from '../../theme/colors';
+import { useTheme } from '../../hooks/useTheme';
 import {
   dateFormatter,
   depositWithdrawColor,
@@ -33,7 +34,7 @@ const formatDateTime = (dateString: string | undefined) => {
 
 const WalletHistoryDetails = () => {
   const route = useRoute();
-  const theme = useAppSelector(state => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   const selectedWalletHistory = useAppSelector(
     state => state.wallet.selectedWalletHistory,
   );
@@ -58,8 +59,8 @@ const WalletHistoryDetails = () => {
   const isFailed = status === 'FAILED' || status === 'CANCELLED' || status === 'CANCELED' || status === 'REJECTED';
   const isPending = !isSuccess && !isFailed;
 
-  const textColor = theme !== 'Dark' ? colors.black : colors.white;
-  const labelColor = theme !== 'Dark' ? colors.textGray : colors.descText;
+  const textColor = themeColors.text;
+  const labelColor = themeColors.secondaryText;
 
   const title = String(transaction_type || 'Transaction') || 'Wallet History';
 
@@ -93,11 +94,11 @@ const WalletHistoryDetails = () => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.newThemeColor }]}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View
         style={[
           styles.header,
-          { borderBottomColor: theme !== 'Dark' ? '#eee' : colors.inputBorder },
+          { borderBottomColor: themeColors.border },
         ]}>
         <TouchableOpacity
           onPress={() => NavigationService.goBack()}
@@ -106,10 +107,10 @@ const WalletHistoryDetails = () => {
             source={back_ic}
             style={styles.backIcon}
             resizeMode="contain"
-            tintColor={colors.white}
+            tintColor={themeColors.text}
           />
         </TouchableOpacity>
-        <AppText style={styles.headerTitle} numberOfLines={1}>
+        <AppText style={[styles.headerTitle, { color: themeColors.text }]} numberOfLines={1}>
           {title}
         </AppText>
         <View style={styles.headerBtn} />
@@ -129,7 +130,7 @@ const WalletHistoryDetails = () => {
                   ? colors.green
                   : isFailed
                   ? colors.red
-                  : colors.buttonBg || colors.disabledText,
+                  : colors.lightYellow,
               },
             ]}>
             {isSuccess && (
@@ -162,7 +163,7 @@ const WalletHistoryDetails = () => {
                   ? colors.green
                   : isFailed
                   ? colors.red
-                  : colors.buttonBg || colors.disabledText,
+                  : colors.lightYellow,
               },
             ])}>
             {isSuccess ? 'Success' : isFailed ? 'Failed' : status || 'Pending'}
@@ -195,7 +196,7 @@ const WalletHistoryDetails = () => {
             value={fee != null ? toFixedThree(Number(fee)) : undefined}
           />
           <Row label="Chain" value={String(chain ?? '')} />
-          <View style={[styles.divider, { backgroundColor: labelColor }]} />
+          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
           {from_address != null && String(from_address) !== '' && (
             <Row
               label="From Address"
@@ -219,7 +220,7 @@ const WalletHistoryDetails = () => {
           <Row
             label="Transaction Type"
             value={String(transaction_type ?? '')}
-            valueColor={colors.white}
+            valueColor={textColor}
           />
           {(description != null && String(description) !== '') && (
             <Row
@@ -259,7 +260,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    color: colors.white,
     fontFamily: fontFamilySemiBold,
     flex: 1,
     textAlign: 'center',

@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { AppText } from "../../shared";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 import { useAppSelector } from "../../store/hooks";
 import FastImage from "react-native-fast-image";
 import { back_ic, cancelcheck, closeIcon, headPhoneIcon, pendingCheck, successcheck } from "../../helper/ImageAssets";
@@ -19,7 +20,7 @@ const formatDateTime = (dateString) => {
 const SpotOrderHistoryDetail = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   const order = route?.params?.order || {};
 
   // Log full order data once (to see what detail page receives — then show all on history page)
@@ -52,8 +53,8 @@ const SpotOrderHistoryDetail = () => {
   const orderNo = order?.orderId || order?.order_id || order?._id || order?.id || "---";
   const filledQty = filled;
 
-  const textColor = theme !== "Dark" ? colors.black : colors.white;
-  const labelColor = theme !== "Dark" ? colors.textGray : colors.descText;
+  const textColor = themeColors.text;
+  const labelColor = themeColors.secondaryText;
 
   const Row = ({ label, value, valueColor, numberOfValueLines = 1 }) => (
     <View style={[styles.row, numberOfValueLines > 1 && styles.rowMultiline]}>
@@ -68,40 +69,37 @@ const SpotOrderHistoryDetail = () => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor:colors.newThemeColor }]}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: theme !== "Dark" ? "#eee" : colors.inputBorder }]}>
+      <View style={[styles.header, { borderBottomColor: themeColors.border }]}>
         <TouchableOpacity onPress={() => NavigationService.goBack()} style={styles.headerBtn}>
-          <FastImage source={back_ic} style={styles.backIcon} resizeMode="contain" tintColor={colors.white} />
+          <FastImage source={back_ic} style={styles.backIcon} resizeMode="contain" tintColor={themeColors.text} />
         </TouchableOpacity>
-        <AppText style={styles.headerTitle}>{pair}</AppText>
+        <AppText style={[styles.headerTitle, { color: themeColors.text }]}>{pair}</AppText>
         <View></View>
-        {/* <TouchableOpacity style={styles.headerBtn} onPress={() => NavigationService.navigate("Support")}>
-          <FastImage source={headPhoneIcon} style={styles.headerRightIcon} resizeMode="contain" tintColor={colors.white} />
-        </TouchableOpacity> */}
+
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Status: Filled = checkmark, Canceled = cancel icon, Pending/Open = pending icon */}
         <View style={styles.statusBlock}>
-          <View style={[styles.statusCircle, { borderWidth: 1, borderColor: isFilled ? colors.green : isCanceled ? colors.red : isPending ? (colors.buttonBg || colors.disabledText) : colors.disabledText }]}>
+          <View style={[styles.statusCircle, { borderWidth: 1, borderColor: isFilled ? colors.green : isCanceled ? colors.red : isPending ? (colors.lightYellow || colors.disabledText) : colors.disabledText }]}>
             {isFilled && <FastImage source={successcheck} style={{ width: 40, height: 40 }} resizeMode="contain" />}
             {isCanceled && <FastImage source={cancelcheck} style={styles.statusCircleIcon} resizeMode="contain" />}
-            {isPending && <FastImage source={pendingCheck} style={{width:30,height:30}} resizeMode="contain" />}
+            {isPending && <FastImage source={pendingCheck} style={{ width: 30, height: 30 }} resizeMode="contain" />}
           </View>
-          <AppText style={[styles.statusText, { color: isFilled ? colors.green : isCanceled ? colors.red : isPending ? (colors.buttonBg || colors.disabledText) : colors.disabledText }]}>
+          <AppText style={[styles.statusText, { color: isFilled ? colors.green : isCanceled ? colors.red : isPending ? (colors.lightYellow || colors.disabledText) : colors.disabledText }]}>
             {isFilled ? "Filled 100%" : isCanceled ? "Canceled" : isPending ? (status === "PARTIAL" ? "Partial" : status === "OPEN" ? "Open" : "Pending") : status}
           </AppText>
         </View>
 
         {/* Order Summary - same as reference image */}
-        <View style={[styles.block, {  }]}>
+        <View style={[styles.block, {}]}>
           <Row label="Order No." value={String(orderNo)} numberOfValueLines={2} />
           <Row label="Type" value={orderType} valueColor={order?.side === "BUY" ? colors.green : colors.red} />
           <Row label="Filled / Amount" value={`${toFixedEight(filledQty)} / ${toFixedEight(qty)}`} />
           <Row label="Avg. / Price" value={qty ? `${toFixedSix(avgPrice)} / ${toFixedSix(price)}${isFilled ? " (Counterparty 1)" : ""}` : `0 / ${toFixedSix(price)}`} />
           <Row label="Conditions" value=" -- " />
-          <View style={[styles.divider, { backgroundColor: labelColor }]} />
+          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
           <Row label="Fee" value={`${toFixedEight(fee)} ${baseCurrency}`} />
           <Row label="Total" value={`${toFixedEight(total)} ${quoteCurrency}`} />
           <Row label="Create time" value={formatDateTime(order?.createdAt)} />
@@ -109,11 +107,11 @@ const SpotOrderHistoryDetail = () => {
         </View>
 
         {/* Divider before Trade Details */}
-        <View style={[styles.sectionDivider, { backgroundColor: labelColor }]} />
+        <View style={[styles.sectionDivider, { backgroundColor: themeColors.border }]} />
 
         {/* Trade Details - same as reference image */}
         <AppText style={[styles.sectionTitle, { color: textColor }]}>Trade Details</AppText>
-        <View style={[styles.block, { }]}>
+        <View style={[styles.block, {}]}>
           <Row label="Date" value={formatDateTime(order?.updatedAt || order?.createdAt)} />
           <Row label="Price" value={toFixedSix(avgPrice)} />
           <Row label="Amount" value={toFixedEight(filledQty || qty)} />
@@ -148,9 +146,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    color: colors.white,
-    fontFamily:fontFamilyBold,
-    right:15
+    fontFamily: fontFamilyBold,
+    right: 15,
   },
   headerRightIcon: {
     width: 22,
@@ -187,7 +184,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 15,
-    fontFamily:fontFamilySemiBold
+    fontFamily: fontFamilySemiBold
   },
   block: {
     borderRadius: 12,

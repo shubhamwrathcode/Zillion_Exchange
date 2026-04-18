@@ -8,6 +8,7 @@ import {
   WHITE,
 } from "../../shared";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 import { useAppSelector } from "../../store/hooks";
 import FastImage from "react-native-fast-image";
 import { folder, NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
@@ -24,7 +25,7 @@ const NewSwapHistory = ({
   totalAllInvestment = 0,
 }) => {
   const dispatch = useDispatch();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   const swapHistoryListRedux = useAppSelector(
     (state) => state.wallet.swapHistoryList
   );
@@ -58,7 +59,7 @@ const NewSwapHistory = ({
 
   const loadMoreData = (currentSkip, isInitial = false) => {
     if (loading || (!hasMore && !isInitial)) return;
-    
+
     setLoading(true);
     setSkip(currentSkip);
     dispatch(getqbsHistory(currentSkip, limit));
@@ -99,16 +100,17 @@ const NewSwapHistory = ({
         style={[
           styles.card,
           {
-            backgroundColor: colors.themeElevationColor,
+            backgroundColor: themeColors.background,
+            borderColor: themeColors.border,
           },
         ]}
       >
-        <View style={styles.cardHeader}>
+        <View style={[styles.cardHeader, { borderBottomColor: themeColors.border }]}>
           <View style={styles.cardHeaderLeft}>
-            <AppText style={[styles.cardTitle, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardTitle, { color: themeColors.text }]}>
               Swap: {inv?.from} → {inv?.to}
             </AppText>
-            <AppText style={[styles.cardDate, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardDate, { color: themeColors.secondaryText }]}>
               {moment(inv?.createdAt).format("MMM DD, YYYY • hh:mm A")}
             </AppText>
           </View>
@@ -127,46 +129,46 @@ const NewSwapHistory = ({
         <View style={styles.cardBody}>
           {/* Always show first 5 fields */}
           <View style={styles.cardRow}>
-            <AppText style={[styles.cardLabel, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardLabel, { color: themeColors.secondaryText }]}>
               Sr no.:
             </AppText>
-            <AppText style={[styles.cardValue, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardValue, { color: themeColors.text }]}>
               {idx + 1}
             </AppText>
           </View>
 
           <View style={styles.cardRow}>
-            <AppText style={[styles.cardLabel, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardLabel, { color: themeColors.secondaryText }]}>
               Paid Amount:
             </AppText>
-            <AppText style={[styles.cardValue, { color: theme === "Dark" ? "#999" : "#666", fontWeight: "bold" }]}>
+            <AppText style={[styles.cardValue, { color: themeColors.text, fontWeight: "bold" }]}>
               {toFixedSix(inv?.pay_amount)} {inv?.from}
             </AppText>
           </View>
 
           <View style={styles.cardRow}>
-            <AppText style={[styles.cardLabel, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardLabel, { color: themeColors.secondaryText }]}>
               Received Amount:
             </AppText>
-            <AppText style={[styles.cardValue, { color: theme === "Dark" ? "#999" : "#666", fontWeight: "bold" }]}>
+            <AppText style={[styles.cardValue, { color: themeColors.text, fontWeight: "bold" }]}>
               {toFixedSix(inv?.get_amount)} {inv?.to}
             </AppText>
           </View>
 
           <View style={styles.cardRow}>
-            <AppText style={[styles.cardLabel, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardLabel, { color: themeColors.secondaryText }]}>
               Conversion Rate:
             </AppText>
-            <AppText style={[styles.cardValue, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardValue, { color: themeColors.text }]}>
               1 {inv?.from} = {toFixedSix(inv?.conversion_rate)} {inv?.to}
             </AppText>
           </View>
 
           <View style={styles.cardRow}>
-            <AppText style={[styles.cardLabel, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardLabel, { color: themeColors.secondaryText }]}>
               Fee:
             </AppText>
-            <AppText style={[styles.cardValue, { color: theme === "Dark" ? "#999" : "#666" }]}>
+            <AppText style={[styles.cardValue, { color: themeColors.text }]}>
               {toFixedSix(inv?.fee)} {inv?.from}
             </AppText>
           </View>
@@ -192,7 +194,7 @@ const NewSwapHistory = ({
     <AppSafeAreaView
       style={[
         styles.container,
-        { backgroundColor:colors.newThemeColor},
+        { backgroundColor: themeColors.background },
       ]}
     >
       <Toolbar
@@ -241,14 +243,13 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 10,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.05)",
     width: "95%",
-    alignSelf: "center"
+    alignSelf: "center",
   },
 
   cardHeader: {
@@ -258,7 +259,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.1)",
   },
 
   cardHeaderLeft: {

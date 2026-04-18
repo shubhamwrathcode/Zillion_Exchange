@@ -12,6 +12,7 @@ import {
   Toolbar,
 } from "../../shared";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 import { useAppSelector } from "../../store/hooks";
 import FastImage from "react-native-fast-image";
 import { NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
@@ -31,7 +32,7 @@ const OpenOrder = ({
   totalAllInvestment = 0,
 }) => {
   const dispatch = useDispatch();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   const openOrdersRedux = useAppSelector((state) => state.home.openOrders);
   const [openOrders, setOpenOrders] = useState([]);
   const [skip, setSkip] = useState(0);
@@ -83,11 +84,13 @@ const OpenOrder = ({
     return moment(dateString).format("YYYY-MM-DD HH:mm:ss");
   };
 
-  const getStatusColor = (status) => {
-    if (status === "FILLED" || status === "COMPLETED" || status === "EXECUTED") return colors.green;
-    if (status === "CANCELLED" || status === "CANCELED") return colors.descText || colors.disabledText;
-    if (status === "PARTIAL" || status === "OPEN" || status === "PENDING") return colors.amber;
-    return colors.descText;
+  const getStatusColor = (status = "") => {
+    const s = String(status).toUpperCase().trim();
+    if (s === "FILLED" || s === "COMPLETED" || s === "EXECUTED") return colors.green;
+    if (s === "REJECTED" || s === "CANCELLED" || s === "CANCELED") return colors.red;
+    if (s === "PARTIAL") return colors.amber;
+    if (s === "OPEN" || s === "PENDING") return colors.lightYellow;
+    return themeColors.secondaryText;
   };
 
   const renderCard = (inv, idx) => {
@@ -101,12 +104,23 @@ const OpenOrder = ({
     const price = Number(inv?.price) || 0;
     const avgPrice = Number(inv?.avg_execution_price) || price;
     const status = inv?.status || "";
-    const isFilled = status === "FILLED";
+    const isFilled = String(status).toUpperCase().trim() === "FILLED";
     const orderTypeLabel = (inv?.order_type === "MARKET" ? "Market" : "Limit") + " / " + (inv?.side === "BUY" ? "Buy" : "Sell");
-    const statusLabel = status === "FILLED" ? "Filled" : (status === "CANCELLED" || status === "CANCELED" ? "Canceled" : (status === "OPEN" ? "Open" : (status === "PARTIAL" ? "Partial" : status)));
+    
+    const getStatusLabel = (s = "") => {
+      const statusUpper = s.toUpperCase().trim();
+      if (statusUpper === "FILLED") return "Filled";
+      if (statusUpper === "CANCELLED" || statusUpper === "CANCELED") return "Cancelled";
+      if (statusUpper === "REJECTED") return "Rejected";
+      if (statusUpper === "PARTIAL") return "Partial";
+      if (statusUpper === "OPEN") return "Open";
+      if (statusUpper === "PENDING") return "Pending";
+      return s || "---";
+    };
+    const statusLabel = getStatusLabel(status);
 
-    const textColor = theme === "Dark" ? colors.white : colors.black;
-    const labelColor = theme === "Dark" ? colors.descText : colors.textGray;
+    const textColor = themeColors.text;
+    const labelColor = themeColors.secondaryText;
 
     return (
       <TouchableOpacity
@@ -152,7 +166,7 @@ const OpenOrder = ({
           <AppText style={[styles.cardValue, { color: getStatusColor(status) }]}>{statusLabel}</AppText>
         </View>
 
-        <View style={styles.cardDivider} />
+        <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
       </TouchableOpacity>
     );
   };
@@ -161,7 +175,7 @@ const OpenOrder = ({
     <AppSafeAreaView
       style={[
         styles.container,
-        { backgroundColor: colors.newThemeColor },
+        { backgroundColor: themeColors.background },
       ]}
     >
       <Toolbar
@@ -214,7 +228,6 @@ const styles = StyleSheet.create({
   },
   cardDivider: {
     height: 1,
-    backgroundColor: colors.overlayColor,
     marginTop: 14,
   },
 

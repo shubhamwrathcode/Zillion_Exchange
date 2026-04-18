@@ -6,37 +6,34 @@ import {
   SEMI_BOLD,
   SIXTEEN,
   FOURTEEN,
+  BOLD,
+  THIRTEEN,
+  EIGHTEEN,
 } from "../../shared";
 import { useRoute } from "@react-navigation/native";
 import KeyBoardAware from "../../shared/components/KeyboardAware";
-import { Keyboard, StyleSheet, View, TouchableOpacity } from "react-native";
+import { Keyboard, StyleSheet, View, TouchableOpacity, Platform } from "react-native";
 import { colors } from "../../theme/colors";
-import {
-  borderWidth,
-  universalPaddingHorizontal,
-  universalPaddingHorizontalHigh,
-  universalPaddingTop,
-} from "../../theme/dimens";
 import { errorText } from "../../helper/Constants";
 import { showError } from "../../helper/logger";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { enableTwoFa } from "../../actions/accountActions";
 import { verifyUser, sendLoginOtp } from "../../actions/authActions";
 import NavigationService from "../../navigation/NavigationService";
-import { appBg, back_ic } from "../../helper/ImageAssets";
+import { back_ic } from "../../helper/ImageAssets";
 import FastImage from "react-native-fast-image";
-import { authStyles } from "../auth/authStyles";
 import OTPInputView from "@twotalltotems/react-native-otp-input";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import { SpinnerSecond } from "../../shared/components/SpinnerSecond";
+import { useTheme } from "../../hooks/useTheme";
 
 const EnterOtp = () => {
   const dispatch = useAppDispatch();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   const userData = useAppSelector((state) => state.auth.userData);
   const { emailId, mobileNumber, country_code } = userData ?? {};
   const route = useRoute();
-  const params = route?.params ?? {};
+  const params: any = route?.params ?? {};
   const isLogin = params?.isLogin ?? false;
   const authType = params?.authType ?? 1;
   const loginSignId = params?.loginSignId ?? "";
@@ -61,11 +58,11 @@ const EnterOtp = () => {
   const getVerifySignId = () => {
     if (!isLogin) return (emailId || `${country_code || ""} ${mobileNumber || ""}`.trim()) || email_or_phone;
     if (selectedAuthMethod === 3) {
-      const m = availableMethods.find((x) => x.type === 3);
+      const m = availableMethods.find((x: any) => x.type === 3);
       return m?.value ?? loginSignId;
     }
     if (selectedAuthMethod === 1) {
-      const m = availableMethods.find((x) => x.type === 1);
+      const m = availableMethods.find((x: any) => x.type === 1);
       return m?.value ?? loginSignId;
     }
     return loginSignId;
@@ -108,127 +105,103 @@ const EnterOtp = () => {
   };
 
   return (
-    <AppSafeAreaView
-      source={theme !== "Dark" && appBg}
-      style={{ backgroundColor: colors.newThemeColor }}
-    >
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <KeyBoardAware containerStyle={{justifyContent: "space-between"}}>
-        <View >
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            width: "75%",
-            marginTop: 20,
-            marginHorizontal: 10,
-          }}
-        >
-          <TouchableOpacity onPress={() => NavigationService.goBack()}>
-            <FastImage
-              source={back_ic}
-              resizeMode="contain"
-              style={{ width: 20, height: 20 }}
-              tintColor={theme !== "Dark" ? colors.black : colors.white}
-            />
-          </TouchableOpacity>
-          <AppText weight={SEMI_BOLD} type={SIXTEEN}>
-            Two Factor Authentication
-          </AppText>
-        </View>
-        <AppText style={{ alignSelf: "center", marginLeft: 25 }}>
-          {selectedAuthMethod === 2
-            ? "Your Code will be sent to Authenticator App"
-            : `Your Code has been sent ${selectedAuthMethod === 1 ? "to Email" : selectedAuthMethod === 3 ? "to Mobile" : ""} `}
-        </AppText>
-        <View
-          style={[
-            theme !== "Dark" ? authStyles.card : styles.cardDark,
-            { margin: 20 },
-          ]}
-        >
-          <OTPInputView
-            style={{
-              width: "100%",
-              height: 100,
-              justifyContent: "flex-start",
-            }}
-            pinCount={6}
-            codeInputFieldStyle={styles.underlineStyleBase}
-            codeInputHighlightStyle={styles.underlineStyleHighLighted}
-            onCodeChanged={setCode}
-            onCodeFilled={(otp) => {
-              if (otp?.length === 6) {
-                if (isLogin) {
-                  dispatch(verifyUser({ email_or_phone: getVerifySignId(), otp, type: selectedAuthMethod }));
-                } else {
-                  const data = {
-                    email_or_phone:
-                      authType === 1
-                        ? emailId
-                        : authType === 3
-                        ? `${country_code || ""} ${mobileNumber || ""}`.trim()
-                        : authType === 0 && userData?.["2fa"] === 1
-                        ? emailId
-                        : authType === 0 && userData?.["2fa"] === 3
-                        ? `${country_code || ""} ${mobileNumber || ""}`.trim()
-                        : emailId || `${country_code || ""} ${mobileNumber || ""}`.trim(),
-                    type: authType,
-                    verification_code: parseInt(otp, 10),
-                  };
-                  dispatch(enableTwoFa(data));
-                }
-              }
-            }}
-          />
-          {isLogin && selectedAuthMethod !== 2 && (
-            <View style={styles.resendRow}>
-              {resendTimer > 0 ? (
-                <AppText type={FOURTEEN} color={colors.disabledText}>
-                  Resend ({resendTimer}s)
+        <View style={styles.scrollContent}>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => NavigationService.goBack()} style={styles.backBtn}>
+                    <FastImage
+                    source={back_ic}
+                    resizeMode="contain"
+                    style={styles.backIcon}
+                    tintColor={themeColors.text}
+                    />
+                </TouchableOpacity>
+                <AppText weight={BOLD} type={EIGHTEEN} style={{ color: themeColors.text, marginLeft: 12 }}>
+                    Verification
                 </AppText>
-              ) : (
-                <TouchableOpacityView onPress={handleGetOtp}>
-                  <AppText type={FOURTEEN} color={colors.buttonBg}>
-                    Get OTP
-                  </AppText>
-                </TouchableOpacityView>
-              )}
             </View>
-          )}
-          {isLogin && availableMethods?.length > 1 && (
-            <View style={{ marginTop: 12 }}>
-              <AppText type={FOURTEEN} color={colors.disabledText} style={{ marginBottom: 6 }}>
-                Switch to:
-              </AppText>
-              {availableMethods
-                .filter((m) => m.type !== selectedAuthMethod && m.type !== 4)
-                .map((method) => (
-                  <TouchableOpacityView
-                    key={method.type}
-                    onPress={() => {
-                      setSelectedAuthMethod(method.type);
-                      setCode("");
-                      setResendTimer(0);
+
+            <View style={styles.infoBox}>
+                 <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, textAlign: 'center' }}>
+                    {selectedAuthMethod === 2
+                        ? "Enter the code from your Google Authenticator app"
+                        : `Enter the code sent to your ${selectedAuthMethod === 1 ? "email" : "mobile number"}`}
+                </AppText>
+            </View>
+
+            <View style={[styles.card, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+                <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.text, marginBottom: 12 }}>
+                    Verification Code
+                </AppText>
+                <OTPInputView
+                    style={styles.otpInputView}
+                    pinCount={6}
+                    codeInputFieldStyle={[
+                        styles.otpField,
+                        { borderColor: themeColors.border, color: themeColors.text }
+                    ]}
+                    codeInputHighlightStyle={{ borderColor: themeColors.button }}
+                    onCodeChanged={setCode}
+                    onCodeFilled={(otp) => {
+                        if (otp?.length === 6) {
+                            setCode(otp);
+                        }
                     }}
-                    style={{ paddingVertical: 4 }}
-                  >
-                    <AppText type={FOURTEEN}>
-                      {method.label || (method.type === 1 ? "Email" : method.type === 2 ? "Authenticator" : "Mobile")}
-                    </AppText>
-                  </TouchableOpacityView>
-                ))}
+                />
+
+                {isLogin && selectedAuthMethod !== 2 && (
+                    <View style={styles.resendRow}>
+                    {resendTimer > 0 ? (
+                        <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText }}>
+                        Resend ({resendTimer}s)
+                        </AppText>
+                    ) : (
+                        <TouchableOpacityView onPress={handleGetOtp}>
+                        <AppText weight={SEMI_BOLD} type={THIRTEEN} style={{ color: themeColors.button }}>
+                            Get OTP
+                        </AppText>
+                        </TouchableOpacityView>
+                    )}
+                    </View>
+                )}
             </View>
-          )}
-        </View>
+
+            {isLogin && availableMethods?.length > 1 && (
+                <View style={styles.altFlow}>
+                    <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText, marginBottom: 16 }}>
+                        Prefer another method?
+                    </AppText>
+                    {availableMethods
+                        .filter((m: any) => m.type !== selectedAuthMethod && m.type !== 4)
+                        .map((method: any) => (
+                        <TouchableOpacityView
+                            key={method.type}
+                            onPress={() => {
+                            setSelectedAuthMethod(method.type);
+                            setCode("");
+                            setResendTimer(0);
+                            }}
+                            style={[styles.altBtn, { borderColor: themeColors.border, backgroundColor: themeColors.card }]}
+                        >
+                            <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.text }}>
+                                Use {method.label || (method.type === 1 ? "Email" : method.type === 2 ? "Authenticator" : "Mobile")}
+                            </AppText>
+                        </TouchableOpacityView>
+                    ))}
+                </View>
+            )}
         </View>
         
-        <Button
-            children="Submit"
-            disabled={!code}
-            onPress={() => onSubmit()}
-            loading={showButtonLoading}
-            containerStyle={styles.button}
-          />
+        <View style={styles.bottomSection}>
+            <Button
+                children="Submit"
+                disabled={code.length !== 6}
+                onPress={onSubmit}
+                loading={showButtonLoading}
+                containerStyle={styles.submitBtn}
+            />
+        </View>
       </KeyBoardAware>
 
       <SpinnerSecond />
@@ -237,43 +210,51 @@ const EnterOtp = () => {
 };
 
 export default EnterOtp;
+
 const styles = StyleSheet.create({
-  container: {
-    paddingTop: universalPaddingTop,
-    marginTop: 20,
-    marginHorizontal: 20,
-    backgroundColor: "#FFFFFF",
-    padding: universalPaddingHorizontal,
-    borderWidth: borderWidth,
-    borderColor: "#D4D4D4",
-    borderRadius: 10,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
   },
-  button: {
-    marginVertical: universalPaddingHorizontalHigh,
-    width: "80%",
-    alignSelf: "center",
-    marginBottom: "5%"
+  backBtn: { padding: 4 },
+  backIcon: { width: 22, height: 22 },
+  scrollContent: { paddingHorizontal: 20 },
+  infoBox: { marginTop: 16, marginBottom: 30 },
+  card: {
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8 },
+      android: { elevation: 1.5 },
+    }),
   },
-  cardDark: {
-    padding: 12,
-    marginTop: 20,
-    borderRadius: 15,
+  otpInputView: {
+    width: "100%",
+    height: 50,
   },
-  underlineStyleBase: {
-    width: 40,
+  otpField: {
+    width: 44,
     height: 50,
     borderWidth: 1,
-    borderRadius: 8,
-    borderColor: colors.inputBorder,
-    color: "#fff",
-    fontSize: 18,
-    textAlign: "center",
-  },
-  underlineStyleHighLighted: {
-    borderColor: colors.disabledText,
+    borderRadius: 10,
+    fontSize: 20,
+    fontWeight: '600',
   },
   resendRow: {
-    marginTop: 12,
+    marginTop: 20,
     alignItems: "flex-end",
   },
+  altFlow: { marginTop: 40 },
+  altBtn: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  bottomSection: { padding: 20, paddingBottom: 40 },
+  submitBtn: { width: "100%" },
 });

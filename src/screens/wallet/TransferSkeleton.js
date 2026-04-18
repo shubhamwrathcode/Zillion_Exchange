@@ -29,10 +29,10 @@ const ShimmerBox = ({ width: w, height, borderRadius = 8, style }) => {
     return () => shimmerX.stopAnimation();
   }, [shimmerX, w]);
 
-  const boneColor = themeColors.themeElevationColor;
+  const boneColor = isDark ? "#2A2A2A" : "#E1E9EE";
   const shimmerColors = isDark 
-    ? ["transparent", "rgba(255,255,255,0.16)", "transparent"]
-    : ["transparent", "rgba(0,0,0,0.05)", "transparent"];
+    ? ["transparent", "rgba(255,255,255,0.06)", "transparent"]
+    : ["transparent", "rgba(255,255,255,0.6)", "transparent"];
 
   return (
     <View
@@ -76,7 +76,7 @@ const TransferSkeleton = ({ contentOnly = false }) => {
   const content = (
     <>
       {/* From / To card */}
-      <View style={[styles.card, { backgroundColor: themeColors.themeElevationColor }]}>
+      <View style={[styles.card, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1, marginTop: -35 }]}>
         <View style={styles.cardRows}>
           <View style={styles.rowLeft}>
             <ShimmerBox width={40} height={12} borderRadius={4} />
@@ -108,7 +108,7 @@ const TransferSkeleton = ({ contentOnly = false }) => {
       </View>
 
       {/* Amount input */}
-      <View style={[styles.amountRow, { backgroundColor: themeColors.themeElevationColor }]}>
+      <View style={[styles.amountRow, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1 }]}>
         <ShimmerBox width={CONTENT_WIDTH * 0.45} height={26} borderRadius={6} />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
           <ShimmerBox width={40} height={14} borderRadius={4} />
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: H_PADDING,
     paddingTop: 16,
-    backgroundColor: colors.newThemeColor,
+    backgroundColor: "transparent",
   },
   contentOnlyWrap: {
     paddingHorizontal: H_PADDING,
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     width: CONTENT_WIDTH,
     borderRadius: 12,
     padding: 14,
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

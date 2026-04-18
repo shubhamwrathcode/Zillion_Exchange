@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import LinearGradient from "react-native-linear-gradient";
 import {
   AppText,
   Button,
@@ -35,6 +36,7 @@ import {
 } from "../../helper/ImageAssets";
 import NavigationService from "../../navigation/NavigationService";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 import { useAppSelector } from "../../store/hooks";
 import { useDispatch } from "react-redux";
 import { useEffect, useRef, useState } from "react";
@@ -57,7 +59,7 @@ const HEADER_BOTTOM_OFFSET = 30;
 const HEADER_CONTENT_PADDING = 12;
 
 // ─── Shimmer cell ────────────────────────────────────────────────────────────
-const ShimmerCell = ({ width: w, height, borderRadius = 6, style }) => {
+function ShimmerCell({ width: w, height, borderRadius = 6, style }) {
   const shimmerX = useRef(new Animated.Value(-SHIMMER_STRIP)).current;
   const mounted = useRef(true);
   useEffect(() => {
@@ -80,10 +82,16 @@ const ShimmerCell = ({ width: w, height, borderRadius = 6, style }) => {
       shimmerX.stopAnimation();
     };
   }, [shimmerX, w]);
+  const { colors: themeColors, isDark } = useTheme();
+  const boneColor = isDark ? "#2A2A2A" : "#E1E9EE";
+  const shimmerColors = isDark
+    ? ["transparent", "rgba(255,255,255,0.08)", "transparent"]
+    : ["transparent", "rgba(255,255,255,0.6)", "transparent"];
+
   return (
     <View
       style={[
-        { width: w, height, borderRadius, overflow: "hidden", backgroundColor: colors.themeElevationColor },
+        { width: w, height, borderRadius, overflow: "hidden", backgroundColor: boneColor },
         style,
       ]}
     >
@@ -95,90 +103,24 @@ const ShimmerCell = ({ width: w, height, borderRadius = 6, style }) => {
           bottom: 0,
           width: SHIMMER_STRIP,
           transform: [{ translateX: shimmerX }],
-          backgroundColor: "rgba(255,255,255,0.07)",
         }}
-      />
+      >
+        <LinearGradient
+          colors={shimmerColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{ flex: 1, width: SHIMMER_STRIP }}
+        />
+      </Animated.View>
     </View>
   );
-};
-
-// ─── Convert Skeleton (middle content only) ──────────────────────────────────
-const ConvertSkeleton = () => (
-  <View style={{ flex: 1 }}>
-    {/* From / To card */}
-    <View style={skStyles.sectionWrap}>
-      <View style={skStyles.fromToCard}>
-        <View style={{ flex: 1 }}>
-          {/* From row */}
-          <View style={skStyles.fieldRow}>
-            <View style={{ gap: 6 }}>
-              <ShimmerCell width={28} height={10} borderRadius={4} />
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <ShimmerCell width={24} height={24} borderRadius={12} />
-                <ShimmerCell width={60} height={14} borderRadius={4} />
-                <ShimmerCell width={12} height={12} borderRadius={3} />
-              </View>
-            </View>
-          </View>
-          <View style={skStyles.divider} />
-          {/* To row */}
-          <View style={skStyles.fieldRow}>
-            <View style={{ gap: 6 }}>
-              <ShimmerCell width={20} height={10} borderRadius={4} />
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <ShimmerCell width={24} height={24} borderRadius={12} />
-                <ShimmerCell width={60} height={14} borderRadius={4} />
-                <ShimmerCell width={12} height={12} borderRadius={3} />
-              </View>
-            </View>
-          </View>
-        </View>
-        {/* Swap arrow */}
-        <View style={skStyles.arrowCol}>
-          <ShimmerCell width={22} height={22} borderRadius={5} />
-        </View>
-      </View>
-    </View>
-
-    {/* Amount field */}
-    <View style={{ paddingHorizontal: SIDE_PAD }}>
-      <ShimmerCell width={50} height={11} borderRadius={4} style={{ marginBottom: 8 }} />
-      <View style={skStyles.amountBox}>
-        <ShimmerCell width={CONTENT_W * 0.5} height={16} borderRadius={4} />
-        <View style={{ flexDirection: "row", gap: 12 }}>
-          <ShimmerCell width={38} height={14} borderRadius={4} />
-          <ShimmerCell width={28} height={14} borderRadius={4} />
-        </View>
-      </View>
-      <ShimmerCell width={150} height={10} borderRadius={4} style={{ marginTop: 8, marginBottom: 20 }} />
-
-      {/* Detail card – 5 rows */}
-      <View style={skStyles.detailCard}>
-        {[1, 2, 3, 4, 5].map((i) => (
-          <View key={i} style={skStyles.detailRow}>
-            <ShimmerCell width={90} height={11} borderRadius={4} />
-            <ShimmerCell width={110} height={11} borderRadius={4} />
-          </View>
-        ))}
-      </View>
-
-      {/* Disclaimer box */}
-      <View style={skStyles.disclaimerBox}>
-        <ShimmerCell width={20} height={20} borderRadius={5} />
-        <View style={{ flex: 1, gap: 6 }}>
-          <ShimmerCell width={CONTENT_W - 52} height={10} borderRadius={4} />
-          <ShimmerCell width={CONTENT_W * 0.7} height={10} borderRadius={4} />
-        </View>
-      </View>
-    </View>
-  </View>
-);
+}
 
 const skStyles = StyleSheet.create({
   sectionWrap: { paddingHorizontal: SIDE_PAD, marginTop: -24, marginBottom: 16, zIndex: 10 },
   fromToCard: {
     flexDirection: "row",
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 12,
     overflow: "hidden",
     ...Platform.select({
@@ -190,7 +132,7 @@ const skStyles = StyleSheet.create({
   divider: { height: 1, backgroundColor: "rgba(255,255,255,0.08)", marginHorizontal: 16 },
   arrowCol: { alignSelf: "stretch", justifyContent: "center", alignItems: "center", paddingHorizontal: 12 },
   amountBox: {
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 12,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -200,7 +142,7 @@ const skStyles = StyleSheet.create({
     marginBottom: 8,
   },
   detailCard: {
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 12,
     padding: 16,
     gap: 12,
@@ -212,15 +154,89 @@ const skStyles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 12,
     padding: 12,
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 12,
   },
 });
 
-const ConvertNew = () => {
+function ConvertSkeleton() {
+  const { colors: themeColors, isDark } = useTheme();
+  return (
+    <View style={{ flex: 1 }}>
+      {/* From / To card */}
+      <View style={skStyles.sectionWrap}>
+        <View style={[skStyles.fromToCard, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1 }]}>
+          <View style={{ flex: 1 }}>
+            {/* From row */}
+            <View style={skStyles.fieldRow}>
+              <View style={{ gap: 6 }}>
+                <ShimmerCell width={28} height={10} borderRadius={4} />
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <ShimmerCell width={24} height={24} borderRadius={12} />
+                  <ShimmerCell width={60} height={14} borderRadius={4} />
+                  <ShimmerCell width={12} height={12} borderRadius={3} />
+                </View>
+              </View>
+            </View>
+            <View style={[skStyles.divider, { backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "#EEE" }]} />
+            {/* To row */}
+            <View style={skStyles.fieldRow}>
+              <View style={{ gap: 6 }}>
+                <ShimmerCell width={20} height={10} borderRadius={4} />
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <ShimmerCell width={24} height={24} borderRadius={12} />
+                  <ShimmerCell width={60} height={14} borderRadius={4} />
+                  <ShimmerCell width={12} height={12} borderRadius={3} />
+                </View>
+              </View>
+            </View>
+          </View>
+          {/* Swap arrow */}
+          <View style={skStyles.arrowCol}>
+            <ShimmerCell width={22} height={22} borderRadius={5} />
+          </View>
+        </View>
+      </View>
+
+      {/* Amount field */}
+      <View style={{ paddingHorizontal: SIDE_PAD }}>
+        <ShimmerCell width={50} height={11} borderRadius={4} style={{ marginBottom: 8 }} />
+        <View style={[skStyles.amountBox, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1 }]}>
+          <ShimmerCell width={CONTENT_W * 0.5} height={16} borderRadius={4} />
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <ShimmerCell width={38} height={14} borderRadius={4} />
+            <ShimmerCell width={28} height={14} borderRadius={4} />
+          </View>
+        </View>
+        <ShimmerCell width={150} height={10} borderRadius={4} style={{ marginTop: 8, marginBottom: 20 }} />
+
+        {/* Detail card – 5 rows */}
+        <View style={[skStyles.detailCard, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1 }]}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <View key={i} style={skStyles.detailRow}>
+              <ShimmerCell width={90} height={11} borderRadius={4} />
+              <ShimmerCell width={110} height={11} borderRadius={4} />
+            </View>
+          ))}
+        </View>
+
+        {/* Disclaimer box */}
+        <View style={[skStyles.disclaimerBox, { backgroundColor: isDark ? "#1A1A1A" : "#FFF9E6", borderColor: isDark ? "#2A2A2A" : "#F3BB2B", borderWidth: 1 }]}>
+          <ShimmerCell width={20} height={20} borderRadius={5} />
+          <View style={{ flex: 1, gap: 6 }}>
+            <ShimmerCell width={CONTENT_W - 52} height={10} borderRadius={4} />
+            <ShimmerCell width={CONTENT_W * 0.7} height={10} borderRadius={4} />
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function ConvertNew() {
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
 
   const swapCurrencyList = useAppSelector((state) => state.wallet.swapCurrencyList);
   const swapConversionRate = useAppSelector((state) => state.wallet.swapConversionRate);
@@ -284,11 +300,11 @@ const ConvertNew = () => {
     setVisible(false);
   };
 
-  const labelColor = theme === "Dark" ? colors.descText : "#666";
-  const arrowTint = theme === "Dark" ? colors.white : colors.black;
+  const labelColor = themeColors.secondaryText;
+  const arrowTint = isDark ? colors.white : colors.black;
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: themeColors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor={colors.buttonBg} />
 
       {/* Header — always visible */}
@@ -296,7 +312,7 @@ const ConvertNew = () => {
         <TouchableOpacity onPress={() => NavigationService.goBack()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
           <FastImage source={back_ic} resizeMode="contain" tintColor={colors.white} style={styles.headerIcon} />
         </TouchableOpacity>
-        <AppText color={colors.black} weight={SEMI_BOLD} style={styles.headerTitle}>
+        <AppText color={isDark ? colors.black : colors.white} weight={SEMI_BOLD} style={styles.headerTitle}>
           Convert
         </AppText>
         <TouchableOpacity onPress={() => NavigationService.navigate("Swap_History")} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
@@ -311,7 +327,7 @@ const ConvertNew = () => {
         <>
           {/* From / To card - overlaps header */}
           <View style={styles.fromToSectionWrap}>
-            <View style={styles.fromToSection}>
+            <View style={[styles.fromToSection, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1, elevation: 0, shadowOpacity: 0 }]}>
               <View style={styles.fromToLeft}>
                 <TouchableOpacity style={styles.fieldRow} onPress={() => openCoinModal("from")} activeOpacity={0.7}>
                   <View>
@@ -320,7 +336,7 @@ const ConvertNew = () => {
                       {fromCoin?.icon_path && (
                         <FastImage source={{ uri: BASE_URL + fromCoin.icon_path }} style={styles.coinIconSmall} resizeMode="contain" />
                       )}
-                      <AppText color={colors.white} weight={MEDIUM} type={FOURTEEN}>{fromCoin?.short_name || "Select"}</AppText>
+                      <AppText color={themeColors.text} weight={MEDIUM} type={FOURTEEN}>{fromCoin?.short_name || "Select"}</AppText>
                       <FastImage source={Down_Imgs} resizeMode="contain" tintColor={colors.secondaryText} style={styles.dropdownArrow} />
                     </View>
                   </View>
@@ -333,7 +349,7 @@ const ConvertNew = () => {
                       {toCoin?.icon_path && (
                         <FastImage source={{ uri: BASE_URL + toCoin.icon_path }} style={styles.coinIconSmall} resizeMode="contain" />
                       )}
-                      <AppText color={colors.white} weight={MEDIUM} type={FOURTEEN}>{toCoin?.short_name || "Select"}</AppText>
+                      <AppText color={themeColors.text} weight={MEDIUM} type={FOURTEEN}>{toCoin?.short_name || "Select"}</AppText>
                       <FastImage source={Down_Imgs} resizeMode="contain" tintColor={colors.secondaryText} style={styles.dropdownArrow} />
                     </View>
                   </View>
@@ -344,18 +360,18 @@ const ConvertNew = () => {
                 onPress={handleSwapCoins}
                 activeOpacity={0.7}
               >
-                <FastImage source={swap} resizeMode="contain" tintColor={arrowTint} style={[styles.swapIcon, { transform: [{ rotate: "90deg" }] }]} />
+                <FastImage source={swap} resizeMode="contain" tintColor={themeColors.text} style={[styles.swapIcon, { transform: [{ rotate: "90deg" }] }]} />
               </TouchableOpacity>
             </View>
           </View>
 
-          <KeyBoardAware style={{ flex: 1, paddingHorizontal: 20, backgroundColor: colors.newThemeColor }}>
+          <KeyBoardAware style={{ flex: 1, paddingHorizontal: 20, backgroundColor: themeColors.background }}>
             <AppText type={TEN} style={[styles.sectionLabel, { color: labelColor }]}>Amount</AppText>
-            <View style={styles.amountField}>
+            <View style={[styles.amountField, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1 }]}>
               <TextInput
                 placeholder="Enter the amount"
-                placeholderTextColor={theme === "Dark" ? "#5E6272" : "#FFFFFF80"}
-                style={[styles.amountInput, { color: theme === "Dark" ? colors.white : colors.black }]}
+                placeholderTextColor={themeColors.secondaryText}
+                style={[styles.amountInput, { color: themeColors.text }]}
                 value={amount}
                 onChangeText={setAmount}
                 keyboardType="numeric"
@@ -382,7 +398,7 @@ const ConvertNew = () => {
               </AppText>
             )}
 
-            <View style={styles.detailCard}>
+            <View style={[styles.detailCard, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1 }]}>
               <View style={styles.detailRow}>
                 <AppText type={TEN} style={{ color: labelColor }}>Conversion rate</AppText>
                 <AppText type={TEN} style={{ color: labelColor }}>
@@ -409,7 +425,7 @@ const ConvertNew = () => {
               </View>
             </View>
 
-            <View style={styles.disclaimerBox}>
+            <View style={[styles.disclaimerBox, { backgroundColor: isDark ? "#1A1A1A" : "#FFF9E6", borderColor: isDark ? themeColors.border : "#F3BB2B", borderWidth: 1 }]}>
               <FastImage source={disclaimerIcon} style={styles.disclaimerIcon} resizeMode="contain" />
               <AppText type={NINE} style={[styles.disclaimerText, { color: labelColor }]}>
                 The final conversion amount will be calculated at the current available market rate at the time of execution. The actual value may differ slightly from the rate displayed here due to market fluctuations.
@@ -437,7 +453,7 @@ const ConvertNew = () => {
         onClose={() => setCoinModal(false)}
         data={swapCurrencyList}
         onSelect={handleSelectCoin}
-        theme={theme}
+        isDark={isDark}
         disabledCoinId={type === "from" ? toCoin?.currency_id : fromCoin?.currency_id}
       />
       <TransferModal
@@ -454,7 +470,6 @@ export default ConvertNew;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.newThemeColor,
   },
   header: {
     flexDirection: "row",
@@ -480,7 +495,7 @@ const styles = StyleSheet.create({
   },
   fromToSection: {
     flexDirection: "row",
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 12,
     overflow: "hidden",
     ...Platform.select({
@@ -508,7 +523,7 @@ const styles = StyleSheet.create({
   },
   fieldDivider: {
     height: 1,
-    backgroundColor: colors.dividerColor || "rgba(255,255,255,0.08)",
+    backgroundColor: colors.lightGrey || "rgba(255,255,255,0.08)",
     marginHorizontal: 16,
   },
   coinIconSmall: {
@@ -535,7 +550,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   amountField: {
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 12,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -561,7 +576,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   detailCard: {
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 12,
     padding: 16,
     gap: 12,
@@ -577,7 +592,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 12,
     padding: 12,
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 12,
   },
   disclaimerIcon: {

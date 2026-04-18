@@ -5,6 +5,7 @@ import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated, Dimensions, ScrollView } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width } = Dimensions.get("window");
 const CONTENT_PADDING = 16;
@@ -38,8 +39,11 @@ const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
     };
   }, [shimmerX, w]);
 
-  const boneColor = colors.themeElevationColor;
-  const shimmerColors = ["transparent", "rgba(255,255,255,0.16)", "transparent"];
+  const { colors: themeColors, isDark } = useTheme();
+  const boneColor = isDark ? "#2A2A2A" : "#E1E9EE";
+  const shimmerColors = isDark
+    ? ["transparent", "rgba(255,255,255,0.08)", "transparent"]
+    : ["transparent", "rgba(255,255,255,0.6)", "transparent"];
 
   return (
     <View
@@ -67,6 +71,7 @@ const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
 };
 
 const RefferalRewardSkeleton = () => {
+  const { colors: themeColors, isDark } = useTheme();
   return (
     <ScrollView
       style={styles.scroll}
@@ -79,7 +84,7 @@ const RefferalRewardSkeleton = () => {
         <ShimmerBox width={CONTENT_WIDTH} height={12} borderRadius={4} />
       </View>
 
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1 }]}>
         <View style={styles.refRow}>
           <ShimmerBox width={80} height={12} borderRadius={4} />
           <ShimmerBox width={CONTENT_WIDTH * 0.45} height={12} borderRadius={4} />
@@ -95,7 +100,7 @@ const RefferalRewardSkeleton = () => {
       </View>
 
       <View style={styles.eventsSection}>
-        <View style={[styles.eventCard, { width: CONTENT_WIDTH }]}>
+        <View style={[styles.eventCard, { width: CONTENT_WIDTH, backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1 }]}>
           <ShimmerBox width={CONTENT_WIDTH - 32} height={100} borderRadius={12} style={{ marginBottom: 12 }} />
           <ShimmerBox width={140} height={14} borderRadius={4} style={{ marginBottom: 8 }} />
           <ShimmerBox width={CONTENT_WIDTH * 0.7} height={12} borderRadius={4} style={{ marginBottom: 12 }} />
@@ -127,7 +132,7 @@ const RefferalRewardSkeleton = () => {
           <ShimmerBox width={140} height={40} borderRadius={8} />
         </View>
         {[1, 2, 3].map((i) => (
-          <View key={i} style={styles.historyCard}>
+          <View key={i} style={[styles.historyCard, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1 }]}>
             <View style={styles.historyRow}>
               <ShimmerBox width={40} height={10} borderRadius={4} />
               <ShimmerBox width={80} height={10} borderRadius={4} />
@@ -163,7 +168,7 @@ const styles = StyleSheet.create({
     marginHorizontal: CONTENT_PADDING,
     marginTop: 4,
     padding: 16,
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 12,
   },
   refRow: {
@@ -179,7 +184,7 @@ const styles = StyleSheet.create({
   },
   eventsSection: { marginTop: 24, marginHorizontal: CONTENT_PADDING },
   eventCard: {
-    backgroundColor: "#2b313c",
+    backgroundColor: "transparent",
     borderRadius: 12,
     padding: 16,
   },
@@ -210,7 +215,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   historyCard: {
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 10,
     padding: 14,
     marginBottom: 10,

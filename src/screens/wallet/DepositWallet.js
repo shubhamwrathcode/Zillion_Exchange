@@ -81,7 +81,7 @@ const DepositWallet = () => {
     }
 
   };
-  
+
   const handleReset = () => {
     setSearchResult("");
     setFilterData('');
@@ -91,16 +91,16 @@ const DepositWallet = () => {
   return (
     <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }}>
       <KeyBoardAware>
-        <View style={[styles.headerView, {backgroundColor: theme !== "Dark" && "#FAF9F6"}]}>
+        <View style={[styles.headerView, { backgroundColor: theme !== "Dark" && "#FAF9F6" }]}>
           <TouchableOpacity onPress={() => NavigationService.goBack()}>
             <FastImage
               source={back_ic}
               resizeMode="contain"
               style={{ width: 20, height: 20 }}
-              tintColor={theme !== "Dark"? colors.black : colors.white}
+              tintColor={theme !== "Dark" ? colors.black : colors.white}
             />
           </TouchableOpacity>
-          <View  style={[styles.searchView, {borderColor:  theme === "Dark" ? "#FFFFFF33" : "#00000033"}]}>
+          <View style={[styles.searchView, { borderColor: theme === "Dark" ? "#FFFFFF33" : "#00000033" }]}>
             <FastImage
               source={searchIcon}
               tintColor={"#787878"}
@@ -113,11 +113,11 @@ const DepositWallet = () => {
               maxLength={30}
               value={searhResult}
               onChangeText={(val) => handleInputChange(val)}
-              style={{width: "80%", color: theme !== "Dark" ? "#000000" : "#FFFFFF"}}
+              style={{ width: "80%", color: theme !== "Dark" ? "#000000" : "#FFFFFF" }}
             />
           </View>
           <AppText
-            style={{ color: theme !== "Dark" ? "#F3BB2B" : colors.buttonDarkBg}}
+            style={{ color: theme !== "Dark" ? "#F3BB2B" : colors.buttonDarkBg }}
             weight={SEMI_BOLD}
             type={FOURTEEN}
             onPress={handleReset}
@@ -172,8 +172,8 @@ const DepositWallet = () => {
                     ? filterData
                     : depositFiatCoins
                   : filterData
-                  ? filterData
-                  : depositActiveCoins
+                    ? filterData
+                    : depositActiveCoins
               }
               renderItem={({ item }) => {
                 return (
@@ -190,14 +190,14 @@ const DepositWallet = () => {
                       })
                     }
                   >
-                    <View style={{borderRadius: 50, overflow: "hidden"}}>
-                    <FastImage
-                      source={{ uri: BASE_URL + item?.icon_path }}
-                      style={{ width: 30, height: 30 }}
-                      resizeMode="cover"
-                    />
+                    <View style={{ borderRadius: 50, overflow: "hidden" }}>
+                      <FastImage
+                        source={{ uri: BASE_URL + item?.icon_path }}
+                        style={{ width: 30, height: 30 }}
+                        resizeMode="cover"
+                      />
                     </View>
-                    
+
                     <AppText weight={SEMI_BOLD}>{item?.short_name}</AppText>
                     <AppText color={DISCLAIMTEXT}>{item?.name}</AppText>
                   </TouchableOpacity>

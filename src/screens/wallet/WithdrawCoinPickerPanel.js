@@ -14,6 +14,7 @@ import FastImage from "react-native-fast-image";
 import { searchIcon } from "../../helper/ImageAssets";
 import { BASE_URL } from "../../helper/Constants";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 import { universalPaddingHorizontalHigh } from "../../theme/dimens";
 import {
   getActiveWithdrawChainKeys,
@@ -95,7 +96,7 @@ const yToRailLetter = (locationY, railHeight) => {
 const WithdrawCoinPickerSkeleton = () => (
   <View style={styles.selectCoinPhase}>
     <View
-      style={[styles.selectCoinSearchWrap, { borderColor: colors.inputBorder }]}
+      style={[styles.selectCoinSearchWrap, { borderWidth: 0 }]}
     >
       <ShimmerBone width="100%" height={48} borderRadius={10} />
     </View>
@@ -129,7 +130,8 @@ const WithdrawCoinPickerSkeleton = () => (
 );
 
 /** DepositCoin-style list (search + A–Z) embedded in WithdrawWallet select step */
-const WithdrawCoinPickerPanel = ({ coins, theme, onSelect, loading }) => {
+const WithdrawCoinPickerPanel = ({ coins, onSelect, loading }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const [searchPair, setSearchPair] = useState("");
   const [railScrollLetter, setRailScrollLetter] = useState(null);
   const [bubbleLetter, setBubbleLetter] = useState(null);
@@ -141,7 +143,7 @@ const WithdrawCoinPickerPanel = ({ coins, theme, onSelect, loading }) => {
   const railDragActiveRef = useRef(false);
   const lastRailHapticLetterRef = useRef(null);
   const bubbleHideTimeoutRef = useRef(null);
-  const scrollToLetterRef = useRef(() => {});
+  const scrollToLetterRef = useRef(() => { });
   const onViewableItemsChangedRef = useRef(null);
 
   useEffect(() => {
@@ -327,12 +329,12 @@ const WithdrawCoinPickerPanel = ({ coins, theme, onSelect, loading }) => {
             weight={SEMI_BOLD}
             type={FOURTEEN}
             style={{
-              color: theme === "Dark" ? colors.white : colors.black,
+              color: themeColors.text,
             }}
           >
             {item?.short_name}
           </AppText>
-          <AppText type={TWELVE} color={colors.textGray}>
+          <AppText type={TWELVE} color={isDark ? "#B1B1B1" : "#666"}>
             {item?.name}
           </AppText>
         </View>
@@ -352,7 +354,7 @@ const WithdrawCoinPickerPanel = ({ coins, theme, onSelect, loading }) => {
   return (
     <View style={styles.selectCoinPhase}>
       <View
-        style={[styles.selectCoinSearchWrap, { borderColor: colors.inputBorder }]}
+        style={[styles.selectCoinSearchWrap, { backgroundColor: themeColors.background, borderColor: isDark ? themeColors.border : "#EEE" }]}
       >
         <FastImage
           source={searchIcon}
@@ -364,12 +366,12 @@ const WithdrawCoinPickerPanel = ({ coins, theme, onSelect, loading }) => {
           style={[
             styles.selectCoinSearchInput,
             {
-              backgroundColor: colors.themeElevationColor,
-              color: theme === "Dark" ? colors.white : colors.black,
+              backgroundColor: themeColors.background,
+              color: themeColors.text,
             },
           ]}
           placeholder="Search Coins"
-          placeholderTextColor={colors.secondaryText}
+          placeholderTextColor={themeColors.secondaryText}
           value={searchPair}
           onChangeText={setSearchPair}
         />
@@ -398,7 +400,7 @@ const WithdrawCoinPickerPanel = ({ coins, theme, onSelect, loading }) => {
           removeClippedSubviews={Platform.OS === "android"}
           viewabilityConfig={viewabilityConfig}
           onViewableItemsChanged={onViewableItemsChanged}
-          extraData={theme}
+          extraData={isDark}
           onScrollToIndexFailed={({ index }) => {
             const list = sortedSelectCoinsRef.current;
             if (!list.length) return;
@@ -432,7 +434,7 @@ const WithdrawCoinPickerPanel = ({ coins, theme, onSelect, loading }) => {
                 <View
                   style={[
                     styles.alphabetBubble,
-                    theme === "Dark"
+                    isDark
                       ? styles.alphabetBubbleDark
                       : styles.alphabetBubbleLight,
                   ]}
@@ -460,12 +462,10 @@ const WithdrawCoinPickerPanel = ({ coins, theme, onSelect, loading }) => {
               >
                 {LETTER_KEYS.map((label) => {
                   const isHighlighted = highlightedRailLetter === label;
-                  const mutedColor =
-                    theme === "Dark"
-                      ? colors.descText || colors.textGray
-                      : colors.textGray;
-                  const selectedColor =
-                    theme === "Dark" ? colors.white : colors.black;
+                  const mutedColor = isDark
+                    ? colors.descText || colors.textGray
+                    : colors.textGray;
+                  const selectedColor = isDark ? colors.white : colors.black;
                   return (
                     <View key={label} style={styles.alphabetIndexLetterCell}>
                       <AppText
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingHorizontal: 12,
     borderRadius: 12,
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderWidth: 1,
   },
   selectCoinSearchIcon: {

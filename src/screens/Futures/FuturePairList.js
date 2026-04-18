@@ -8,6 +8,7 @@ import {
 import { AppText, ELEVEN, FIFTEEN, FOURTEEN, SEMI_BOLD } from "../../shared";
 import { colors } from "../../theme/colors";
 import { toFixedFive } from "../../helper/utility";
+import { useTheme } from "../../hooks/useTheme";
 
 const FuturePairList = ({
   pairs = [],
@@ -15,12 +16,12 @@ const FuturePairList = ({
   onSelectPair,
   searchTerm = "",
   onSearchChange,
-  theme = "Dark",
 }) => {
-  const isDark = theme === "Dark";
+  const { isDark, colors: themeColors } = useTheme();
+  
   const selectedBorder = isDark ? colors.buttonDarkBg : colors.buttonBg;
   const selectedBg = isDark ? "rgba(243, 187, 43, 0.14)" : "rgba(243, 187, 43, 0.10)";
-  const cardBg = colors.themeElevationColor;
+  const cardBg = themeColors.background;
   const inputBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)";
   const divider = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
 
@@ -40,7 +41,7 @@ const FuturePairList = ({
       <AppText
         type={FIFTEEN}
         weight={SEMI_BOLD}
-        style={[styles.title, { color: isDark ? colors.white : colors.black }]}
+        style={[styles.title, { color: themeColors.text }]}
       >
         Select Futures Pair
       </AppText>
@@ -61,7 +62,7 @@ const FuturePairList = ({
           placeholderTextColor={isDark ? "#6F6F6F" : "#9D9D9D"}
           style={[
             styles.searchInput,
-            { color: isDark ? colors.white : colors.black },
+            { color: themeColors.text },
           ]}
         />
       </View>
@@ -77,7 +78,7 @@ const FuturePairList = ({
           <View style={styles.emptyState}>
             <AppText
               type={ELEVEN}
-              style={{ color: isDark ? "#9D9D9D" : "#666666" }}
+              style={{ color: themeColors.secondaryText }}
             >
               No pairs found
             </AppText>
@@ -113,14 +114,14 @@ const FuturePairList = ({
                 <AppText
                   type={FOURTEEN}
                   weight={SEMI_BOLD}
-                  style={{ color: isDark ? colors.white : colors.black }}
+                  style={{ color: themeColors.text }}
                 >
                   {item?.short_name}
                   {item?.margin_asset ? `/${item?.margin_asset}` : ""}
                 </AppText>
                 <AppText
                   type={ELEVEN}
-                  style={{ color: isDark ? "#9D9D9D" : "#666666" }}
+                  style={{ color: themeColors.secondaryText }}
                 >
                   {item?.name}
                 </AppText>
@@ -130,7 +131,7 @@ const FuturePairList = ({
                 <AppText
                   type={FOURTEEN}
                   weight={SEMI_BOLD}
-                  style={{ color: isDark ? colors.white : colors.black }}
+                  style={{ color: themeColors.text }}
                 >
                   {toFixedFive(item?.buy_price)}
                 </AppText>
@@ -207,4 +208,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FuturePairList;
+export default FuturePairList;

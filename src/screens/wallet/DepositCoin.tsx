@@ -45,6 +45,7 @@ import { useFocusEffect, useRoute } from '@react-navigation/native';
 import NavigationService from '../../navigation/NavigationService';
 import { BASE_URL } from '../../helper/Constants';
 import { colors } from '../../theme/colors';
+import { useTheme } from '../../hooks/useTheme';
 import { universalPaddingHorizontal, universalPaddingHorizontalHigh } from '../../theme/dimens';
 import {
     getDepositActiveCoins,
@@ -55,7 +56,7 @@ import {
 } from '../../actions/walletActions';
 import { getNotificationList } from '../../actions/homeActions';
 import { copyText, shortenAddress, dateFormatter } from '../../helper/utility';
-import { BACK_ICON, searchIcon, copyIcon, printIcon, upIcon, downIcon, INFO } from '../../helper/ImageAssets';
+import { BACK_ICON, searchIcon, copyIcon, printIcon, upIcon, downIcon, INFO, NO_NOTIFICATION_ICON } from '../../helper/ImageAssets';
 import { setLoading } from '../../slices/authSlice';
 import { setWalletAddress } from '../../slices/walletSlice';
 import { showError } from '../../helper/logger';
@@ -201,7 +202,7 @@ const sortCoinsByShortName = (arr: any[]) =>
 
 const DepositCoinSelectListSkeleton = () => (
     <View style={styles.selectCoinPhase}>
-        <View style={styles.selectCoinSearchWrap}>
+        <View style={[styles.selectCoinSearchWrap, { borderWidth: 0 }]}>
             <ShimmerBone width="100%" height={48} borderRadius={10} />
         </View>
         <View style={styles.selectCoinListRow}>
@@ -231,7 +232,7 @@ const DepositCoinSelectListSkeleton = () => (
 const DepositCoin = () => {
     const route = useRoute();
     const dispatch = useAppDispatch();
-    const theme = useAppSelector((state) => state.auth.theme);
+    const { colors: themeColors, isDark } = useTheme();
     const walletAddress = useAppSelector((state) => state.wallet.walletAddress);
     const depositActiveCoins = useAppSelector((state) => state.wallet.depositActiveCoins);
     const notificationList = useAppSelector((state) => state.home.notificationList);
@@ -681,7 +682,7 @@ const DepositCoin = () => {
                     resizeMode="cover"
                 />
                 <View style={styles.coinInfo}>
-                    <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: theme === 'Dark' ? colors.white : colors.black }}>
+                    <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.text }}>
                         {item?.short_name}
                     </AppText>
                     <AppText type={TWELVE} color={colors.textGray}>
@@ -734,7 +735,7 @@ const DepositCoin = () => {
             <View
                 style={[
                     styles.depositHistoryItem,
-                    { backgroundColor: theme === 'Dark' ? colors.white_fifteen : colors.white }
+                    { backgroundColor: themeColors.background, borderWidth: 1, borderColor: isDark ? themeColors.border : '#EEE' }
                 ]}
             >
                 <TouchableOpacity
@@ -759,7 +760,7 @@ const DepositCoin = () => {
                                 weight={SEMI_BOLD}
                                 type={FOURTEEN}
                                 numberOfLines={1}
-                                style={{ color: 'white' }}
+                                style={{ color: themeColors.text }}
                             >
                                 {item?.amount} {item?.currency}
                             </AppText>
@@ -783,7 +784,7 @@ const DepositCoin = () => {
                                 <AppText
                                     type={TWELVE}
                                     numberOfLines={1}
-                                    style={{ flex: 1, marginLeft: 8, color: 'white' }}
+                                    style={{ flex: 1, marginLeft: 8, color: themeColors.text }}
                                 >
                                     {item?.chain || 'Internal transfer'}
                                 </AppText>
@@ -796,7 +797,7 @@ const DepositCoin = () => {
                                 </AppText>
                                 <AppText
                                     type={TEN}
-                                    style={{ flex: 1, marginLeft: 8, color: 'white' }}
+                                    style={{ flex: 1, marginLeft: 8, color: themeColors.text }}
                                 >
                                     {moment(item.updatedAt).format('DD-MM-YYYY hh:mm A')}
                                 </AppText>
@@ -890,18 +891,18 @@ const DepositCoin = () => {
             : `Deposit ${selectedCurrency?.short_name || ''}`;
 
     return (
-        <AppSafeAreaView style={{ flex: 1, backgroundColor: colors.newThemeColor }}>
+        <AppSafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
             <View style={styles.headerView}>
                 <TouchableOpacity onPress={handleHeaderBack}>
                     <FastImage
                         source={BACK_ICON}
                         resizeMode="contain"
                         style={{ width: 20, height: 20 }}
-                        tintColor={theme === 'Dark' ? colors.white : colors.black}
+                        tintColor={themeColors.text}
                     />
                 </TouchableOpacity>
                 <AppText
-                    color={colors.white}
+                    color={themeColors.text}
                     weight={SEMI_BOLD}
                     type={EIGHTEEN}
                 >
@@ -915,7 +916,7 @@ const DepositCoin = () => {
                         source={printIcon}
                         resizeMode="contain"
                         style={{ width: 24, height: 20 }}
-                        tintColor={theme === 'Dark' ? colors.white : colors.black}
+                        tintColor={themeColors.text}
                     />
 
                 </TouchableOpacity>
@@ -926,7 +927,7 @@ const DepositCoin = () => {
                     <DepositCoinSelectListSkeleton />
                 ) : (
                     <View style={styles.selectCoinPhase}>
-                        <View style={styles.selectCoinSearchWrap}>
+                        <View style={[styles.selectCoinSearchWrap, { borderColor: isDark ? themeColors.border : '#EEE' }]}>
                             <FastImage
                                 source={searchIcon}
                                 style={styles.selectCoinSearchIcon}
@@ -937,12 +938,13 @@ const DepositCoin = () => {
                                 style={[
                                     styles.selectCoinSearchInput,
                                     {
-                                        backgroundColor: colors.themeElevationColor,
-                                        color: theme === 'Dark' ? colors.white : colors.black,
+                                        backgroundColor: themeColors.background,
+                                        borderColor: isDark ? themeColors.border : '#EEE',
+                                        color: themeColors.text,
                                     },
                                 ]}
                                 placeholder="Search Coins"
-                                placeholderTextColor={colors.secondaryText}
+                                placeholderTextColor={themeColors.secondaryText}
                                 value={searchPair}
                                 onChangeText={setSearchPair}
                             />
@@ -970,7 +972,7 @@ const DepositCoin = () => {
                                 removeClippedSubviews={Platform.OS === 'android'}
                                 viewabilityConfig={viewabilityConfig}
                                 onViewableItemsChanged={onViewableItemsChanged}
-                                extraData={theme}
+                                extraData={isDark}
                                 onScrollToIndexFailed={({ index }) => {
                                     const list = sortedSelectCoinsRef.current;
                                     if (!list.length) return;
@@ -1004,7 +1006,7 @@ const DepositCoin = () => {
                                             <View
                                                 style={[
                                                     styles.alphabetBubble,
-                                                    theme === 'Dark'
+                                                    isDark
                                                         ? styles.alphabetBubbleDark
                                                         : styles.alphabetBubbleLight,
                                                 ]}
@@ -1032,12 +1034,8 @@ const DepositCoin = () => {
                                         >
                                             {LETTER_KEYS.map((label) => {
                                                 const isHighlighted = highlightedRailLetter === label;
-                                                const mutedColor =
-                                                    theme === 'Dark'
-                                                        ? colors.descText || colors.textGray
-                                                        : colors.textGray;
-                                                const selectedColor =
-                                                    theme === 'Dark' ? colors.white : colors.black;
+                                                const mutedColor = themeColors.secondaryText;
+                                                const selectedColor = themeColors.text;
                                                 return (
                                                     <View
                                                         key={label}
@@ -1080,13 +1078,13 @@ const DepositCoin = () => {
                                         resizeMode="cover"
                                     />
                                     <View style={{ flex: 1 }}>
-                                        <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: theme === 'Dark' ? colors.white : colors.black }}>
+                                        <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.text }}>
                                             {selectedCurrency?.short_name}{' '}
                                             <AppText type={TWELVE} color={colors.textGray}>
                                                 {selectedCurrency?.name}
                                             </AppText>
                                         </AppText>
-                                        <AppText type={TWELVE} style={{ marginTop: 4, color: colors.white }}>
+                                        <AppText type={TWELVE} style={{ marginTop: 4, color: themeColors.secondaryText }}>
                                             Network: {selectedNetwork}
                                         </AppText>
                                     </View>
@@ -1101,7 +1099,7 @@ const DepositCoin = () => {
                                         }}
                                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                                     >
-                                        <AppText type={FOURTEEN} style={{color: colors.buttonBg}} weight={SEMI_BOLD}>
+                                        <AppText type={FOURTEEN} style={{ color: colors.buttonBg }} weight={SEMI_BOLD}>
                                             Change
                                         </AppText>
                                     </TouchableOpacity>
@@ -1109,7 +1107,7 @@ const DepositCoin = () => {
                                 <View style={styles.warningBox}>
                                     <AppText type={TEN} color={colors.textGray}>
                                         Make sure you also selected the same{' '}
-                                        <AppText type={TEN} weight={BOLD} style={{color: colors.buttonBg}}>
+                                        <AppText type={TEN} weight={BOLD} style={{ color: colors.buttonBg }}>
                                             {selectedCurrency?.short_name}-{selectedNetwork}
                                         </AppText>{' '}
                                         network on the platform where you are withdrawing funds for this deposit.
@@ -1152,7 +1150,7 @@ const DepositCoin = () => {
                                                             copyText(depositAddress);
                                                         }}
                                                     >
-                                                        <AppText type={FOURTEEN} numberOfLines={1} style={{ flex: 1 }}>
+                                                        <AppText type={FOURTEEN} numberOfLines={1} style={{ flex: 1, color: themeColors.text }}>
                                                             {depositAddress}
                                                         </AppText>
                                                         <FastImage
@@ -1199,8 +1197,8 @@ const DepositCoin = () => {
 
                             {/* FAQ Section - same card UI as KycStatus */}
                             <View style={styles.faqSection}>
-                                <View style={[styles.faqSectionCard, { backgroundColor: colors.themeElevationColor }]}>
-                                    <AppText type={FIFTEEN} weight={SEMI_BOLD} style={[styles.faqSectionCardTitle, { color: theme === "Dark" ? colors.white : colors.black }] as any}>
+                                <View style={[styles.faqSectionCard, { backgroundColor: themeColors.background, borderColor: isDark ? themeColors.border : '#EEE', borderWidth: 1 }]}>
+                                    <AppText type={FIFTEEN} weight={SEMI_BOLD} style={[styles.faqSectionCardTitle, { color: themeColors.text }] as any}>
                                         FAQ
                                     </AppText>
                                     <FlatList
@@ -1216,20 +1214,20 @@ const DepositCoin = () => {
                                                     onPress={() => setFaqActiveIndex(faqActiveIndex === index ? null : index)}
                                                     activeOpacity={0.7}
                                                 >
-                                                    <AppText type={THIRTEEN} weight={SEMI_BOLD} style={[styles.faqQuestion, { color: theme === "Dark" ? "#999" : "#666" }] as any}>
+                                                    <AppText type={THIRTEEN} weight={SEMI_BOLD} style={[styles.faqQuestion, { color: themeColors.secondaryText }] as any}>
                                                         {item.title}
                                                     </AppText>
                                                     <FastImage
                                                         source={faqActiveIndex === index ? upIcon : downIcon}
                                                         resizeMode="contain"
                                                         style={styles.faqArrow}
-                                                        tintColor={theme === "Dark" ? "#999" : "#666"}
+                                                        tintColor={themeColors.secondaryText}
                                                     />
                                                 </TouchableOpacity>
                                                 {faqActiveIndex === index && (
                                                     <View style={styles.faqAnswer}>
                                                         {item.content.split('\n').map((line: string, lineIndex: number) => (
-                                                            <AppText key={lineIndex} type={TWELVE} style={{ color: theme === "Dark" ? "#999" : "#666", lineHeight: 18 }}>
+                                                            <AppText key={lineIndex} type={TWELVE} style={{ color: themeColors.secondaryText, lineHeight: 18 }}>
                                                                 {line}
                                                             </AppText>
                                                         ))}
@@ -1241,11 +1239,6 @@ const DepositCoin = () => {
                                 </View>
                             </View>
 
-                            {/* <AppText weight={SEMI_BOLD} type={SIXTEEN} style={styles.sectionTitle}>
-                        Announcements
-                            </AppText> */}
-
-                            {/* Announcements Section */}
                             {announcements?.length > 0 && (
                                 <View style={styles.announcementsSection}>
                                     <View style={styles.announcementsHeader}>
@@ -1254,7 +1247,6 @@ const DepositCoin = () => {
                                         </AppText>
                                         <TouchableOpacity
                                             onPress={() => {
-                                                // Navigate to announcements page if needed
                                             }}
                                         >
                                             <AppText type={FOURTEEN} color={YELLOW}>
@@ -1270,12 +1262,12 @@ const DepositCoin = () => {
                                         {announcements?.map((item, index) => (
                                             <View key={index} style={[
                                                 styles.announcementItem,
-                                                { backgroundColor: theme === 'Dark' ? colors.white_fifteen : colors.white }
+                                                { backgroundColor: themeColors.background, borderColor: isDark ? themeColors.border : '#EEE', borderWidth: 1 }
                                             ]}>
                                                 <AppText
                                                     weight={SEMI_BOLD}
                                                     type={FOURTEEN}
-                                                    color={theme === 'Dark' ? WHITE : BLACK}
+                                                    color={themeColors.text}
                                                 >
                                                     {item?.title}
                                                 </AppText>
@@ -1332,11 +1324,8 @@ const DepositCoin = () => {
                                         ))}
                                     </View>
                                 ) : (
-                                    <View style={styles.emptyContainer}>
-                                        <AppText type={FOURTEEN} color={colors.textGray}>
-                                            No Data Available
-                                        </AppText>
-                                    </View>
+                                    <FastImage source={NO_NOTIFICATION_ICON} style={{ width: 120, height: 80, alignSelf: 'center' }}
+                                        resizeMode='contain' />
                                 )}
                             </View>
                         </ScrollView>
@@ -1353,7 +1342,7 @@ const DepositCoin = () => {
                     container: {
                         borderTopLeftRadius: 20,
                         borderTopRightRadius: 20,
-                        backgroundColor: colors.sheetColor || colors.newThemeColor,
+                        backgroundColor: themeColors.background,
                     },
                     wrapper: { backgroundColor: 'rgba(0,0,0,0.6)' },
                     draggableIcon: { backgroundColor: colors.textGray },
@@ -1365,7 +1354,7 @@ const DepositCoin = () => {
                         type={SIXTEEN}
                         style={{
                             ...styles.networkSheetTitle,
-                            color: theme === 'Dark' ? colors.white : colors.black,
+                            color: themeColors.text,
                         }}
                     >
                         Choose Network
@@ -1382,7 +1371,7 @@ const DepositCoin = () => {
                             return (
                                 <TouchableOpacity
                                     key={`${chainKey}-${idx}`}
-                                    style={styles.networkCard}
+                                    style={[styles.networkCard, { borderColor: isDark ? themeColors.border : '#EEE' }]}
                                     onPress={() => handleNetworkChosenFromSheet(chainKey)}
                                     activeOpacity={0.75}
                                 >
@@ -1390,7 +1379,7 @@ const DepositCoin = () => {
                                         <AppText
                                             weight={SEMI_BOLD}
                                             type={FOURTEEN}
-                                            style={{ color: theme === 'Dark' ? colors.white : colors.black }}
+                                            style={{ color: themeColors.text }}
                                         >
                                             {chainKey}
                                         </AppText>
@@ -1446,7 +1435,7 @@ const DepositCoin = () => {
                     <View
                         style={[
                             styles.modalContent,
-                            { backgroundColor: colors.newThemeColor },
+                            { backgroundColor: themeColors.background, borderColor: isDark ? themeColors.border : '#EEE', borderWidth: 1 },
                         ]}
                     >
                         <View style={styles.modalHeader}>
@@ -1508,7 +1497,7 @@ const DepositCoin = () => {
                     <View
                         style={[
                             styles.modalContent,
-                            { backgroundColor: theme === 'Dark' ? colors.white_fifteen : colors.white },
+                            { backgroundColor: themeColors.background, borderColor: isDark ? themeColors.border : '#EEE', borderWidth: 1 },
                         ]}
                     >
                         <View style={styles.modalHeader}>
@@ -1521,79 +1510,79 @@ const DepositCoin = () => {
                         </View>
                         <View style={styles.detailsContainer}>
                             <View style={styles.detailRow}>
-                                <AppText type={FOURTEEN} color='white' style={styles.modalLabel}>
+                                <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
                                     Status
                                 </AppText>
                                 <AppText
                                     type={FOURTEEN}
                                     weight={SEMI_BOLD}
-                                    color={modalData?.status === 'SUCCESS' ? GREEN : WHITE}
+                                    color={modalData?.status === 'SUCCESS' ? GREEN : themeColors.text}
                                     style={styles.modalValue}
                                 >
                                     {modalData?.status === 'SUCCESS' ? 'Completed' : 'Pending'}
                                 </AppText>
                             </View>
                             <View style={styles.detailRow}>
-                                <AppText type={FOURTEEN} color='white' style={styles.modalLabel}>
+                                <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
                                     Date
                                 </AppText>
                                 <AppText
                                     type={FOURTEEN}
                                     weight={SEMI_BOLD}
-                                    color='white'
+                                    color={themeColors.text}
                                     style={styles.modalValue}
                                 >
                                     {moment(modalData?.updatedAt).format('DD-MM-YYYY hh:mm A')}
                                 </AppText>
                             </View>
                             <View style={styles.detailRow}>
-                                <AppText type={FOURTEEN} color='white' style={styles.modalLabel}>
+                                <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
                                     Coin
                                 </AppText>
                                 <AppText
                                     type={FOURTEEN}
                                     weight={SEMI_BOLD}
-                                    color='white'
+                                    color={themeColors.text}
                                     style={styles.modalValue}
                                 >
                                     {modalData?.short_name}
                                 </AppText>
                             </View>
                             <View style={styles.detailRow}>
-                                <AppText type={FOURTEEN} color='white' style={styles.modalLabel}>
+                                <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
                                     Deposit amount
                                 </AppText>
                                 <AppText
                                     type={FOURTEEN}
                                     weight={SEMI_BOLD}
-                                    color='white'
+                                    color={themeColors.text}
                                     style={styles.modalValue}
                                 >
                                     {modalData?.amount} {modalData?.short_name}
                                 </AppText>
                             </View>
                             <View style={styles.detailRow}>
-                                <AppText type={FOURTEEN} color='white' style={styles.modalLabel}>
+                                <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
                                     Network
                                 </AppText>
                                 <AppText
                                     type={FOURTEEN}
                                     weight={SEMI_BOLD}
-                                    color='white'
+                                    color={themeColors.text}
                                     style={styles.modalValue}
                                 >
                                     {modalData?.chain || 'Internal Transaction'}
                                 </AppText>
                             </View>
                             <View style={styles.detailRow}>
-                                <AppText type={FOURTEEN} color='white' style={styles.modalLabel}>
+                                <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
                                     From Address
                                 </AppText>
                                 <View style={[styles.addressRow, styles.modalValue]}>
                                     <AppText
                                         type={FOURTEEN}
                                         weight={SEMI_BOLD}
-                                        color='white'
+                                        color={themeColors.text}
                                         style={{ flex: 1 }}
                                         numberOfLines={1}
                                     >
@@ -1615,14 +1604,14 @@ const DepositCoin = () => {
                                 </View>
                             </View>
                             <View style={styles.detailRow}>
-                                <AppText type={FOURTEEN} color='white' style={styles.modalLabel}>
+                                <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
                                     Deposit Address
                                 </AppText>
                                 <View style={[styles.addressRow, styles.modalValue]}>
                                     <AppText
                                         type={FOURTEEN}
                                         weight={SEMI_BOLD}
-                                        color='white'
+                                        color={themeColors.text}
                                         style={{ flex: 1 }}
                                         numberOfLines={1}
                                     >
@@ -1644,14 +1633,14 @@ const DepositCoin = () => {
                                 </View>
                             </View>
                             <View style={styles.detailRow}>
-                                <AppText type={FOURTEEN} color='white' style={styles.modalLabel}>
+                                <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
                                     TxID
                                 </AppText>
                                 <View style={[styles.addressRow, styles.modalValue]}>
                                     <AppText
                                         type={FOURTEEN}
                                         weight={SEMI_BOLD}
-                                        color='white'
+                                        color={themeColors.text}
                                         style={{ flex: 1 }}
                                         numberOfLines={1}
                                     >
@@ -1673,13 +1662,13 @@ const DepositCoin = () => {
                                 </View>
                             </View>
                             <View style={styles.detailRow}>
-                                <AppText type={FOURTEEN} color='white' style={styles.modalLabel}>
+                                <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
                                     Deposit wallet
                                 </AppText>
                                 <AppText
                                     type={FOURTEEN}
                                     weight={SEMI_BOLD}
-                                    color='white'
+                                    color={themeColors.text}
                                     style={styles.modalValue}
                                 >
                                     {modalData?.description?.includes('bonus')
@@ -1703,7 +1692,7 @@ const DepositCoin = () => {
                     <View
                         style={[
                             styles.modalContent,
-                            { backgroundColor: colors.newThemeColor },
+                            { backgroundColor: themeColors.background, borderColor: isDark ? themeColors.border : '#EEE', borderWidth: 1 },
                         ]}
                     >
                         <View style={styles.modalHeader}>
@@ -1805,7 +1794,6 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
         marginTop: 20,
-        backgroundColor: colors.themeElevationColor
     },
     selectedSection: {
         borderColor: YELLOW,
@@ -1819,7 +1807,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 12,
         borderRadius: 8,
-        backgroundColor: colors.overlayColor,
         marginBottom: 10,
     },
     searchIcon: {
@@ -1837,11 +1824,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 8,
         borderRadius: 8,
-        backgroundColor: colors.overlayColor,
         gap: 5,
     },
     quickCoinItemSelected: {
-        backgroundColor: colors.overlayColor,
         borderWidth: 1,
         borderColor: '#F3BB2B',
     },
@@ -1868,7 +1853,6 @@ const styles = StyleSheet.create({
         gap: 15,
     },
     qrWrapper: {
-        backgroundColor: colors.white,
         padding: 10,
         borderRadius: 10,
     },
@@ -1922,8 +1906,8 @@ const styles = StyleSheet.create({
     faqScrollContent: { paddingBottom: 8 },
     faqItemInner: {
         paddingVertical: 12,
-        borderBottomWidth: 0.5,
-        borderBottomColor: 'rgba(128,128,128,0.15)',
+        borderBottomWidth: 0.4,
+        borderColor: colors.inputBorder
     },
     faqItemInnerLast: { borderBottomWidth: 0 },
     faqQuestionRow: {
@@ -1937,7 +1921,6 @@ const styles = StyleSheet.create({
         marginTop: 10,
         paddingTop: 10,
         borderTopWidth: 1,
-        borderTopColor: 'rgba(128,128,128,0.2)',
     },
     announcementsSection: {
         marginTop: 20,
@@ -1954,7 +1937,6 @@ const styles = StyleSheet.create({
     announcementItem: {
         padding: 10,
         marginBottom: 10,
-        backgroundColor: colors.white_fifteen,
         borderRadius: 8,
     },
     recentDepositsSection: {
@@ -1982,7 +1964,6 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: colors.inputBorder,
         alignItems: 'flex-start',
     },
     depositHistoryContent: {
@@ -2046,7 +2027,6 @@ const styles = StyleSheet.create({
     },
     addressText: {
         // marginRight: 5,
-        color: 'white',
         width: "100%"
     },
     copyButton: {
@@ -2104,7 +2084,6 @@ const styles = StyleSheet.create({
     networkItem: {
         padding: 15,
         borderBottomWidth: 1,
-        borderBottomColor: colors.inputBorder,
         borderRadius: 8,
         marginBottom: 5,
     },
@@ -2123,7 +2102,6 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: colors.inputBorder,
         minHeight: 44,
     },
     modalLabel: {
@@ -2141,7 +2119,6 @@ const styles = StyleSheet.create({
     stepContainer: {
         paddingVertical: 10,
         borderBottomWidth: 1,
-        borderBottomColor: colors.inputBorder,
     },
     headerView: {
         flexDirection: "row",
@@ -2174,9 +2151,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         paddingHorizontal: 12,
         borderRadius: 12,
-        backgroundColor: colors.themeElevationColor,
         borderWidth: 1,
-        borderColor: colors.inputBorder,
     },
     selectCoinSearchIcon: {
         width: 20,
@@ -2217,7 +2192,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.38)',
     },
     alphabetBubbleDark: {
-        backgroundColor: 'rgba(255,255,255,0.22)',
+        backgroundColor: 'rgba(255,255,255,0.12)',
     },
     alphabetBubbleText: {
         color: '#FFFFFF',
@@ -2262,11 +2237,9 @@ const styles = StyleSheet.create({
     },
     networkCard: {
         borderWidth: 1,
-        borderColor: colors.inputBorder,
         borderRadius: 12,
         padding: 14,
         marginBottom: 10,
-        backgroundColor: colors.themeElevationColor,
     },
     networkCardTitleRow: {
         flexDirection: 'row',

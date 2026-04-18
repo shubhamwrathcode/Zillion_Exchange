@@ -15,6 +15,7 @@ import {
 import { closeIcon } from "../../helper/ImageAssets";
 import FastImage from "react-native-fast-image";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const MIN_LEVERAGE = 1;
 const MAX_LEVERAGE = 100;
@@ -36,6 +37,7 @@ const sanitizeLeverage = (value, fallback = MIN_LEVERAGE) => {
 };
 
 const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
+  const { isDark, colors: themeColors } = useTheme();
   const [leverageState, setLeverageState] = useState(() =>
     sanitizeLeverage(leverage)
   );
@@ -131,7 +133,7 @@ const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor:colors.themeElevationColor }}>
+    <View style={{ flex: 1, backgroundColor: themeColors.background }}>
       <View
         style={{
           flexDirection: "row",
@@ -141,7 +143,7 @@ const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <AppText type={EIGHTEEN} weight={BOLD}>
+          <AppText type={EIGHTEEN} weight={BOLD} style={{ color: themeColors.text }}>
             Adjust Leverage
           </AppText>
         </View>
@@ -149,7 +151,7 @@ const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
           onPress={onClose}
           style={{
             borderWidth: 1,
-            borderColor: "#FFFFFF80",
+            borderColor: isDark ? "#FFFFFF30" : "#EEE",
             borderRadius: 15,
             padding: 5,
           }}
@@ -157,29 +159,29 @@ const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
           <FastImage
             source={closeIcon}
             style={{ width: 12, height: 12 }}
-            tintColor={"#FFFFFF80"}
+            tintColor={isDark ? "#FFFFFF80" : "#777"}
             resizeMode="contain"
           />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.stepContainer}>
+      <View style={[styles.stepContainer, { backgroundColor: isDark ? "#FFFFFF1A" : "#F8F8F8", borderColor: isDark ? "#3F3F3F" : "#EEE" }]}>
         <TouchableOpacity
           onPress={handleDecrease}
-          style={styles.stepButton}
+          style={[styles.stepButton, { backgroundColor: isDark ? "#FFFFFF12" : "#EEE" }]}
           activeOpacity={0.7}
         >
-          <AppText style={styles.stepButtonLabel}>-</AppText>
+          <AppText style={[styles.stepButtonLabel, { color: isDark ? "#FFFFFF80" : "#555" }]}>-</AppText>
         </TouchableOpacity>
-        <AppText style={{ color: "#FFFFFF" }} type={FIFTEEN}>
+        <AppText style={{ color: themeColors.text }} type={FIFTEEN}>
           {`${leverageState}x`}
         </AppText>
         <TouchableOpacity
           onPress={handleIncrease}
-          style={styles.stepButton}
+          style={[styles.stepButton, { backgroundColor: isDark ? "#FFFFFF12" : "#EEE" }]}
           activeOpacity={0.7}
         >
-          <AppText style={styles.stepButtonLabel}>+</AppText>
+          <AppText style={[styles.stepButtonLabel, { color: isDark ? "#FFFFFF80" : "#555" }]}>+</AppText>
         </TouchableOpacity>
       </View>
 
@@ -188,11 +190,11 @@ const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
           style={styles.trackWrapper}
           onLayout={handleTrackLayout}
         >
-          <View style={styles.track} />
+          <View style={[styles.track, { backgroundColor: isDark ? "#3F3F3F" : "#EEE" }]} />
           <View
             style={[
               styles.activeTrack,
-              { width: Math.max(knobPosition, 0) },
+              { width: Math.max(knobPosition, 0), backgroundColor: colors.buttonDarkBg },
             ]}
           />
           <View style={styles.tickRow}>
@@ -203,6 +205,7 @@ const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
                   key={marker}
                   style={[
                     styles.tick,
+                    { backgroundColor: isDark ? "#3F3F3F" : "#BBB" },
                     isActive && styles.tickActive,
                   ]}
                 />
@@ -219,7 +222,7 @@ const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
               },
             ]}
           >
-            <View style={styles.knob} />
+            <View style={[styles.knob, { borderColor: isDark ? "#1D1D1D" : "#FFF", backgroundColor: colors.buttonDarkBg }]} />
           </View>
         </View>
 
@@ -237,6 +240,7 @@ const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
                   type={TEN}
                   style={[
                     styles.labelText,
+                    { color: isDark ? "#FFFFFF66" : "#888" },
                     isActive && styles.labelTextActive,
                   ]}
                 >
@@ -247,50 +251,6 @@ const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
           })}
         </View>
       </View>
-
-      {/* <View style={{marginTop: 20}}>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-            paddingHorizontal: 20,
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: "#FFFFFF80",
-              width: 4,
-              height: 4,
-              borderRadius: 50,
-            }}
-          ></View>
-          <AppText type={TEN} style={{color: "#FFFFFF80"}}>
-            Maximum Position at current leverageState: 100,000,000 USDT
-          </AppText>
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-            paddingHorizontal: 20,
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: "#FFFFFF80",
-              width: 4,
-              height: 4,
-              borderRadius: 50,
-            }}
-          ></View>
-          <AppText type={TEN} style={{color: "#FFFFFF80"}}>
-          Please note that leverageState Changing will also apply for open positions
-          and Open orders.
-          </AppText>
-        </View>
-      </View> */}
 
       <Button
         children="Confirm"
@@ -304,7 +264,6 @@ const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
 const styles = StyleSheet.create({
   stepContainer: {
     borderWidth: 1,
-    borderColor: "#3F3F3F",
     borderRadius: 5,
     paddingHorizontal: 20,
     height: 40,
@@ -313,7 +272,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#FFFFFF1A",
     width: "90%",
   },
   stepButton: {
@@ -322,10 +280,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 14,
-    backgroundColor: "#FFFFFF12",
   },
   stepButtonLabel: {
-    color: "#FFFFFF80",
     fontSize: 16,
   },
   sliderContainer: {
@@ -340,13 +296,11 @@ const styles = StyleSheet.create({
   track: {
     height: TRACK_HEIGHT,
     borderRadius: TRACK_HEIGHT / 2,
-    backgroundColor: "#3F3F3F",
   },
   activeTrack: {
     position: "absolute",
     height: TRACK_HEIGHT,
     borderRadius: TRACK_HEIGHT / 2,
-    backgroundColor: colors.buttonDarkBg,
     left: 0,
     top: (TRACK_WRAPPER_HEIGHT - TRACK_HEIGHT) / 2,
   },
@@ -363,7 +317,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#3F3F3F",
     transform: [{ rotate: "45deg" }],
   },
   tickActive: {
@@ -381,9 +334,7 @@ const styles = StyleSheet.create({
     width: KNOB_SIZE,
     height: KNOB_SIZE,
     borderRadius: 6,
-    backgroundColor: colors.buttonDarkBg,
     borderWidth: 2,
-    borderColor: "#1D1D1D",
     transform: [{ rotate: "45deg" }],
   },
   labelRow: {
@@ -393,10 +344,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   labelText: {
-    color: "#FFFFFF66",
   },
   labelTextActive: {
-    color: colors.white,
+    color: colors.buttonDarkBg,
+    fontWeight: "bold",
   },
   labelHitSlop: {
     paddingVertical: 4,

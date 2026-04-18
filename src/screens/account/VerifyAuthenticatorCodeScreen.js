@@ -14,28 +14,29 @@ import {
   AppText,
   Button,
   OtpInput6Digit,
+  BOLD,
+  FOURTEEN,
+  THIRTEEN,
+  SEMI_BOLD,
+  EIGHTEEN,
 } from '../../shared';
-import { colors } from '../../theme/colors';
 import FastImage from 'react-native-fast-image';
 import { back_ic } from '../../helper/ImageAssets';
 import { confirm2fa, getUserProfile } from '../../actions/accountActions';
 import { showError } from '../../helper/logger';
 import { SpinnerSecond } from '../../shared/components/SpinnerSecond';
+import { useTheme } from "../../hooks/useTheme";
 
 const CODE_LENGTH = 6;
 
 const VerifyAuthenticatorCodeScreen = () => {
   const navigation = useNavigation();
   const dispatch = useAppDispatch();
+  const { colors: themeColors, isDark } = useTheme();
   const isLoading = useAppSelector((state) => state.auth.isLoading);
   const showButtonLoading = useAppSelector((state) => state.auth.isLoading && state.auth.loadingFor !== 'otp');
-  const theme = useAppSelector((state) => state.auth.theme);
-  const isDark = theme === 'Dark';
 
   const [authenticatorCode, setAuthenticatorCode] = useState('');
-
-  const textPrimary = isDark ? colors.white : '#222';
-  const textSecondary = isDark ? colors.descText : '#666';
 
   const handleEnable = async () => {
     if (!authenticatorCode || authenticatorCode.length !== CODE_LENGTH) {
@@ -50,11 +51,10 @@ const VerifyAuthenticatorCodeScreen = () => {
   };
 
   return (
-    <AppSafeAreaView style={[styles.container, { backgroundColor: colors.newThemeColor }]}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
       >
         <View style={styles.header}>
           <TouchableOpacity
@@ -62,7 +62,7 @@ const VerifyAuthenticatorCodeScreen = () => {
             style={styles.backBtn}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <FastImage source={back_ic} style={styles.backIcon} tintColor={colors.white} resizeMode="contain" />
+            <FastImage source={back_ic} style={styles.backIcon} tintColor={themeColors.text} resizeMode="contain" />
           </TouchableOpacity>
         </View>
 
@@ -73,16 +73,18 @@ const VerifyAuthenticatorCodeScreen = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
-            <AppText style={[styles.title, { color: textPrimary }]}>Verify Setup</AppText>
-            <AppText style={[styles.subtitle, { color: textSecondary }]}>
+            <AppText weight={BOLD} type={EIGHTEEN} style={[styles.title, { color: themeColors.text }]}>Verify Setup</AppText>
+            <AppText type={THIRTEEN} style={[styles.subtitle, { color: themeColors.secondaryText }]}>
               Step 3: Enter the 6-digit code from your Google Authenticator app to complete setup.
             </AppText>
-            <OtpInput6Digit
-              label="Authenticator Code"
-              value={authenticatorCode}
-              onChangeText={setAuthenticatorCode}
-              isDark={isDark}
-            />
+            <View style={{ marginTop: 24 }}>
+                <OtpInput6Digit
+                label="Authenticator Code"
+                value={authenticatorCode}
+                onChangeText={setAuthenticatorCode}
+                isDark={isDark}
+                />
+            </View>
             <Button
               children="Enable Google Authenticator"
               onPress={handleEnable}
@@ -98,9 +100,10 @@ const VerifyAuthenticatorCodeScreen = () => {
   );
 };
 
+export default VerifyAuthenticatorCodeScreen;
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -108,13 +111,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   backBtn: { padding: 4 },
-  backIcon: { width: 20, height: 20 },
+  backIcon: { width: 22, height: 22 },
   scroll: { flex: 1 },
   scrollContent: { padding: 20, paddingBottom: 40 },
   content: { borderRadius: 16, overflow: 'hidden' },
-  title: { fontSize: 18, fontWeight: '700', letterSpacing: 0.2, marginHorizontal: 2 },
-  subtitle: { fontSize: 14, marginTop: 6, lineHeight: 20 },
-  btn: { marginTop: 24 },
+  title: { fontSize: 18 },
+  subtitle: { marginTop: 6, lineHeight: 20 },
+  btn: { marginTop: 30 },
 });
-
-export default VerifyAuthenticatorCodeScreen;

@@ -196,45 +196,7 @@ const KycRejected = ({ onVerifyPress }) => {
   );
 };
 
-const KycPartialRejection = ({ onResubmitPress, idDocStatus, taxDocStatus, selfieStatus, submittedIdDocType, submittedTaxDocType, getRejectReason }) => {
-  const { colors: themeColors } = useTheme();
-  const idD = getDocStatusDisplay(idDocStatus);
-  const taxD = getDocStatusDisplay(taxDocStatus);
-  const selfD = getDocStatusDisplay(selfieStatus);
-  return (
-    <View>
-      <FastImage source={kyc_rejected} resizeMode="contain" style={styles.icon} />
-      <AppText weight={SEMI_BOLD} style={[styles.title, { color: themeColors.text }]}>
-        Documents Need Resubmission
-      </AppText>
-      <AppText type={FOURTEEN} style={{ color: themeColors.secondaryText, marginTop: 8, marginHorizontal: universalPaddingHorizontalHigh }}>
-        Some of your documents require resubmission. Please check the details below and upload the corrected documents.
-      </AppText>
-      <AppText type={FOURTEEN} weight={SEMI_BOLD} style={[styles.requirementsTitle, { color: themeColors.text, marginTop: 16 }]}>Document Status</AppText>
-      <View style={styles.requirementsList}>
-        <View style={styles.requirementItem}>
-          <AppText type={FOURTEEN} style={{ color: themeColors.text }}>{idD.icon} {submittedIdDocType ? getDocTypeName(submittedIdDocType) : "Identity Document"} - {idD.text}</AppText>
-          {idDocStatus === "resubmit_required" && getRejectReason("id_document") ? (
-            <AppText type={TWELVE} color={themeColors.red} style={{ marginLeft: 8 }}>Reason: {getRejectReason("id_document")}</AppText>
-          ) : null}
-        </View>
-        <View style={styles.requirementItem}>
-          <AppText type={FOURTEEN} style={{ color: themeColors.text }}>{taxD.icon} {submittedTaxDocType ? getDocTypeName(submittedTaxDocType) : "Tax Document"} - {taxD.text}</AppText>
-          {taxDocStatus === "resubmit_required" && getRejectReason("tax_document") ? (
-            <AppText type={TWELVE} color={themeColors.red} style={{ marginLeft: 8 }}>Reason: {getRejectReason("tax_document")}</AppText>
-          ) : null}
-        </View>
-        <View style={styles.requirementItem}>
-          <AppText type={FOURTEEN} style={{ color: themeColors.text }}>{selfD.icon} Live Selfie - {selfD.text}</AppText>
-          {selfieStatus === "rejected" && getRejectReason("selfie") ? (
-            <AppText type={TWELVE} color={themeColors.red} style={{ marginLeft: 8 }}>Reason: {getRejectReason("selfie")}</AppText>
-          ) : null}
-        </View>
-      </View>
-      <Button children="Resubmit Documents" onPress={onResubmitPress} containerStyle={styles.button} />
-    </View>
-  );
-};
+
 
 const KycDue = ({ onVerifyPress, screenWidth }) => {
   const { colors: themeColors } = useTheme();

@@ -6,6 +6,7 @@ import FastImage from "react-native-fast-image";
 import { back_ic, BACK_ICON, bitcoin_ic, moreOption, printIcon, sideIcon } from "../../helper/ImageAssets";
 import NavigationService from "../../navigation/NavigationService";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 import { useAppSelector } from "../../store/hooks";
 import { useDispatch } from "react-redux";
 import { getParticularCoinBalance, getUserMainWallet, getWalletType, handleTranferCoin } from "../../actions/walletActions";
@@ -21,7 +22,8 @@ import TransferSkeleton from "./TransferSkeleton";
 const Height = Dimensions.get('window').height;
 const Transfer = () => {
   const dispatch = useDispatch();
-  const theme = useAppSelector(state => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
+  const theme = isDark ? "Dark" : "Light";
   const WalletTypes = useAppSelector(state => state.wallet.walletTypes);
   const userWallet = useAppSelector(state => state.wallet.userMainWallet);
   const [coin, setCoin] = useState(userWallet[0]);
@@ -98,28 +100,28 @@ const Transfer = () => {
   };
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }} isfrom>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }} isfrom>
       {/* Static header - no skeleton */}
-      <View style={[styles.headerSection, { paddingHorizontal: 20, backgroundColor: colors.newThemeColor }]}>
+      <View style={[styles.headerSection, { paddingHorizontal: 20, }]}>
         <View style={styles.headerView}>
           <TouchableOpacity onPress={() => NavigationService.goBack()}>
             <FastImage
               source={BACK_ICON}
               resizeMode="contain"
-              tintColor={colors.white}
+              tintColor={themeColors.text}
               style={{ width: 20, height: 20 }}
             />
           </TouchableOpacity>
           <TouchableOpacity style={{ flexDirection: "row", alignItems: "center", gap: 10 }} onPress={() => NavigationService.navigate('Interanl_Trade_History')}>
             <FastImage
-              tintColor={colors.white}
+              tintColor={themeColors.text}
               source={printIcon}
               resizeMode="contain"
               style={{ width: 24, height: 20 }}
             />
           </TouchableOpacity>
         </View>
-        <AppText color={colors.white} weight={SEMI_BOLD} type={TWENTY} style={{ marginVertical: 10 }}>Transfer</AppText>
+        <AppText color={themeColors.text} weight={SEMI_BOLD} type={TWENTY} style={{ marginVertical: 10 }}>Transfer</AppText>
       </View>
 
       <KeyBoardAware style={{ flex: 1, }}>
@@ -127,12 +129,12 @@ const Transfer = () => {
           <TransferSkeleton contentOnly />
         ) : (
           <>
-            <View style={styles.fromToCard}>
+            <View style={[styles.fromToCard, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1, marginTop: -25 }]}>
               <FastImage source={sideIcon} resizeMode="contain" style={{ width: 50, height: 80 }} />
               <View style={{ gap: 20 }}>
                 <TouchableOpacity style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "90%" }} onPress={() => openModal('from')}>
-                  <AppText color={BLACK} weight={MEDIUM} type={FOURTEEN}>From</AppText>
-                  <AppText color={BLACK} weight={MEDIUM} type={FOURTEEN}>{fromWallet?.toUpperCase()}</AppText>
+                  <AppText color={themeColors.text} weight={MEDIUM} type={FOURTEEN}>From</AppText>
+                  <AppText color={themeColors.text} weight={MEDIUM} type={FOURTEEN}>{fromWallet?.toUpperCase()}</AppText>
 
                   <FastImage
                     source={back_ic}
@@ -142,14 +144,14 @@ const Transfer = () => {
                       height: 15,
                       transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
                     }}
-                    tintColor={theme !== "Dark" ? colors.black : colors.white}
+                    tintColor={themeColors.text}
                   />
 
 
                 </TouchableOpacity>
                 <TouchableOpacity style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "90%" }} onPress={() => openModal('to')}>
-                  <AppText color={BLACK} weight={MEDIUM} type={FOURTEEN}>To </AppText>
-                  <AppText color={BLACK} weight={MEDIUM} type={FOURTEEN}>{toWallet?.toUpperCase()}</AppText>
+                  <AppText color={themeColors.text} weight={MEDIUM} type={FOURTEEN}>To </AppText>
+                  <AppText color={themeColors.text} weight={MEDIUM} type={FOURTEEN}>{toWallet?.toUpperCase()}</AppText>
 
                   <FastImage
                     source={back_ic}
@@ -159,7 +161,7 @@ const Transfer = () => {
                       height: 15,
                       transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
                     }}
-                    tintColor={theme !== "Dark" ? colors.black : colors.white}
+                    tintColor={themeColors.text}
                   />
 
                 </TouchableOpacity>
@@ -168,8 +170,8 @@ const Transfer = () => {
 
             </View>
             <TouchableOpacity style={{
-              flexDirection: "row", justifyContent: "space-between", marginHorizontal: 20, borderBottomColor: "#A2A2A2",
-              borderBottomWidth: 0.5, paddingBottom: 15, alignItems: "center", marginTop: 15
+              flexDirection: "row", justifyContent: "space-between", marginHorizontal: 20, borderBottomColor: isDark ? themeColors.border : "#EEE",
+              borderBottomWidth: 1, paddingBottom: 15, alignItems: "center", marginTop: 15
             }} onPress={() => setCoinModal(true)}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                 <View style={{ borderRadius: 50, overflow: "hidden" }}>
@@ -180,7 +182,7 @@ const Transfer = () => {
                   />
                 </View>
 
-                <AppText color={BLACK} weight={SEMI_BOLD} type={SIXTEEN}>{coin?.short_name}</AppText>
+                <AppText color={themeColors.text} weight={SEMI_BOLD} type={SIXTEEN}>{coin?.short_name}</AppText>
               </View>
 
               <FastImage
@@ -191,18 +193,18 @@ const Transfer = () => {
                   height: 15,
                   transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
                 }}
-                tintColor={theme !== "Dark" ? colors.black : colors.white}
+                tintColor={themeColors.text}
               />
 
             </TouchableOpacity>
             <View style={{ marginHorizontal: 20 }}>
-              <AppText color={BLACK} weight={SEMI_BOLD} type={SIXTEEN} style={{ marginVertical: 10 }}>Transfer Amount</AppText>
+              <AppText color={themeColors.text} weight={SEMI_BOLD} type={SIXTEEN} style={{ marginVertical: 10 }}>Transfer Amount</AppText>
             </View>
-            <View style={styles.inputContainer}>
-              <TextInput placeholder="Enter the amount" placeholderTextColor={theme !== "Dark" ? '#5E6272' : "#FFFFFF80"} style={{ marginLeft: 20, width: '55%', color: theme === "Dark" && "#fff" }} value={amount} onChangeText={(value) => setAmount(value)} keyboardType="numeric" />
+            <View style={[styles.inputContainer, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1 }]}>
+              <TextInput placeholder="Enter the amount" placeholderTextColor={themeColors.secondaryText} style={{ marginLeft: 20, width: '55%', color: themeColors.text }} value={amount} onChangeText={(value) => setAmount(value)} keyboardType="numeric" />
               <View style={{ flexDirection: "row", gap: 25, alignItems: "center", paddingHorizontal: 20 }}>
-                <AppText style={{ color: theme !== "Dark" ? '#5E6272' : "#FFFFFF80" }} type={FOURTEEN}>{coin?.short_name}</AppText>
-                <AppText style={{ color: theme !== "Dark" ? '#F3BB2B' : '#F3BB2B' }} type={FOURTEEN} onPress={() => setAmount(String(particularCoinBalance?.fromWallet?.balance) || 0)}>MAX</AppText>
+                <AppText style={{ color: themeColors.secondaryText }} type={FOURTEEN}>{coin?.short_name}</AppText>
+                <AppText style={{ color: colors.buttonBg }} type={FOURTEEN} onPress={() => setAmount(String(particularCoinBalance?.fromWallet?.balance) || 0)}>MAX</AppText>
               </View>
 
             </View>
@@ -229,8 +231,8 @@ const Transfer = () => {
 
       {/* Static button - no skeleton */}
       <Button children="Confirm" containerStyle={{ margin: 20 }} disabled={!fromWallet || !toWallet || !amount || !coin} onPress={handleTransfer} />
-      <WalletTypeModal visible={modalVisible} onClose={() => setModalVisible(false)} data={WalletTypes} onSelect={handleSelect} theme={theme} />
-      <CoinListModal visible={coinModal} onClose={() => setCoinModal(false)} data={userWallet} onSelect={handleSelectCoin} theme={theme} />
+      <WalletTypeModal visible={modalVisible} onClose={() => setModalVisible(false)} data={WalletTypes} onSelect={handleSelect} />
+      <CoinListModal visible={coinModal} onClose={() => setCoinModal(false)} data={userWallet} onSelect={handleSelectCoin} />
       <TransferModal visible={visible} handleVisiblity={handlePopup} type={'transfer'} />
     </AppSafeAreaView>
   );
@@ -247,7 +249,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 10
+    marginTop: 0,
+    paddingTop: 10
   },
   fromToCard: {
     flexDirection: "row",
@@ -255,13 +258,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     width: "90%",
     alignSelf: "center",
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     borderRadius: 10,
     padding: 12,
     zIndex: 1,
   },
   inputContainer: {
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     flexDirection: "row",
     marginHorizontal: 20,
     borderRadius: 10,
@@ -270,7 +273,7 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   disView: {
-    backgroundColor: colors.themeElevationColor,
+    backgroundColor: "transparent",
     flexDirection: "row",
     marginHorizontal: 20,
     borderRadius: 10,

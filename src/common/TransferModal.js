@@ -6,6 +6,7 @@ import {useAppSelector} from '../store/hooks';
 import {AppText, BLACK, EIGHTEEN, SEMI_BOLD, SIXTEEN, TEN, THIRTEEN, TWENTY} from './AppText';
 import TouchableOpacityView from './TouchableOpacityView';
 import {colors} from '../theme/colors';
+import { useTheme } from '../hooks/useTheme';
 import {
   buttonHeight,
   smallButtonHeight,
@@ -14,6 +15,7 @@ import {
 import NavigationService from '../navigation/NavigationService';
 
 const TransferModal = ({visible, handleVisiblity, type}) => {
+  const { colors: themeColors, isDark } = useTheme();
   const [showModal, setShowModal] = React.useState(visible);
   const scaleValue = React.useRef(new Animated.Value(0)).current;
   const feeDetails = useAppSelector(state => state.home.feeDetails);
@@ -52,7 +54,7 @@ const TransferModal = ({visible, handleVisiblity, type}) => {
     <Modal transparent visible={showModal}>
       <View style={styles.modalBackGround}>
         <Animated.View
-          style={[styles.modalContainer, {transform: [{scale: scaleValue}]}]}>
+          style={[styles.modalContainer, {transform: [{scale: scaleValue}], backgroundColor: themeColors.background }]}>
           <View style={styles.container}>
             <View style={styles.wrapper}>
               <View style={styles.imageContainer}>
@@ -62,7 +64,7 @@ const TransferModal = ({visible, handleVisiblity, type}) => {
                   style={styles.icon}
                 />
               </View>
-              <AppText type={SIXTEEN} style={styles.titletext1}>
+              <AppText type={SIXTEEN} style={[styles.titletext1, { color: themeColors.text }]}>
                 {type === "transfer" ? 'Transfer Successfully' : type === "swap" ? "Currency Swapped Successfully" : "You have successfully purchased the earning package"}
               </AppText>
               {/* <View style={styles.itemsContainer}>
@@ -89,7 +91,7 @@ const TransferModal = ({visible, handleVisiblity, type}) => {
                 <TouchableOpacityView
                   onPress={handelPress}
                   style={[styles.actionBtn, {height: type === "earning" && 30}]}>
-                  <AppText type={THIRTEEN} weight={SEMI_BOLD} color={BLACK}>
+                  <AppText type={THIRTEEN} weight={SEMI_BOLD} color={isDark ? colors.black : colors.white}>
                     {type === "earning" ? 'View Portfolio' : 'OK'}
                   </AppText>
                 </TouchableOpacityView>
@@ -110,7 +112,6 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: '85%',
-    backgroundColor: '#36363F',
     paddingHorizontal: 15,
     paddingVertical: 25,
     borderRadius: 20,

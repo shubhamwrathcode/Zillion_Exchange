@@ -28,13 +28,15 @@ import { showError } from "../helper/logger";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { closeIcon, NO_NOTIFICATION_ICON, searchIcon } from "../helper/ImageAssets";
 import { colors } from "../theme/colors";
+import { useTheme } from "../hooks/useTheme";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedView = Animated.createAnimatedComponent(View);
 
-const CoinListModal = ({ visible, data, onSelect, theme, onClose, disabledCoinId }) => {
+const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const [searchText, setSearchText] = useState("");
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const opacity = useSharedValue(0);
@@ -113,7 +115,9 @@ const CoinListModal = ({ visible, data, onSelect, theme, onClose, disabledCoinId
         style={[
           styles.coinItem,
           {
-            backgroundColor: colors.themeElevationColor,
+            backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF",
+            borderColor: isDark ? "#2A2A2A" : "#EEE",
+            borderWidth: 1,
             opacity: isDisabled ? 0.4 : 1,
           },
         ]}
@@ -132,9 +136,9 @@ const CoinListModal = ({ visible, data, onSelect, theme, onClose, disabledCoinId
             style={[
               styles.coinIconContainer,
               {
-                borderColor: theme === "Dark" 
+                borderColor: isDark 
                   ? "rgba(255,255,255,0.1)" 
-                  : "rgba(0,0,0,0.08)",
+                  : "#EEE",
               },
             ]}
           >
@@ -146,7 +150,7 @@ const CoinListModal = ({ visible, data, onSelect, theme, onClose, disabledCoinId
           </AnimatedView>
           <View style={styles.coinInfo}>
             <AppText
-              color={BLACK}
+              color={themeColors.text}
               style={styles.coinShortName}
               weight={SEMI_BOLD}
             >
@@ -162,7 +166,7 @@ const CoinListModal = ({ visible, data, onSelect, theme, onClose, disabledCoinId
             color={BLACK} 
             style={[
               styles.coinBalance,
-              { color: theme === "Dark" ? "#fff" : "#000" }
+              { color: themeColors.text }
             ]}
           >
             {toFixedFive(item?.balance)}
@@ -188,7 +192,7 @@ const CoinListModal = ({ visible, data, onSelect, theme, onClose, disabledCoinId
                 styles.modalContent,
                 modalStyle,
                 {
-                  backgroundColor:colors.newThemeColor,
+                  backgroundColor: themeColors.background,
                 },
               ]}
             >
@@ -196,7 +200,7 @@ const CoinListModal = ({ visible, data, onSelect, theme, onClose, disabledCoinId
                 <AppText 
                   style={[
                     styles.title,
-                    { color: theme === "Dark" ? "#fff" : "#000" }
+                    { color: themeColors.text }
                   ]} 
                   weight={BOLD}
                 > 
@@ -207,12 +211,12 @@ const CoinListModal = ({ visible, data, onSelect, theme, onClose, disabledCoinId
                   style={[
                     styles.closeButton,
                     {
-                      backgroundColor: theme === "Dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
+                      backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
                     },
                   ]}
                   activeOpacity={0.7}
                 >
-                   <FastImage source={closeIcon} resizeMode="contain" style={{width: 15, height: 15}} tintColor={theme !== "Dark" ? colors.black : colors.white}/>
+                   <FastImage source={closeIcon} resizeMode="contain" style={{width: 15, height: 15}} tintColor={themeColors.text}/>
                 </TouchableOpacity>
               </View>
 
@@ -221,7 +225,9 @@ const CoinListModal = ({ visible, data, onSelect, theme, onClose, disabledCoinId
                 style={[
                   styles.searchContainer,
                   {
-                    backgroundColor:colors.themeElevationColor,
+                    backgroundColor: isDark ? "#1A1A1A" : "#F5F5F5",
+                    borderColor: isDark ? "#2A2A2A" : "#EEE",
+                    borderWidth: 1
                   },
                 ]}
               >
@@ -230,13 +236,13 @@ const CoinListModal = ({ visible, data, onSelect, theme, onClose, disabledCoinId
                  tintColor={"#666"}/>
                 <TextInput
                   placeholder="Search currency..."
-                  placeholderTextColor={theme === "Dark" ? "#666" : "#999"}
+                  placeholderTextColor={themeColors.secondaryText}
                   value={searchText}
                   onChangeText={setSearchText}
                   style={[
                     styles.searchInput,
                     {
-                      color: theme === "Dark" ? "#fff" : "#000",
+                      color: themeColors.text,
                     },
                   ]}
                 />
@@ -260,7 +266,7 @@ const CoinListModal = ({ visible, data, onSelect, theme, onClose, disabledCoinId
                   style={styles.noResultContainer}
                 >
                 <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={{width: 80, height: 80}} 
-                tintColor={colors.white}/>
+                tintColor={isDark ? colors.white : "#CCC"}/>
                 </Animated.View>
               ) : (
                 <FlatList
@@ -299,7 +305,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.3,
     shadowRadius: 12,
-    elevation: 16,
+    elevation: 0,
   },
   header: {
     flexDirection: "row",

@@ -22,6 +22,7 @@ import {
   TWELVE,
 } from './AppText';
 import {colors} from '../theme/colors';
+import { useTheme } from '../hooks/useTheme';
 import KeyBoardAware from './KeyboardAware';
 import {
   Screen,
@@ -64,7 +65,7 @@ const CoinList = ({onSelectCoin, hideCoin}) => {
                 source={{uri: `${BASE_URL}${item.icon_path}`}}
               />
               <View style={{marginLeft: 10}}>
-                <AppText>{item?.short_name}</AppText>
+                <AppText color={themeColors.text}>{item?.short_name}</AppText>
                 <AppText type={TEN} color={SECOND}>
                   {item?.name}
                 </AppText>
@@ -86,6 +87,7 @@ const CoinList = ({onSelectCoin, hideCoin}) => {
 };
 
 const RbSheet = ({rbref, name, setCoin, hideCoin, data}) => {
+  const { colors: themeColors, isDark } = useTheme();
   const dispatch = useAppDispatch();
   const Conversion = useSelector(state => state.home.conversion);
 
@@ -129,22 +131,22 @@ const RbSheet = ({rbref, name, setCoin, hideCoin, data}) => {
           },
         }}>
         {name === 'dropdown' ? (
-          <KeyBoardAware style={[styles.container]}>
+          <KeyBoardAware style={[styles.container, { backgroundColor: themeColors.background }]}>
             <View style={styles.confirmOrder}>
-              <AppText
-                type={SEVENTEEN}
-                weight={SEMI_BOLD}
-                style={styles.headerText}>
-                Select Currency
-              </AppText>
-              <TouchableOpacityView
-                onPress={() => {
+                <AppText
+                  type={SEVENTEEN}
+                  weight={SEMI_BOLD}
+                  style={[styles.headerText, { color: themeColors.text }]}>
+                  Select Currency
+                </AppText>
+                <TouchableOpacityView
+                  onPress={() => {
                   rbref?.current?.close();
                 }}
                 style={styles.closeView}>
                 <FastImage
                   source={closeIcon}
-                  tintColor={colors.secondaryText}
+                  tintColor={themeColors.text}
                   style={styles.closeIcon}
                 />
               </TouchableOpacityView>
@@ -158,12 +160,12 @@ const RbSheet = ({rbref, name, setCoin, hideCoin, data}) => {
             </View>
           </KeyBoardAware>
         ) : (
-          <View style={[styles.container,{backgroundColor:"#1C1B1B"}]}>
-            <View style={[styles.confirmOrder,{backgroundColor:"#27282C"}]}>
+          <View style={[styles.container,{backgroundColor: themeColors.background }]}>
+            <View style={[styles.confirmOrder,{backgroundColor: themeColors.background }]}>
               <AppText
                 type={SEVENTEEN}
                 weight={SEMI_BOLD}
-                style={styles.headerText}>
+                style={[styles.headerText, { color: themeColors.text }]}>
                Payment Details
               </AppText>
               <TouchableOpacityView
@@ -173,7 +175,7 @@ const RbSheet = ({rbref, name, setCoin, hideCoin, data}) => {
                 style={styles.closeView}>
                 <FastImage
                   source={closeIcon}
-                  tintColor={colors.secondaryText}
+                  tintColor={themeColors.text}
                   style={styles.closeIcon}
                 />
               </TouchableOpacityView>
@@ -191,27 +193,14 @@ const RbSheet = ({rbref, name, setCoin, hideCoin, data}) => {
                 </AppText>
               </View>
             </View>
-            {/* <ImageBackground
-              source={convertBg}
-              imageStyle={{
-                resizeMode: 'contain',
-              }}
-              style={{
-                height: 60,
-                width: Screen.Width - universalPaddingHorizontalHigh,
-                alignSelf: 'center',
-                justifyContent: 'center',
-              }}>
-             
-            </ImageBackground> */}
              <View style={styles.row2}>
                 <View style={styles.currencyBox}>
                   <FastImage source={data?.img1} style={styles.coinImg} />
                   <View style={styles.rightBox}>
-                    <AppText type={TWELVE} weight={NORMAL}>
+                    <AppText type={TWELVE} weight={NORMAL} color={themeColors.text}>
                       {data?.coin1}
                     </AppText>
-                    <AppText type={FOURTEEN} weight={SEMI_BOLD}>
+                    <AppText type={FOURTEEN} weight={SEMI_BOLD} color={themeColors.text}>
                       {data?.coinQuantity}
                     </AppText>
                   </View>
@@ -219,24 +208,24 @@ const RbSheet = ({rbref, name, setCoin, hideCoin, data}) => {
                 <FastImage
                   source={arrowRightIcon}
                   style={styles.arrow}
-                  tintColor={'#ffffff90'}
+                  tintColor={themeColors.text}
                 />
                 <View style={styles.currencyBox2}>
                   <View style={styles.rightBox2}>
-                    <AppText type={TWELVE} weight={NORMAL}>
+                    <AppText type={TWELVE} weight={NORMAL} color={themeColors.text}>
                       {data?.coin2}
                     </AppText>
-                    <AppText type={FOURTEEN} weight={SEMI_BOLD}>
+                    <AppText type={FOURTEEN} weight={SEMI_BOLD} color={themeColors.text}>
                       {toFixedFive(data?.firstPrice)}
                     </AppText>
                   </View>
                   <FastImage source={data?.img2} style={styles.coinImg} />
                 </View>
               </View>
-            <View style={[styles.row3,{backgroundColor:"#1C1B1B"}]}>
+            <View style={[styles.row3,{backgroundColor: themeColors.background, borderColor: themeColors.border, borderWidth: 1 }]}>
               <View style={styles.feeLine}>
                 <View>
-                  <AppText style={styles.rowThreeHeading}>
+                  <AppText style={[styles.rowThreeHeading, { color: themeColors.secondaryText }]}>
                     Transaction Fees
                   </AppText>
                 </View>
@@ -246,18 +235,18 @@ const RbSheet = ({rbref, name, setCoin, hideCoin, data}) => {
               </View>
               <View style={styles.typeLine}>
                 <View>
-                  <AppText style={styles.rowThreeHeading}>Type</AppText>
+                  <AppText style={[styles.rowThreeHeading, { color: themeColors.secondaryText }]}>Type</AppText>
                 </View>
                 <View>
-                  <AppText>Market</AppText>
+                  <AppText color={themeColors.text}>Market</AppText>
                 </View>
               </View>
               <View style={styles.rateLine}>
                 <View>
-                  <AppText style={styles.rowThreeHeading}>Rate</AppText>
+                  <AppText style={[styles.rowThreeHeading, { color: themeColors.secondaryText }]}>Rate</AppText>
                 </View>
                 <View>
-                  <AppText>
+                  <AppText color={themeColors.text}>
                     1 {data?.coin1} = {toFixedFive(Conversion)} {data?.coin2}
                   </AppText>
                 </View>
@@ -274,7 +263,7 @@ const RbSheet = ({rbref, name, setCoin, hideCoin, data}) => {
                 children="Continue"
                 onPress={() => handleConvert()}
                 containerStyle={styles.yesButton}
-                titleStyle={[styles.buttonTitle,{color:colors.black}]}
+                titleStyle={[styles.buttonTitle,{color: isDark ? colors.black : colors.white }]}
               />
             </View>
 
@@ -289,23 +278,16 @@ export default RbSheet;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.black,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    borderWidth: borderWidth,
-    borderColor: colors.inputBorder,
+    borderWidth: 1,
     paddingHorizontal: 0,
   },
   confirmOrder: {
-    height: 52,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.inputBackground,
   },
-  headerText: {alignSelf: 'center', color: '#fff', marginTop: 4},
+  headerText: {alignSelf: 'center', marginTop: 4},
   closeView: {
     position: 'absolute',
     right: 15,
@@ -345,48 +327,35 @@ const styles = StyleSheet.create({
   rightBox: {marginLeft: 10, marginTop: 4},
   rightBox2: {marginRight: 10, marginTop: 4, alignItems: 'flex-end'},
   row3: {
-    flexDirection: 'column',
-    marginHorizontal: universalPaddingHorizontal,
-    marginTop: 10,
-    borderRadius: 5,
-    paddingHorizontal: universalPaddingHorizontal,
-    paddingVertical: 15,
+    marginHorizontal: 20,
+    marginTop: 20,
+    padding: 15,
+    borderRadius: 10,
     alignItems: 'center',
-    // backgroundColor: colors.inputBackground,
-    borderWidth: 2,
-    borderColor: colors.inputBorder,
   },
   feeLine: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
   },
-  rowThreeHeading: {color: '#ffffff50'},
+  rowThreeHeading: {},
   typeLine: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    marginTop: 10,
   },
   rateLine: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    marginTop: 10,
   },
   arrow: {width: 24, height: 24},
-
-  row4: {
-    flexDirection: 'row',
-    marginHorizontal: 26,
-    marginTop: 40,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  btns: {width: '48%'},
   container2: {
     flexDirection: 'row',
     marginHorizontal: universalPaddingHorizontal,
-    borderBottomColor: colors.inputBorder,
-    borderBottomWidth: borderWidth,
+    borderBottomWidth: 1,
     paddingVertical: universalPaddingHorizontal,
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -401,9 +370,9 @@ const styles = StyleSheet.create({
   },
   noButton: {
     width:"30%",
-    backgroundColor: '#1C1B1B',
+    backgroundColor: '#1A1A1A',
     borderColor: colors.buttonBg,
-    borderWidth: borderWidth,
+    borderWidth: 1,
     marginEnd: 10,
   },
   yesButton: {
@@ -412,7 +381,6 @@ const styles = StyleSheet.create({
     marginStart: 10,
   },
   buttonContainer: {
-   
     width:'100%',
     flexDirection: 'row',
     justifyContent:"flex-end",
