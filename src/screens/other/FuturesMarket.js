@@ -9,6 +9,7 @@ import { toFixedFive, toFixedThree } from "../../helper/utility";
 import FastImage from "react-native-fast-image";
 import { Coin, tetherIcon, bitcoinIcon, bnbIcon, NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
 import { BASE_URL } from "../../helper/Constants";
+import { useTheme } from "../../hooks/useTheme";
 
 const QUOTE_OPTIONS = [
   { key: "All", label: "All", icon: Coin },
@@ -25,11 +26,10 @@ const TYPE_OPTIONS = [
 ];
 
 const FuturesMarket = ({ search }) => {
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors } = useTheme();
   const futuresPairData = useAppSelector((state) => state.home.futuresPairs || []) || [];
   const [quoteCurrency, setQuoteCurrency] = useState("USDT");
   const [filterType, setFilterType] = useState("All");
-  const isDark = theme === "Dark";
 
   const filterFuturesData = useMemo(() => {
     let data = Array.isArray(futuresPairData) ? [...futuresPairData] : [];
@@ -63,12 +63,13 @@ const FuturesMarket = ({ search }) => {
     }
   };
 
-  const chipBg = (selected) => (selected ? colors.themeElevationColor : "transparent");
-  const chipTextColor = (selected) => (selected ? colors.white : (isDark ? "#9D9D9D" : "#666"));
+  const chipBg = (selected) => (selected ? themeColors.card : "transparent");
+  const chipTextColor = (selected) => (selected ? themeColors.text : themeColors.secondaryText);
+  const chipBorder = (selected) => (selected ? themeColors.border : "transparent");
 
   return (
     <View style={styles.container}>
-      {/* Row 1: All, Gainers, Losers, Trending (same as Spot) */}
+      {/* Row 1: Filter Type */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -79,7 +80,14 @@ const FuturesMarket = ({ search }) => {
           <TouchableOpacity
             key={key}
             onPress={() => setFilterType(key)}
-            style={[styles.chip, { backgroundColor: "transparent" }]}
+            style={[
+              styles.chip, 
+              { 
+                backgroundColor: chipBg(filterType === key),
+                borderColor: chipBorder(filterType === key),
+                borderWidth: 1
+              }
+            ]}
             activeOpacity={0.8}
           >
             <AppText type={ELEVEN} weight={SEMI_BOLD} style={{ color: chipTextColor(filterType === key) }}>
@@ -89,7 +97,7 @@ const FuturesMarket = ({ search }) => {
         ))}
       </ScrollView>
 
-      {/* Row 2: All, USDT, BTC, ETH, BNB with icons (same as Spot) */}
+      {/* Row 2: Quote Currency */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -100,7 +108,15 @@ const FuturesMarket = ({ search }) => {
           <TouchableOpacity
             key={opt.key}
             onPress={() => setQuoteCurrency(opt.key)}
-            style={[styles.chip, styles.chipWithIcon, { backgroundColor: chipBg(quoteCurrency === opt.key) }]}
+            style={[
+              styles.chip, 
+              styles.chipWithIcon, 
+              { 
+                backgroundColor: chipBg(quoteCurrency === opt.key),
+                borderColor: chipBorder(quoteCurrency === opt.key),
+                borderWidth: 1
+              }
+            ]}
             activeOpacity={0.8}
           >
             {opt.key !== "All" && (
@@ -118,11 +134,11 @@ const FuturesMarket = ({ search }) => {
       </ScrollView>
 
       {filterFuturesData?.length > 0 ? (
-        <FuturesList data={filterFuturesData} onPress={handleNavigate} theme={theme} />
+        <FuturesList data={filterFuturesData} onPress={handleNavigate} />
       ) : (
         <View style={styles.empty}>
           <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={{ width: 150, height: 150 }} />
-          <AppText type={TWELVE} color={colors.disabledText}>
+          <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>
             No futures data at the moment.
           </AppText>
         </View>
@@ -131,9 +147,8 @@ const FuturesMarket = ({ search }) => {
   );
 };
 
-export const FuturesList = ({ data, onPress, theme }) => {
-  const textColor = theme !== "Dark" ? colors.black : colors.white;
-  const secondaryColor = theme !== "Dark" ? "#666" : colors.secondaryText;
+export const FuturesList = ({ data, onPress }) => {
+  const { colors: themeColors } = useTheme();
   return (
     <View style={styles.list}>
       {data.map((item, index) => {
@@ -142,13 +157,13 @@ export const FuturesList = ({ data, onPress, theme }) => {
         return (
           <TouchableOpacity
             key={item?._id || index}
-            style={[styles.row, { borderBottomColor: theme !== "Dark" ? "#eee" : colors.dividerColor }]}
+            style={[styles.row, { borderBottomColor: themeColors.border }]}
             onPress={() => onPress(item)}
             activeOpacity={0.7}
           >
             <View style={styles.nameCol}>
               <View style={styles.nameRow}>
-                <View style={styles.iconWrap}>
+                <View style={[styles.iconWrap, { backgroundColor: themeColors.card }]}>
                   <FastImage
                     source={iconSource}
                     resizeMode="contain"
@@ -157,21 +172,21 @@ export const FuturesList = ({ data, onPress, theme }) => {
                 </View>
                 <View style={styles.nameBlock}>
                   <View style={styles.symbolRow}>
-                    <AppText type={TWELVE} weight={SEMI_BOLD} color={textColor} numberOfLines={1}>
+                    <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: themeColors.text }} numberOfLines={1}>
                       {item?.short_name}/{item?.margin_asset}
                     </AppText>
-                    <View style={styles.perpBadge}>
-                      <AppText type={ELEVEN} color={colors.disabledText}>Perp</AppText>
+                    <View style={[styles.perpBadge, { backgroundColor: themeColors.card }]}>
+                      <AppText type={ELEVEN} style={{ color: themeColors.secondaryText }}>Perp</AppText>
                     </View>
                   </View>
-                  <AppText type={ELEVEN} style={[styles.volText, { color: secondaryColor }]} numberOfLines={1}>
+                  <AppText type={ELEVEN} style={[styles.volText, { color: themeColors.secondaryText }]} numberOfLines={1}>
                     Vol {toFixedThree(item?.volume)}
                   </AppText>
                 </View>
               </View>
             </View>
             <View style={styles.priceCol}>
-              <AppText type={TWELVE} weight={SEMI_BOLD} color={textColor} style={styles.priceText}>
+              <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.priceText, { color: themeColors.text }]}>
                 {toFixedFive(item?.buy_price)}
               </AppText>
               <View style={[styles.chgPill, isPositive ? styles.chgPillGreen : styles.chgPillRed]}>
@@ -247,7 +262,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: colors.inputBorder,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
@@ -259,7 +273,6 @@ const styles = StyleSheet.create({
   },
   perpBadge: {
     marginLeft: 2,
-    backgroundColor: colors.inputBorder,
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 8,

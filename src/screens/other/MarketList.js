@@ -2,13 +2,14 @@ import React, { useCallback, useMemo } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View, Dimensions } from "react-native";
 import { AppText, FOURTEEN, TWELVE } from "../../shared";
 import FastImage from "react-native-fast-image";
-import { NO_NOTIFICATION_ICON, starFillIcon, starIcon, upDownIc } from "../../helper/ImageAssets";
+import { NO_NOTIFICATION_ICON, starFillIcon, starIcon } from "../../helper/ImageAssets";
 import { useAppSelector } from "../../store/hooks";
 import { toFixedFive, toFixedThree } from "../../helper/utility";
 import { colors } from "../../theme/colors";
 import { addToFavorites } from "../../actions/homeActions";
 import { useDispatch } from "react-redux";
 import { BASE_URL } from "../../helper/Constants";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const H_PAD = Math.max(14, SCREEN_WIDTH * 0.04);
@@ -20,11 +21,10 @@ const formatInrPrice = (usdPrice) => {
   return inr >= 1000 ? `${(inr / 1000).toFixed(2)}K` : `${inr.toFixed(2)}`;
 };
 
-const MarketRow = React.memo(({ item, theme, favoriteArray, onPress, onToggleFavorite }) => {
-
+const MarketRow = React.memo(({ item, favoriteArray, onPress, onToggleFavorite }) => {
+  const { colors: themeColors } = useTheme();
   const isFavorite = favoriteArray?.includes(item?._id);
   const isNegative = (item?.change_percentage ?? 0) < 0;
-  const isDark = theme === "Dark";
 
   const handleAddFav = useCallback(
     (e) => {
@@ -48,7 +48,7 @@ const MarketRow = React.memo(({ item, theme, favoriteArray, onPress, onToggleFav
 
   return (
     <TouchableOpacity
-      style={[styles.row, { borderBottomColor: isDark ? colors.dividerColor : "#eee" }]}
+      style={[styles.row, { borderBottomColor: themeColors.border }]}
       onPress={handlePress}
       activeOpacity={0.7}
     >
@@ -59,7 +59,7 @@ const MarketRow = React.memo(({ item, theme, favoriteArray, onPress, onToggleFav
               source={isFavorite ? starFillIcon : starIcon}
               resizeMode="contain"
               style={styles.starIcon}
-              tintColor={isFavorite ? colors.starColor : isDark ? "rgba(255,255,255,0.5)" : "#999"}
+              tintColor={isFavorite ? colors.starColor : themeColors.secondaryText}
             />
           </TouchableOpacity>
           {iconUri ? (
@@ -69,16 +69,16 @@ const MarketRow = React.memo(({ item, theme, favoriteArray, onPress, onToggleFav
               style={styles.coinIcon}
             />
           ) : (
-            <View style={[styles.coinIcon, styles.coinIconPlaceholder]} />
+            <View style={[styles.coinIcon, styles.coinIconPlaceholder, { backgroundColor: themeColors.card }]} />
           )}
           <View style={styles.nameBlock}>
-            <AppText numberOfLines={1} style={[styles.symbolText, { color: isDark ? colors.white : colors.black }]}>
+            <AppText numberOfLines={1} style={[styles.symbolText, { color: themeColors.text }]}>
               {ticker}
-              <Text style={{ fontWeight: "400", color: isDark ? colors.secondaryText : "#9D9D9D", fontSize: 11.5 }}>
+              <Text style={{ fontWeight: "400", color: themeColors.secondaryText, fontSize: 11.5 }}>
                 {' '}/{item?.quote_currency}
               </Text>
             </AppText>
-            <AppText numberOfLines={1} style={[styles.fullName, { color: isDark ? colors.secondaryText : "#666" }]}>
+            <AppText numberOfLines={1} style={[styles.fullName, { color: themeColors.secondaryText }]}>
               {fullName}
             </AppText>
           </View>
@@ -86,10 +86,10 @@ const MarketRow = React.memo(({ item, theme, favoriteArray, onPress, onToggleFav
       </View>
 
       <View style={styles.priceCol}>
-        <Text numberOfLines={1} style={[styles.lastPrice, { color: isDark ? colors.white : colors.black }]}>
+        <Text numberOfLines={1} style={[styles.lastPrice, { color: themeColors.text }]}>
           {priceStr}
         </Text>
-        <Text numberOfLines={1} style={[styles.inrPrice, { color: isDark ? colors.secondaryText : "#666" }]}>
+        <Text numberOfLines={1} style={[styles.inrPrice, { color: themeColors.secondaryText }]}>
           {inrStr}
         </Text>
       </View>
@@ -106,7 +106,6 @@ const MarketRow = React.memo(({ item, theme, favoriteArray, onPress, onToggleFav
     prevProps.item?._id === nextProps.item?._id &&
     prevProps.item?.buy_price === nextProps.item?.buy_price &&
     prevProps.item?.change_percentage === nextProps.item?.change_percentage &&
-    prevProps.theme === nextProps.theme &&
     prevProps.favoriteArray?.includes(prevProps.item?._id) === nextProps.favoriteArray?.includes(nextProps.item?._id)
   );
 });
@@ -114,10 +113,9 @@ const MarketRow = React.memo(({ item, theme, favoriteArray, onPress, onToggleFav
 MarketRow.displayName = "MarketRow";
 
 const MarketList = React.memo(({ filterData, style, onPress, scrollEnabled = true }) => {
+  const { colors: themeColors } = useTheme();
   const dispatch = useDispatch();
-  const theme = useAppSelector((state) => state.auth.theme);
   const favoriteArray = useAppSelector((state) => state.home.favoriteArray);
-  const isDark = theme === "Dark";
 
   const handleAddFav = useCallback(
     (id) => {
@@ -137,50 +135,46 @@ const MarketList = React.memo(({ filterData, style, onPress, scrollEnabled = tru
     ({ item }) => (
       <MarketRow
         item={item}
-        theme={theme}
         favoriteArray={favoriteArray}
         onPress={handlePress}
         onToggleFavorite={handleAddFav}
       />
     ),
-    [theme, favoriteArray, handlePress, handleAddFav]
+    [favoriteArray, handlePress, handleAddFav]
   );
 
   const keyExtractor = useCallback((item, index) => item?._id || index.toString(), []);
 
   const ListHeaderComponent = useMemo(
     () => (
-      <View style={[styles.tableHeader, { borderBottomColor: isDark ? colors.dividerColor : "#eee" }]}>
+      <View style={[styles.tableHeader, { borderBottomColor: themeColors.border }]}>
         <View style={styles.headerCellName}>
-          <AppText style={[styles.tableHeaderText, { color: colors.secondaryText }]}>Name</AppText>
-          {/* <FastImage source={upDownIc} resizeMode="contain" style={styles.sortIcon} tintColor={colors.secondaryText} /> */}
+          <AppText style={[styles.tableHeaderText, { color: themeColors.secondaryText }]}>Name</AppText>
         </View>
         <View style={styles.headerCellPrice}>
-          <AppText style={[styles.tableHeaderText, { color: colors.secondaryText }]}>Last Price</AppText>
-          {/* <FastImage source={upDownIc} resizeMode="contain" style={styles.sortIcon} tintColor={colors.secondaryText} /> */}
+          <AppText style={[styles.tableHeaderText, { color: themeColors.secondaryText }]}>Last Price</AppText>
         </View>
         <View style={styles.headerCellChg}>
-          <AppText style={[styles.tableHeaderText, { color: colors.secondaryText }]}>24h Chg%</AppText>
-          {/* <FastImage source={upDownIc} resizeMode="contain" style={styles.sortIcon} tintColor={colors.secondaryText} /> */}
+          <AppText style={[styles.tableHeaderText, { color: themeColors.secondaryText }]}>24h Chg%</AppText>
         </View>
       </View>
     ),
-    [isDark]
+    [themeColors.border, themeColors.secondaryText]
   );
 
   const ListEmptyComponent = useMemo(
     () => (
       <View style={styles.emptyWrap}>
         <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={styles.emptyIcon} />
-        <AppText type={FOURTEEN} style={[styles.emptyText, { color: colors.disabledText }]}>
+        <AppText type={FOURTEEN} style={[styles.emptyText, { color: themeColors.secondaryText }]}>
           No coins found
         </AppText>
-        <AppText type={TWELVE} style={[styles.emptySubtext, { color: colors.disabledText }]}>
+        <AppText type={TWELVE} style={[styles.emptySubtext, { color: themeColors.secondaryText }]}>
           Try changing filters or search
         </AppText>
       </View>
     ),
-    []
+    [themeColors.secondaryText]
   );
 
   const data = Array.isArray(filterData) ? filterData : [];

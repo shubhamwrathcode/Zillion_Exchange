@@ -21,8 +21,10 @@ import {useAppSelector, useAppDispatch} from '../../store/hooks';
 import {BASE_URL} from '../../helper/Constants';
 import {Screen} from '../../theme/dimens';
 import {STAKING} from '../../navigation/routes';
+import { useTheme } from '../../hooks/useTheme';
 
 const StakingTrade: React.FC = () => {
+  const { colors: themeColors, theme, isDark } = useTheme();
   const dispatch = useAppDispatch();
   useEffect(() => {
     dispatch(getStaking());
@@ -76,7 +78,7 @@ const StakingTrade: React.FC = () => {
             2
           </AppText>
         </View>
-        <View style={[styles.border, {backgroundColor: colors.white}]}></View>
+        <View style={[styles.border, {backgroundColor: isDark ? colors.white : colors.black}]}></View>
         <View style={styles.otherTab}>
           <AppText
             weight={MEDIUM}
@@ -174,10 +176,12 @@ const styles = StyleSheet.create({
     height: 1,
   },
   otherTab: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.transparent,
     width: 25,
     height: 25,
     borderRadius: 15,
+    borderWidth: 1,
+    borderColor: colors.grey,
     alignItems: 'center',
     justifyContent: 'center',
   },

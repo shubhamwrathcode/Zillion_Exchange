@@ -14,12 +14,14 @@ import NavigationService from "../../navigation/NavigationService";
 import { WALLET_SCREEN, MARKET_SCREEN, FUTURES_SCREEN } from "../../navigation/routes";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import FastImage from "react-native-fast-image";
-import { AppText, FOURTEEN } from "../../shared";
+import { AppText } from "../../shared";
 import { back_ic } from "../../helper/ImageAssets";
 import { useDispatch } from "react-redux";
 import { setBuyOrders, setSellOrders, setSpotSelectedPair, setFuturesSelectedPair } from "../../slices/homeSlice";
+import { useTheme } from "../../hooks/useTheme";
 
 const CoinList = React.memo(() => {
+  const { colors: themeColors } = useTheme();
   const coinPairs = useAppSelector((state) => state.home.coinPairs);
   const futuresPairs = useAppSelector((state) => state.home.futuresPairs ?? []);
   const theme = useAppSelector((state) => state.auth.theme);
@@ -94,7 +96,7 @@ const CoinList = React.memo(() => {
       style={[styles.container, { marginBottom: 50 }]}
     >
       {/* Single elevated card: Tabs + 4 items list (no scroll) + View More */}
-      <View style={styles.elevatedCard}>
+      <View style={[styles.elevatedCard, { backgroundColor: themeColors.card }]}>
         <Animated.View entering={FadeInDown.duration(400)}>
           <HomeCoinTabs activeTab={activeTabList} setActiveTab={handleTabChange} />
         </Animated.View>
@@ -127,14 +129,14 @@ const CoinList = React.memo(() => {
           onPress={handleViewMore}
           activeOpacity={0.7}
         >
-          <AppText style={styles.viewMoreText}>
+          <AppText style={[styles.viewMoreText, { color: themeColors.secondaryText }]}>
             View More{" "}
           </AppText>
           <FastImage
             source={back_ic}
             resizeMode="contain"
             style={styles.viewMoreArrow}
-            tintColor={colors.disclaimDarText}
+            tintColor={themeColors.text}
           />
         </TouchableOpacityView>
       </View>
@@ -156,7 +158,6 @@ const styles = StyleSheet.create({
     paddingVertical: universalPaddingHorizontal,
   },
   elevatedCard: {
-    backgroundColor: colors.themeElevationColor,
     borderRadius: 12,
     padding: 10,
     ...Platform.select({
@@ -184,7 +185,6 @@ const styles = StyleSheet.create({
   },
   viewMoreText: {
     fontSize: 13,
-    color: colors.disclaimDarText,
   },
   viewMoreArrow: {
     width: 8,

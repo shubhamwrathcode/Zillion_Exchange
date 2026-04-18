@@ -151,6 +151,7 @@ import BuyOptions from "../screens/Options/BuyOptions";
 import OptionsHistory from "../screens/Options/OptionsHistory";
 import AllEndedProjects from "../screens/Launchpad/AllEndedProjects";
 import TicketScreen from "../screens/supportSreen/TicketScreen";
+import { useTheme } from "../hooks/useTheme";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -504,7 +505,7 @@ const DrawerNavigation = () => {
 };
 
 function BottomNavigation() {
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   return (
     <ChartPreloaderProvider>
       <Tab.Navigator
@@ -515,16 +516,16 @@ function BottomNavigation() {
           headerShown: false,
           tabBarHideOnKeyboard: true,
           tabBarStyle: {
-            backgroundColor: colors.newThemeColor,
+            backgroundColor: themeColors.tabBar,
             height: 60,
             borderTopWidth: 1.5,
-            borderTopColor: colors.newThemeColor,
+            borderTopColor: themeColors.border,
           },
           tabBarIconStyle: {},
           tabBarAllowFontScaling: false,
           tabBarShowLabel: true,
-          tabBarActiveTintColor: colors.buttonBg,
-          tabBarInactiveTintColor: colors.tabIcon,
+          tabBarActiveTintColor: themeColors.button,
+          tabBarInactiveTintColor: themeColors.inactiveTab,
         }}
       >
         <Tab.Screen
@@ -532,29 +533,21 @@ function BottomNavigation() {
           options={{
             tabBarLabel: "",
             tabBarIcon: ({ focused }) => (
-              <>
-                <View style={{ alignItems: "center", marginTop: 10 }}>
-                  <FastImage
-                    source={homeIcon}
-                    style={{ width: 20, height: 20 }}
-                    tintColor={
-                      focused
-                        ? colors.buttonBg
-                        : theme !== "Dark"
-                          ? colors.black
-                          : colors.white
-                    }
-                  />
-                  <AppText
-                    color={focused ? YELLOW : BLACK}
-                    weight={MEDIUM}
-                    type={TEN}
-                    style={{ top: 5 }}
-                  >
-                    Home
-                  </AppText>
-                </View>
-              </>
+              <View style={{ alignItems: "center", marginTop: 10 }}>
+                <FastImage
+                  source={homeIcon}
+                  style={{ width: 20, height: 20 }}
+                />
+                <AppText
+                  style={[
+                    { top: 5, color: focused ? themeColors.button : themeColors.text }
+                  ]}
+                  weight={MEDIUM}
+                  type={TEN}
+                >
+                  Home
+                </AppText>
+              </View>
             ),
           }}
           component={Home}
@@ -564,36 +557,25 @@ function BottomNavigation() {
           options={{
             tabBarLabel: "",
             tabBarIcon: ({ focused }) => (
-              <>
-                <View style={{ alignItems: "center", marginTop: 10 }}>
-                  <FastImage
-                    source={marketIcon}
-                    style={{ width: 20, height: 20 }}
-                    tintColor={
-                      focused
-                        ? colors.buttonBg
-                        : theme !== "Dark"
-                          ? colors.black
-                          : colors.white
-                    }
-                    resizeMode="contain"
-                  />
-                  <AppText
-                    weight={MEDIUM}
-                    type={TEN}
-                    style={{ top: 5 }}
-                    color={focused ? YELLOW : BLACK}
-                  >
-                    Market
-                  </AppText>
-                </View>
-              </>
+              <View style={{ alignItems: "center", marginTop: 10 }}>
+                <FastImage
+                  source={marketIcon}
+                  style={{ width: 20, height: 20 }}
+                  resizeMode="contain"
+                />
+                <AppText
+                  weight={MEDIUM}
+                  type={TEN}
+                  style={{ top: 5, color: focused ? themeColors.button : themeColors.text }}
+                >
+                  Market
+                </AppText>
+              </View>
             ),
           }}
           component={Market}
         />
 
-        {/* Spot: keep mounted so chart + order book don't reload on tab switch */}
         <Tab.Screen
           name={routes.WALLET_SCREEN}
           options={{
@@ -601,35 +583,31 @@ function BottomNavigation() {
             freezeOnBlur: true,
             unmountOnBlur: false,
             tabBarIcon: ({ focused }) => (
-              <>
-                <View style={{ alignItems: "center", marginTop: 10 }}>
-                  <FastImage
-                    source={
-                      focused
-                        ? theme !== "Dark"
-                          ? spotActiveIcon
-                          : spotDarkIcon
-                        : spotIcon
-                    }
-                    style={{ width: 22, height: 22 }}
-                    resizeMode="contain"
-                  />
-                  <AppText
-                    weight={MEDIUM}
-                    type={TEN}
-                    style={{ top: 5 }}
-                    color={focused ? YELLOW : BLACK}
-                  >
-                    Spot
-                  </AppText>
-                </View>
-              </>
+              <View style={{ alignItems: "center", marginTop: 10 }}>
+                <FastImage
+                  source={
+                    focused
+                      ? !isDark
+                        ? spotActiveIcon
+                        : spotDarkIcon
+                      : spotIcon
+                  }
+                  style={{ width: 22, height: 22 }}
+                  resizeMode="contain"
+                />
+                <AppText
+                  weight={MEDIUM}
+                  type={TEN}
+                  style={{ top: 5, color: focused ? themeColors.button : themeColors.text }}
+                >
+                  Spot
+                </AppText>
+              </View>
             ),
           }}
           component={Spot}
         />
 
-        {/* Futures: keep mounted so chart + order book don't reload on tab switch */}
         <Tab.Screen
           name={routes.FUTURES_SCREEN}
           options={{
@@ -637,29 +615,27 @@ function BottomNavigation() {
             freezeOnBlur: true,
             unmountOnBlur: false,
             tabBarIcon: ({ focused }) => (
-              <>
-                <View style={{ alignItems: "center", marginTop: 10 }}>
-                  <FastImage
-                    source={
-                      focused
-                        ? theme !== "Dark"
-                          ? futuresActiveIcon
-                          : futuresActiveIcon
-                        : futuresIcon
-                    }
-                    style={{ width: 22, height: 22 }}
-                    resizeMode="contain"
-                  />
-                  <AppText
-                    weight={MEDIUM}
-                    type={TEN}
-                    style={{ top: 5 }}
-                    color={focused ? YELLOW : BLACK}
-                  >
-                    Futures
-                  </AppText>
-                </View>
-              </>
+              <View style={{ alignItems: "center", marginTop: 10 }}>
+                <FastImage
+                  source={
+                    focused
+                      ? !isDark
+                        ? futuresActiveIcon
+                        : futuresActiveIcon
+                      : futuresIcon
+                  }
+                  style={{ width: 22, height: 22 }}
+                  resizeMode="contain"
+                  tintColor={themeColors.text}
+                />
+                <AppText
+                  weight={MEDIUM}
+                  type={TEN}
+                  style={{ top: 5, color: focused ? themeColors.button : themeColors.text }}
+                >
+                  Futures
+                </AppText>
+              </View>
             ),
           }}
           component={Futures}
@@ -669,30 +645,20 @@ function BottomNavigation() {
           options={{
             tabBarLabel: "",
             tabBarIcon: ({ focused }) => (
-              <>
-                <View style={{ alignItems: "center", marginTop: 10 }}>
-                  <FastImage
-                    source={earningIcon}
-                    style={{ width: 20, height: 20 }}
-                    tintColor={
-                      focused
-                        ? colors.buttonBg
-                        : theme !== "Dark"
-                          ? colors.black
-                          : colors.white
-                    }
-                    resizeMode="contain"
-                  />
-                  <AppText
-                    weight={MEDIUM}
-                    style={{ top: 5 }}
-                    type={TEN}
-                    color={focused ? YELLOW : BLACK}
-                  >
-                    Staking
-                  </AppText>
-                </View>
-              </>
+              <View style={{ alignItems: "center", marginTop: 10 }}>
+                <FastImage
+                  source={earningIcon}
+                  style={{ width: 20, height: 20 }}
+                  resizeMode="contain"
+                />
+                <AppText
+                  weight={MEDIUM}
+                  style={{ top: 5, color: focused ? themeColors.button : themeColors.text }}
+                  type={TEN}
+                >
+                  Staking
+                </AppText>
+              </View>
             ),
           }}
           component={Earning}
@@ -702,30 +668,21 @@ function BottomNavigation() {
           options={{
             tabBarLabel: "",
             tabBarIcon: ({ focused }) => (
-              <>
-                <View style={{ alignItems: "center", marginTop: 10 }}>
-                  <FastImage
-                    source={wallet_ic}
-                    style={{ width: 20, height: 20 }}
-                    tintColor={
-                      focused
-                        ? colors.buttonBg
-                        : theme !== "Dark"
-                          ? colors.black
-                          : colors.white
-                    }
-                    resizeMode="contain"
-                  />
-                  <AppText
-                    weight={MEDIUM}
-                    style={{ top: 5 }}
-                    type={TEN}
-                    color={focused ? YELLOW : BLACK}
-                  >
-                    Wallet
-                  </AppText>
-                </View>
-              </>
+              <View style={{ alignItems: "center", marginTop: 10 }}>
+                <FastImage
+                  source={wallet_ic}
+                  style={{ width: 20, height: 20 }}
+                  resizeMode="contain"
+                  tintColor={themeColors.text}
+                />
+                <AppText
+                  weight={MEDIUM}
+                  style={{ top: 5, color: focused ? themeColors.button : themeColors.text }}
+                  type={TEN}
+                >
+                  Wallet
+                </AppText>
+              </View>
             ),
           }}
           component={WalletNew}

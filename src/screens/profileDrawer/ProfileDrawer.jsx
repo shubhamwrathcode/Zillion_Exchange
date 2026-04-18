@@ -91,6 +91,7 @@ import {
 } from "../../navigation/routes";
 import { useAppSelector } from "../../store/hooks";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 import { useDispatch } from "react-redux";
 import { getUserProfile } from "../../actions/accountActions";
 import { logoutAction } from "../../actions/authActions";
@@ -232,7 +233,7 @@ const AnimatedIconBox = ({ theme, children }) => {
         height: 40,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: theme !== "Dark" ? "#F0F0F0" : "#25262B",
+        backgroundColor: theme !== "Dark" ? themeColors.themeElevationColor : "#25262B",
         borderRadius: 5,
       }}
     >
@@ -250,7 +251,7 @@ const IconAndLabel = ({ theme, iconSource, title, textStyle = {} }) => {
           height: 40,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: '#31363d',
+          backgroundColor: themeColors.themeElevationColor,
           borderRadius: 5,
         }}
       >
@@ -354,6 +355,8 @@ const AnimatedMenuItem = ({ index, onPress, style, theme, children }) => {
   );
 };
 
+
+
 const AnimatedCard = ({ onPress, theme, delay, children }) => {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
@@ -406,12 +409,7 @@ const AnimatedCard = ({ onPress, theme, delay, children }) => {
           padding: 10,
           alignItems: "center",
           justifyContent: "space-between",
-          backgroundColor: colors.themeElevationColor,
-          // elevation: 3,
-          // shadowColor: "#000",
-          // shadowOffset: { width: 0, height: 2 },
-          // shadowOpacity: 0.2,
-          // shadowRadius: 4,
+          backgroundColor: themeColors.themeElevationColor,
         }}
       >
         {children}
@@ -422,7 +420,7 @@ const AnimatedCard = ({ onPress, theme, delay, children }) => {
 
 const ProfileDrawer = () => {
   const dispatch = useDispatch();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, theme, isDark } = useTheme();
   const userData = useAppSelector((state) => state.auth.userData);
   const [refresh, setRefresh] = useState(true);
   const emailTextOpacity = useRef(new Animated.Value(0)).current;
@@ -487,8 +485,7 @@ const ProfileDrawer = () => {
 
 
   return (
-    <View style={styles.container}>
-      {/* <StatusBar backgroundColor={"#070707"} barStyle={"dark-Content"} /> */}
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View
         style={{ marginTop: 20, marginHorizontal: 16, marginBottom: "10%" }}
       >
@@ -511,12 +508,10 @@ const ProfileDrawer = () => {
                 style={{
                   width: 25,
                   height: 25,
-                  transform: [{ rotateX: "360deg" }, { rotateZ: "180deg" }],
                 }}
-                tintColor={colors.white}
+                tintColor={themeColors.text}
               />
             </TouchableOpacity>
-          
           </View>
         </View>
         <View
@@ -550,27 +545,27 @@ const ProfileDrawer = () => {
               <View style={{ marginLeft: 15 }}>
                 <View style={{ flexDirection: "row", gap: 10 }}>
                   <View>
-                  <Animated.View
-                    style={{
-                      opacity: emailTextOpacity,
-                      transform: [{ translateY: emailTextTranslateY }],
-                    }}
-                  >
-                    <AppText
-                      style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}
+                    <Animated.View
+                      style={{
+                        opacity: emailTextOpacity,
+                        transform: [{ translateY: emailTextTranslateY }],
+                      }}
                     >
-                      {userData?.emailId ||
-                        `${userData?.country_code} ${userData?.mobileNumber}`}
-                    </AppText>
-                  </Animated.View>
-                  <View style={{flexDirection: "row", alignItems: "center", gap: 5}}>
-                  <AppText color={DISCLAIMTEXT} type={ELEVEN}>UID: {userData?.uuid}</AppText>
-                  <TouchableOpacity onPress={() => copyText(userData?.uuid)}><FastImage source={copyIcon} resizeMode="contain" style={{width: 10, height: 10}} tintColor={colors.disabledText} /></TouchableOpacity>
-                  
+                      <AppText
+                        style={{ color: themeColors.text, fontSize: 15, fontWeight: "600" }}
+                      >
+                        {userData?.emailId ||
+                          `${userData?.country_code} ${userData?.mobileNumber}`}
+                      </AppText>
+                    </Animated.View>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                      <AppText color={DISCLAIMTEXT} type={ELEVEN}>UID: {userData?.uuid}</AppText>
+                      <TouchableOpacity onPress={() => copyText(userData?.uuid)}><FastImage source={copyIcon} resizeMode="contain" style={{ width: 10, height: 10 }} tintColor={colors.disabledText} /></TouchableOpacity>
+
+                    </View>
+
                   </View>
-                  
-                  </View>
-                  
+
                   {userData?.kycVerified === 2 ? (
                     <FastImage
                       source={right}
@@ -602,22 +597,15 @@ const ProfileDrawer = () => {
                     </View>
                   )}
                 </View>
-
-                {/* <AppText style={{ color: "#fff", fontSize: 12 }}>
-                  {userData?.emailId}
-                </AppText> */}
               </View>
             </View>
           </View>
-          {/* <View>
-            <AntDesign name={'right'} color={'#fff'} size={20} />
-          </View> */}
         </View>
       </View>
       <View
         style={{
           flex: 1,
-          backgroundColor: colors.themeElevationColor,
+          backgroundColor: themeColors.background,
           borderTopLeftRadius: 50,
           borderTopRightRadius: 50,
           overflow: "hidden",
@@ -630,129 +618,129 @@ const ProfileDrawer = () => {
           }}
           showsVerticalScrollIndicator={false}
         >
-        <View
-          style={{
-            marginTop: "10%",
-            marginHorizontal: 20,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginBottom: 20,
-            gap: 12,
-          }}
-        >
-          <AnimatedCard
-            theme={theme}
-            delay={0}
-            onPress={() => NavigationService.navigate(DEPOSIT_COIN_SCREEN)}
+          <View
+            style={{
+              marginTop: "10%",
+              marginHorizontal: 20,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 20,
+              gap: 12,
+            }}
           >
-            <DepositWithdrawCard
+            <AnimatedCard
               theme={theme}
-              bigImage={depositImage}
-              smallIcon={
-                theme !== "Dark" ? newDepositIcon : newDepositDarkIcon
-              }
-              label="Deposit"
-            />
-          </AnimatedCard>
+              delay={0}
+              onPress={() => NavigationService.navigate(DEPOSIT_COIN_SCREEN)}
+            >
+              <DepositWithdrawCard
+                theme={theme}
+                bigImage={depositImage}
+                smallIcon={
+                  theme !== "Dark" ? newDepositIcon : newDepositDarkIcon
+                }
+                label="Deposit"
+              />
+            </AnimatedCard>
 
-          <AnimatedCard
-            theme={theme}
-            delay={80}
-            onPress={() => NavigationService.navigate(WALLET_WITHDRAW_SCREEN)}
+            <AnimatedCard
+              theme={theme}
+              delay={80}
+              onPress={() => NavigationService.navigate(WALLET_WITHDRAW_SCREEN)}
+            >
+              <DepositWithdrawCard
+                theme={theme}
+                bigImage={withdrawImage}
+                smallIcon={
+                  theme !== "Dark" ? newWidthrawIcon : newWidthrawDarkIcon
+                }
+                label="Withdrawal"
+              />
+            </AnimatedCard>
+          </View>
+          <AppText
+            style={{
+              fontSize: 17,
+              fontWeight: "700",
+              marginHorizontal: 20,
+              marginTop: 10,
+            }}
           >
-            <DepositWithdrawCard
-              theme={theme}
-              bigImage={withdrawImage}
-              smallIcon={
-                theme !== "Dark" ? newWidthrawIcon : newWidthrawDarkIcon
-              }
-              label="Withdrawal"
-            />
-          </AnimatedCard>
-        </View>
-        <AppText
-          style={{
-            fontSize: 17,
-            fontWeight: "700",
-            marginHorizontal: 20,
-            marginTop: 10,
-          }}
-        >
-          General Features
-        </AppText>
-        <View style={styles.secondcontainer}>
-          {Data?.map((item, index) => (
-            <AnimatedMenuItem
-              key={item.id}
-              index={index}
-              theme={theme}
-              onPress={item?.onPress}
-              style={styles.singleItem}
-            >
-              <IconAndLabel
+            General Features
+          </AppText>
+          <View style={styles.secondcontainer}>
+            {Data?.map((item, index) => (
+              <AnimatedMenuItem
+                key={item.id}
+                index={index}
                 theme={theme}
-                iconSource={item.icon}
-                title={item.title}
-              />
-            </AnimatedMenuItem>
-          ))}
-        </View>
+                onPress={item?.onPress}
+                style={styles.singleItem}
+              >
+                <IconAndLabel
+                  theme={theme}
+                  iconSource={item.icon}
+                  title={item.title}
+                />
+              </AnimatedMenuItem>
+            ))}
+          </View>
 
-        <AppText
-          style={{
-            fontSize: 17,
-            fontWeight: "700",
-            marginHorizontal: 20,
-            marginTop: 10,
-          }}
-        >
-          Support Tools
-        </AppText>
-        <View style={styles.secondcontainer}>
-          {Data2.map((item, index) => (
-            <AnimatedMenuItem
-              key={item.id}
-              index={index}
-              theme={theme}
-              onPress={item.onPress}
-              style={styles.singleItem}
-            >
-              <IconAndLabel
+          <AppText
+            style={{
+              fontSize: 17,
+              fontWeight: "700",
+              marginHorizontal: 20,
+              marginTop: 10,
+            }}
+          >
+            Support Tools
+          </AppText>
+          <View style={styles.secondcontainer}>
+            {Data2.map((item, index) => (
+              <AnimatedMenuItem
+                key={item.id}
+                index={index}
                 theme={theme}
-                iconSource={item.icon}
-                title={item.title}
-              />
-            </AnimatedMenuItem>
-          ))}
-        </View>
-        <AppText
-          style={{
-            fontSize: 17,
-            fontWeight: "700",
-            marginHorizontal: 20,
-            marginTop: 10,
-          }}
-        >
-          History
-        </AppText>
-        <View style={styles.secondcontainer}>
-          {Data3.map((item, index) => (
-            <AnimatedMenuItem
-              key={item.id}
-              index={index}
-              theme={theme}
-              onPress={item.onPress}
-              style={styles.singleItem}
-            >
-              <IconAndLabel
+                onPress={item.onPress}
+                style={styles.singleItem}
+              >
+                <IconAndLabel
+                  theme={theme}
+                  iconSource={item.icon}
+                  title={item.title}
+                />
+              </AnimatedMenuItem>
+            ))}
+          </View>
+          <AppText
+            style={{
+              fontSize: 17,
+              fontWeight: "700",
+              marginHorizontal: 20,
+              marginTop: 10,
+            }}
+          >
+            History
+          </AppText>
+          <View style={styles.secondcontainer}>
+            {Data3.map((item, index) => (
+              <AnimatedMenuItem
+                key={item.id}
+                index={index}
                 theme={theme}
-                iconSource={item.icon}
-                title={item.title}
-                textStyle={{ width: 60 }}
-              />
-            </AnimatedMenuItem>
-          ))}
-        </View>
+                onPress={item.onPress}
+                style={styles.singleItem}
+              >
+                <IconAndLabel
+                  theme={theme}
+                  iconSource={item.icon}
+                  title={item.title}
+                  textStyle={{ width: 60 }}
+                />
+              </AnimatedMenuItem>
+            ))}
+          </View>
         </ScrollView>
       </View>
 
@@ -784,6 +772,8 @@ const ProfileDrawer = () => {
             style={[
               styles.logoutModalCard,
               {
+                backgroundColor: themeColors.themeElevationColor,
+                borderColor: themeColors.border,
                 transform: [
                   {
                     translateY: logoutAnim.interpolate({
@@ -810,19 +800,18 @@ const ProfileDrawer = () => {
               />
             </View>
 
-            <AppText style={styles.logoutTitle}>Logout</AppText>
-            <AppText style={styles.logoutDesc}>
-              Are you sure you want to logout? You’ll need to sign in again to
-              access your account.
+            <AppText style={[styles.logoutTitle, { color: themeColors.text }]}>Confirm Logout</AppText>
+            <AppText style={[styles.logoutDesc, { color: themeColors.secondaryText }]}>
+              Are you sure you want to log out of your account?
             </AppText>
 
             <View style={styles.logoutActionsRow}>
               <TouchableOpacity
                 activeOpacity={0.85}
-                style={[styles.logoutBtn, styles.logoutBtnSecondary]}
+                style={[styles.logoutBtn, styles.logoutBtnSecondary, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)" }]}
                 onPress={() => closeLogoutModal()}
               >
-                <AppText style={styles.logoutBtnSecondaryText}>Cancel</AppText>
+                <AppText style={[styles.logoutBtnSecondaryText, { color: themeColors.text }]}>Cancel</AppText>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -830,7 +819,7 @@ const ProfileDrawer = () => {
                 style={[styles.logoutBtn, styles.logoutBtnPrimary]}
                 onPress={confirmLogout}
               >
-                <AppText style={styles.logoutBtnPrimaryText}>Logout</AppText>
+                <AppText style={[styles.logoutBtnPrimaryText, { color: "#fff" }]}>Logout</AppText>
               </TouchableOpacity>
             </View>
           </Animated.View>
@@ -847,7 +836,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.newThemeColor,
     width: screenWidth,
-    // padding: 16,
   },
   logoutModalBackdrop: {
     flex: 1,
@@ -857,7 +845,7 @@ const styles = StyleSheet.create({
     padding: 18,
   },
   logoutModalCard: {
-    backgroundColor: colors.themeElevationColor,
+
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,

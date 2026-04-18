@@ -23,6 +23,7 @@ import MarketSkeleton from "./MarketSkeleton";
 import { futureSocketService } from "../../services/socket/FutureSocketService";
 import { setFuturesPairs } from "../../slices/homeSlice";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const H_PAD = universalPaddingHorizontal;
@@ -32,6 +33,7 @@ const SHIMMER_STRIP = 120;
 
 // Reusable shimmer box shared by TabListSkeleton
 const ShimmerCell = ({ width: w, height, borderRadius = 5, style }) => {
+  const { colors: themeColors } = useTheme();
   const shimmerX = useRef(new Animated.Value(-SHIMMER_STRIP)).current;
   const mounted = useRef(true);
   useEffect(() => {
@@ -52,7 +54,7 @@ const ShimmerCell = ({ width: w, height, borderRadius = 5, style }) => {
     <Animated.View
       style={[{
         width: w, height, borderRadius, overflow: "hidden",
-        backgroundColor: colors.themeElevationColor,
+        backgroundColor: themeColors.card,
       }, style]}
     >
       <Animated.View
@@ -69,44 +71,47 @@ const ShimmerCell = ({ width: w, height, borderRadius = 5, style }) => {
 };
 
 // Skeleton that mimics MarketList row layout (icon + name/vol + price + pill)
-const TabListSkeleton = ({ rows = 8 }) => (
-  <Animated.View style={{ paddingHorizontal: SIDE_SPACE, paddingTop: 8 }}>
-    {Array.from({ length: rows }).map((_, i) => (
-      <Animated.View
-        key={i}
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingVertical: 12,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: "rgba(255,255,255,0.06)",
-        }}
-      >
-        {/* left: icon + name/vol */}
-        <Animated.View style={{ flexDirection: "row", alignItems: "center", flex: 1, gap: 8 }}>
-          <ShimmerCell width={28} height={28} borderRadius={14} />
-          <Animated.View style={{ gap: 4 }}>
-            <ShimmerCell width={52} height={12} />
-            <ShimmerCell width={38} height={10} />
+const TabListSkeleton = ({ rows = 8 }) => {
+  const { colors: themeColors } = useTheme();
+  return (
+    <Animated.View style={{ paddingHorizontal: SIDE_SPACE, paddingTop: 8 }}>
+      {Array.from({ length: rows }).map((_, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingVertical: 12,
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: themeColors.border,
+          }}
+        >
+          {/* left: icon + name/vol */}
+          <Animated.View style={{ flexDirection: "row", alignItems: "center", flex: 1, gap: 8 }}>
+            <ShimmerCell width={28} height={28} borderRadius={14} />
+            <Animated.View style={{ gap: 4 }}>
+              <ShimmerCell width={52} height={12} />
+              <ShimmerCell width={38} height={10} />
+            </Animated.View>
           </Animated.View>
+          {/* centre: price */}
+          <ShimmerCell width={56} height={12} style={{ marginHorizontal: 8 }} />
+          {/* right: % pill */}
+          <ShimmerCell width={64} height={24} borderRadius={6} />
         </Animated.View>
-        {/* centre: price */}
-        <ShimmerCell width={56} height={12} style={{ marginHorizontal: 8 }} />
-        {/* right: % pill */}
-        <ShimmerCell width={64} height={24} borderRadius={6} />
-      </Animated.View>
-    ))}
-  </Animated.View>
-);
+      ))}
+    </Animated.View>
+  );
+};
 
 const Market = () => {
+  const { colors: themeColors } = useTheme();
   const route = useRoute();
   const isFocused = useIsFocused();
   const dispatch = useDispatch();
   const socketContextVars = useContext(SocketContext) || {};
   const { subscribeToMarket, unsubscribeFromMarket } = socketContextVars;
-  const theme = useAppSelector((state) => state.auth.theme);
   const coinPairs = useAppSelector((state) => state.home.coinPairs);
   const hotPairsChart = useAppSelector((state) => state.home.hotPairsChart) ?? {};
   const futuresPairs = useAppSelector((state) => state.home.futuresPairs ?? []);
@@ -200,7 +205,7 @@ const Market = () => {
   }, []);
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <KeyBoardAware>
         <MarketHeader
           activeTab={activeTab}

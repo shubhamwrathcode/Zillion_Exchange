@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, StyleSheet, TextStyle, TextProps } from "react-native";
+import { Text, StyleSheet, TextStyle, TextProps, StyleProp } from "react-native";
 import {
   fontFamily,
   fontFamilyBold,
@@ -51,7 +51,7 @@ export const LIGHTGREY = 'LIGHTGREY'
 interface AppTextProps extends TextProps {
   type?: string;
   weight?: string;
-  style?: TextStyle;
+  style?: StyleProp<TextStyle>;
   color?: string;
   // theme?: String;
   numberOfLines?: number;
@@ -66,9 +66,9 @@ const AppText = ({
   numberOfLines,
   ...props
 }: AppTextProps) => {
-  const theme = useAppSelector(state => state.auth.theme);
-  const getTextStyle = (type, weight, color) => {
-    var style = {
+  const themeState = useAppSelector(state => state.auth.theme);
+  const getTextStyle = (type?: string, weight?: string, color?: string): TextStyle => {
+    var style: TextStyle = {
       fontFamily: fontFamily,
     };
     switch (type) {
@@ -149,10 +149,10 @@ const AppText = ({
 
     switch (color) {
       case WHITE:
-        style["color"] = theme === "Dark" ? colors.black : colors.white;
+        style["color"] = themeState === "Dark" ? colors.black : colors.white;
         break;
       case BLACK:
-        style["color"] = theme === "Dark" ? colors.white : colors.black;
+        style["color"] = themeState === "Dark" ? colors.white : colors.black;
         break;
       case YELLOW:
         style["color"] = colors.buttonBg;
@@ -182,18 +182,18 @@ const AppText = ({
           style["color"] = colors.lightGrey;
           break;
         case DISCLAIMTEXT:
-          style["color"] = theme === "Dark" ? colors.disclaimDarText :colors.disclaimText;
+          style["color"] = themeState === "Dark" ? colors.disclaimDarText :colors.disclaimText;
           break;
         
 
       default:
-        style["color"] = theme === "Dark" ? colors.white :colors.black;
+        style["color"] = themeState === "Dark" ? colors.white :colors.black;
     }
 
     return style;
   };
   const styles = {
-    text: (type, weight, color) => ({
+    text: (type?: string, weight?: string, color?: string) => ({
       ...getTextStyle(type, weight, color),
     }),
   };

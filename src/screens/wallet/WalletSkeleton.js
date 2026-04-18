@@ -6,6 +6,7 @@ import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated, Dimensions } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width } = Dimensions.get("window");
 const HORIZONTAL_PADDING = 20;
@@ -13,6 +14,7 @@ const CONTENT_WIDTH = width - HORIZONTAL_PADDING * 2;
 const SHIMMER_STRIP_WIDTH = 80;
 
 const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const shimmerX = useRef(new Animated.Value(-SHIMMER_STRIP_WIDTH)).current;
 
   useEffect(() => {
@@ -31,8 +33,10 @@ const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
     return () => shimmerX.stopAnimation();
   }, [shimmerX, w]);
 
-  const boneColor = colors.themeElevationColor;
-  const shimmerColors = ["transparent", "rgba(255,255,255,0.16)", "transparent"];
+  const boneColor = themeColors.themeElevationColor;
+  const shimmerColors = isDark
+    ? ["transparent", "rgba(255,255,255,0.16)", "transparent"]
+    : ["transparent", "rgba(0,0,0,0.05)", "transparent"];
 
   return (
     <View
@@ -60,6 +64,7 @@ const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
 };
 
 const WalletSkeleton = () => {
+  const { colors: themeColors, isDark } = useTheme();
   return (
     <View style={styles.wrap}>
       {/* Tabs row */}
@@ -93,7 +98,7 @@ const WalletSkeleton = () => {
       <View style={styles.portfolioSection}>
         <ShimmerBox width={80} height={16} borderRadius={4} style={{ marginBottom: 10 }} />
         {[1, 2, 3, 4].map((i) => (
-          <View key={i} style={styles.portfolioCard}>
+          <View key={i} style={[styles.portfolioCard, { backgroundColor: themeColors.themeElevationColor }]}>
             <View>
               <ShimmerBox width={100} height={14} borderRadius={4} />
               <View style={styles.portfolioCardBalance}>
@@ -177,12 +182,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.inputBorder || "#23262F",
     borderRadius: 10,
     padding: 15,
     marginTop: 10,
-    backgroundColor: colors.themeElevationColor,
+
   },
   portfolioCardBalance: {
     flexDirection: "row",

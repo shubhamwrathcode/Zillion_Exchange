@@ -39,6 +39,7 @@ import { checkValue } from "../../helper/utility";
 import { Screen, universalPaddingHorizontalHigh } from "../../theme/dimens";
 import CustomDots from "../home/CustomDots";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const baseOptions = {
   vertical: false,
@@ -47,6 +48,8 @@ const baseOptions = {
 };
 
 const Welcome = () => {
+  const { colors: themeColors, isDark } = useTheme();
+
   const theme = useAppSelector((state) => state.auth.theme);
   const [activeIndex, setActiveIndex] = useState(0);
   const bannerList = [
@@ -83,10 +86,9 @@ const Welcome = () => {
           imageStyle={{ borderRadius: 20 }}
         />
         <AppText
-          color={BLACK}
+          style={{ textAlign: "center", color: themeColors.text }}
           type={FIFTEEN}
           weight={SEMI_BOLD}
-          style={{ textAlign: "center" }}
         >
           {item?.desc}
         </AppText>
@@ -103,7 +105,7 @@ const Welcome = () => {
   };
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <KeyBoardAware>
         <View
           style={[
@@ -123,7 +125,6 @@ const Welcome = () => {
               renderItem={renderItem}
               onSnapToItem={(index) => setActiveIndex(index)}
               autoPlay={true}
-              // style={{backgroundColor: "blue"}}
               pagingEnabled={true}
               autoPlayInterval={2500}
             />
@@ -131,9 +132,11 @@ const Welcome = () => {
               {bannerList?.map((data, index) => {
                 return (
                   <CustomDots
-                    key={data?._id}
+                    key={index}
                     index={index}
                     activeIndex={activeIndex}
+                    activeColor={themeColors.button}
+                    inactiveColor={isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}
                   />
                 );
               })}
@@ -143,11 +146,12 @@ const Welcome = () => {
           <View style={{ alignItems: "center", width: "100%", gap: 15 }}>
             <Button
               children="Create an Account"
-              containerStyle={{ width: "80%" }}
+              containerStyle={{ width: "80%", backgroundColor: themeColors.button }}
               onPress={onRegister}
+              titleStyle={{ color: themeColors.buttonText }}
             />
             <TouchableOpacity onPress={onLogin}>
-              <AppText color={BLACK} weight={SEMI_BOLD} type={FIFTEEN}>
+              <AppText weight={SEMI_BOLD} type={FIFTEEN} style={{ color: themeColors.text }}>
                 Log in
               </AppText>
             </TouchableOpacity>

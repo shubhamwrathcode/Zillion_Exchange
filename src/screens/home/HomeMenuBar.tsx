@@ -7,46 +7,34 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  withTiming,
 } from "react-native-reanimated";
-import { AppText, BLACK, ELEVEN, TEN, THIRTEEN, TWELVE } from "../../shared";
+import { AppText, ELEVEN } from "../../shared";
 import { colors } from "../../theme/colors";
-import { universalPaddingHorizontalHigh } from "../../theme/dimens";
+import { useTheme } from "../../hooks/useTheme";
 const Width = Dimensions.get("window").width;
 import {
-  arbitary,
-  buyCrypto,
   convertIcon,
-  depositIcon,
   earningMenuDarkIcon,
   earningMenuIcon,
   memexDarkIcon,
   memexIcon,
   moreOption,
   rewardHubIcon,
-  swap,
-  walletIcon,
-  withdrawIcon,
 } from "../../helper/ImageAssets";
 import NavigationService from "../../navigation/NavigationService";
 import {
   ACCOUNT_SCREEN,
-  ARBITORY_SCREEN,
   CONVERT_SCREEN,
-  EARING_SCREEN,
   INVITE_AND_EARN_SCREEN,
   MARKET_SCREEN,
   MORE_MENU_SCREEN,
-  QUICK_BUY_SELL,
-  STAKING,
-  WALLET_SCREEN,
 } from "../../navigation/routes";
 import { useAppSelector } from "../../store/hooks";
 import { checkValue } from "../../helper/utility";
-import { showError } from "../../helper/logger";
 
 // ✅ Separate component for menu item to use hooks properly
 const MenuItem = React.memo(({ item, index }: any) => {
+  const { colors: themeColors } = useTheme();
   const scale = useSharedValue(1);
   
   const animatedStyle = useAnimatedStyle(() => {
@@ -79,11 +67,11 @@ const MenuItem = React.memo(({ item, index }: any) => {
         <FastImage
           resizeMode="contain"
           source={item.icon}
-          tintColor={item?.id === "6" ? colors.white : undefined}
+          tintColor={item?.id === "6" ? themeColors.text : undefined}
           style={item?.id === '6' ? styles.iconMore : styles.icon}
         />
 
-        <AppText color={BLACK} type={ELEVEN}>
+        <AppText style={{ color: themeColors.text }} type={ELEVEN}>
           {item?.title}
         </AppText>
       </TouchableOpacityView>
@@ -114,12 +102,6 @@ const HomeMenuBar = () => {
       onPress: () =>
         NavigationService.navigate(ACCOUNT_SCREEN, { from: "home" }),
     },
-    // {
-    //   id: '3',
-    //   title: 'FIT Bot',
-    //   icon: arbitary,
-    //   onPress: () => NavigationService.navigate(ARBITORY_SCREEN, {from: "home"}),
-    // },
     {
       id: "4",
       title: checkValue("Swap"),
@@ -161,15 +143,11 @@ const HomeMenuBar = () => {
 };
 const styles = StyleSheet.create({
   container: {
-    // backgroundColor: colors.menuColor,
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    // justifyContent: 'space-around',
     paddingVertical: 10,
     marginBottom: 10,
-    // marginTop: 10,
-    // paddingHorizontal: 5,
   },
   icon: {
     height: 35,
@@ -182,12 +160,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   singleItem: {
-    // width: '20%',
     width: Width / 4.7,
-    // alignSelf: 'center',
     alignItems: "center",
-    // backgroundColor: "red",
-    // justifyContent: "space-evenly"
   },
 });
 export default HomeMenuBar;

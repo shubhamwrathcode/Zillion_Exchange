@@ -7,12 +7,14 @@ import { View, StyleSheet, Platform, Animated, Dimensions } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { colors } from "../../theme/colors";
 import { universalPaddingHorizontal } from "../../theme/dimens";
+import { useTheme } from "../../hooks/useTheme";
 
 const ROW_HEIGHT = 40;
 const HOME_HORIZONTAL_PADDING = 12;
 const SHIMMER_STRIP_WIDTH_DEFAULT = 80;
 
 const ShimmerBox = ({ width, height, borderRadius = 6, style }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const stripW = SHIMMER_STRIP_WIDTH_DEFAULT;
   const shimmerX = useRef(new Animated.Value(-stripW)).current;
   const mounted = useRef(true);
@@ -40,8 +42,10 @@ const ShimmerBox = ({ width, height, borderRadius = 6, style }) => {
     };
   }, [shimmerX, width]);
 
-  const boneColor = colors.themeElevationColor;
-  const shimmerColors = ["transparent", "rgba(255,255,255,0.16)", "transparent"];
+  const boneColor = themeColors.themeElevationColor;
+  const shimmerColors = isDark 
+    ? ["transparent", "rgba(255,255,255,0.16)", "transparent"]
+    : ["transparent", "rgba(0,0,0,0.05)", "transparent"];
 
   return (
     <View
@@ -75,9 +79,10 @@ const ShimmerBox = ({ width, height, borderRadius = 6, style }) => {
 };
 
 const CoinListSkeleton = () => {
+  const { colors: themeColors } = useTheme();
   return (
     <View style={[styles.container, { marginBottom: 50 }]}>
-      <View style={styles.elevatedCard}>
+      <View style={[styles.elevatedCard, { backgroundColor: themeColors.themeElevationColor }]}>
         {/* Tabs row: 4 pill placeholders */}
         <View style={styles.tabsRow}>
           {[1, 2, 3, 4].map((i) => (
@@ -92,7 +97,7 @@ const CoinListSkeleton = () => {
         </View>
 
         {/* Table header */}
-        <View style={[styles.tableHeader, { borderBottomColor: colors.dividerColor }]}>
+        <View style={[styles.tableHeader, { borderBottomColor: themeColors.border }]}>
           <ShimmerBox width={60} height={11} borderRadius={4} />
           <ShimmerBox width={70} height={11} borderRadius={4} style={{ marginLeft: 8 }} />
           <ShimmerBox width={56} height={11} borderRadius={4} style={styles.headerChg} />
@@ -101,7 +106,7 @@ const CoinListSkeleton = () => {
         {/* 5 skeleton rows matching MarketList row layout */}
         <View style={styles.listWrap}>
           {[1, 2, 3, 4, 5].map((i) => (
-            <View key={i} style={[styles.skeletonRow, { borderBottomColor: colors.dividerColor }]}>
+            <View key={i} style={[styles.skeletonRow, { borderBottomColor: themeColors.border }]}>
               <View style={styles.nameCol}>
                 <View style={styles.nameRow}>
                   <ShimmerBox width={18} height={18} borderRadius={4} />

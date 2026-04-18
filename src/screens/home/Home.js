@@ -67,8 +67,11 @@ import NavigationService from "../../navigation/NavigationService";
 import { colors } from "../../theme/colors";
 import { SocketContext } from "../../SocketProvider";
 
+import { useTheme } from "../../hooks/useTheme";
+
 const Home = () => {
   const dispatch = useAppDispatch();
+  const { colors: themeColors, isDark } = useTheme();
   const theme = useAppSelector((state) => state.auth.theme);
   const loading = useAppSelector((state) => state.auth.isLoading);
   const coinPairs = useAppSelector((state) => state.home.coinPairs);
@@ -132,21 +135,23 @@ const Home = () => {
 
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <KeyBoardAware style={commonStyles.zeroPadding}>
         <View>
-          <HeaderTop theme={theme} />
+          <HeaderTop />
         </View>
 
         {(kycVerified === 0 || kycVerified === 3) && (
           <View
             style={{
-              backgroundColor: colors.themeElevationColor,
+              backgroundColor: themeColors.card,
               marginHorizontal: 12,
               height: 160,
               padding: 10,
               borderRadius: 6,
               marginVertical: 10,
+              borderWidth: 1,
+              borderColor: themeColors.border,
             }}
           >
             <View
@@ -163,10 +168,10 @@ const Home = () => {
                 resizeMode="contain"
               />
               <View style={{ width: "70%" }}>
-                <AppText style={{ color: colors.buttonBg }} type={EIGHTEEN}>
+                <AppText style={{ color: themeColors.button }} type={EIGHTEEN}>
                   Verification
                 </AppText>
-                <AppText style={{ color: "#FFFFFFB2" }} type={ELEVEN}>
+                <AppText style={{ color: themeColors.secondaryText }} type={ELEVEN}>
                   Verify your identity to secure your account and unlock
                   trading access.
                 </AppText>
@@ -175,7 +180,7 @@ const Home = () => {
             <Button
               onPress={() => NavigationService.navigate(KYC_STATUS_SCREEN)}
               children="Verify Now"
-              containerStyle={{ width: "90%", height: 40, alignSelf: "center" }}
+              containerStyle={{ width: "90%", height: 40, alignSelf: "center", backgroundColor: themeColors.button }}
             />
           </View>
         )}

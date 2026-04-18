@@ -29,14 +29,16 @@ import RBSheet from "react-native-raw-bottom-sheet";
 import { colors } from "../../theme/colors";
 import WithdrawSheet from "../../shared/components/WithdrawSheet";
 
-const WalletMenu = ({theme, onDeposit, onWithdraw}) => {
+import { useTheme } from "../../hooks/useTheme";
+
+const WalletMenu = ({ onDeposit, onWithdraw }) => {
+  const { colors: themeColors, theme } = useTheme();
 
   return (
     <View
       style={{
         marginTop: 8,
-        backgroundColor: theme !== "Dark" ? "#FAF9F6" : "transparent",
-        // elevation: 1,
+        backgroundColor: theme !== "Dark" ? themeColors.themeElevationColor : "transparent",
         paddingVertical: 10,
       }}
     >
@@ -57,9 +59,9 @@ const WalletMenu = ({theme, onDeposit, onWithdraw}) => {
           <FastImage
             source={theme !== 'Dark' ? newDepositIcon : newDepositDarkIcon}
             resizeMode="contain"
-            style={{ width: 30, height: 30 }}
+            style={{ width: 25, height: 25 }}
           />
-          <AppText color={BLACK} style={{ marginTop: 5 }}>
+          <AppText style={{ marginTop: 5 }}>
             Deposit
           </AppText>
         </TouchableOpacity>
@@ -70,9 +72,9 @@ const WalletMenu = ({theme, onDeposit, onWithdraw}) => {
           <FastImage
             source={theme !== 'Dark' ? newWidthrawIcon : newWidthrawDarkIcon}
             resizeMode="contain"
-            style={{ width: 30, height: 30 }}
+            style={{ width: 25, height: 25 }}
           />
-          <AppText color={BLACK} style={{ marginTop: 5 }}>
+          <AppText style={{ marginTop: 5 }}>
             Withdraw
           </AppText>
         </TouchableOpacity>
@@ -83,10 +85,9 @@ const WalletMenu = ({theme, onDeposit, onWithdraw}) => {
           <FastImage
             source={theme !== 'Dark' ? buySellIcon : convertIcon}
             resizeMode="contain"
-            style={{ width: 30, height: 30 }}
-            // tintColor={colors.white}
+            style={{ width: 25, height: 25 }}
           />
-          <AppText color={BLACK} style={{ marginTop: 5 }}>
+          <AppText style={{ marginTop: 5 }}>
             Swap
           </AppText>
         </TouchableOpacity>
@@ -96,15 +97,15 @@ const WalletMenu = ({theme, onDeposit, onWithdraw}) => {
         >
           <FastImage
             source={theme !== 'Dark' ? transferIcon : transferDarkIcon}
-            // resizeMode="contain"
-            style={{ width: 30, height: 30 }}
+            resizeMode="contain"
+            style={{ width: 25, height: 25 }}
           />
-          <AppText color={BLACK} style={{ marginTop: 5 }}>
+          <AppText style={{ marginTop: 5 }}>
             Transfer
           </AppText>
         </TouchableOpacity>
       </View>
-     
+
     </View>
   );
 };

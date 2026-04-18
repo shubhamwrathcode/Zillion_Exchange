@@ -2,61 +2,50 @@ import React, { useState } from "react";
 import {
   View,
   Dimensions,
-  ImageBackground,
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import CustomDots from "./CustomDots";
 import { useAppSelector } from "../../store/hooks";
-import { BASE_URL } from "../../helper/Constants";
-import { Screen, universalPaddingHorizontalHigh } from "../../theme/dimens";
-import { BannerListProps } from "../../helper/types";
+import { Screen } from "../../theme/dimens";
 import {
   BACK_ICON,
-  banner1,
-  BANNER_IMG,
-  bannerDark1,
   homeImage1,
   homeImage2,
   homeImage3,
   homeImage4,
-  languageIcon,
-  upDownIc,
 } from "../../helper/ImageAssets";
 import FastImage from "react-native-fast-image";
-import { AppText, TWELVE, WHITE } from "../../shared";
+import { AppText, TWELVE } from "../../shared";
 import { colors } from "../../theme/colors";
 import NavigationService from "../../navigation/NavigationService";
 import {
-  ACCOUNT_SCREEN,
-  CONTACT_US_SCREEN,
   DEPOSIT_COIN_SCREEN,
-  DEPOSIT_WALLET_SCREEN,
   KYC_STEP_ONE_SCREEN,
-  SPOT_MARKET_SCREEN,
   WALLET_SCREEN,
 } from "../../navigation/routes";
-const width = Dimensions.get("screen").width;
+import { useTheme } from "../../hooks/useTheme";
+
 const baseOptions = {
   vertical: false,
   width: Screen.Width,
   height: 110,
 };
-// interface BannerListRenderItemProps {
-//   item: BannerListProps;
-//   index: number;
-// }
 
-const HomeSlider = ({ theme }) => {
-  // const bannerList = useAppSelector(state => state.home.bannerList);
+const HomeSlider = () => {
+  const { colors: themeColors } = useTheme();
   const [activeIndex, setActiveIndex] = useState(0);
-  const bannerList = [
+  const userData = useAppSelector((state) => state.auth.userData);
+  const kycVerified = userData?.kycVerified != null ? Number(userData.kycVerified) : 0;
+
+  const banners = [
     {
       index: 0,
       banner_path: homeImage1,
       title: `Complete your KYC verification to unlock all account features and ensure a seamless trading experience.`,
       onPress: () => NavigationService.navigate(KYC_STEP_ONE_SCREEN),
+      isKyc: true,
     },
     {
       index: 1,
@@ -76,8 +65,14 @@ const HomeSlider = ({ theme }) => {
       title: `Have a question or need help? Get quick assistance from our support team for any queries or concerns.`,
       onPress: () => NavigationService.navigate('Support'),
     },
-
   ];
+
+  const bannerList = banners.filter((banner) => {
+    if (banner.isKyc) {
+      return kycVerified === 0 || kycVerified === 3;
+    }
+    return true;
+  });
 
   const renderItem = ({ item }) => {
     return (
@@ -95,12 +90,12 @@ const HomeSlider = ({ theme }) => {
           <FastImage
             source={item?.banner_path}
             style={{
-              width: item?.index === 0 ? 80 : 70,
-              height: item?.index === 0 ? 80 : 70,
+              width: item?.isKyc ? 80 : 70,
+              height: item?.isKyc ? 80 : 70,
             }}
             resizeMode="contain"
           />
-          <AppText style={{ width: "50%", right: 20 }} type={TWELVE}>
+          <AppText style={{ width: "50%", right: 20, color: themeColors.text }} type={TWELVE}>
             {item?.title}
           </AppText>
           <FastImage
@@ -108,10 +103,10 @@ const HomeSlider = ({ theme }) => {
             style={{
               width: 16,
               height: 16,
-              transform: "rotateX(45deg) rotateZ(3.1rad)",
+              transform: [{ rotateX: "45deg" }, { rotateZ: "3.1rad" }],
             }}
             resizeMode="contain"
-            tintColor={colors.white}
+            tintColor={themeColors.text}
           />
         </TouchableOpacity>
       </View>
@@ -124,9 +119,9 @@ const HomeSlider = ({ theme }) => {
         style={{
           flex: 1,
           borderTopWidth: 0.5,
-          borderTopColor: "#302F2F",
+          borderTopColor: themeColors.border,
           borderBottomWidth: 1,
-          borderBottomColor: "#302F2F",
+          borderBottomColor: themeColors.border,
           marginBottom: 5,
           height: 110,
         }}
@@ -135,7 +130,6 @@ const HomeSlider = ({ theme }) => {
           style={{
             width: "100%",
             alignSelf: "center",
-            // alignItems: 'center',
             justifyContent: "center",
             marginHorizontal: 20,
           }}
@@ -155,7 +149,7 @@ const HomeSlider = ({ theme }) => {
         {bannerList?.map((data, index) => {
           return (
             <CustomDots
-              key={data?._id}
+              key={index}
               index={index}
               activeIndex={activeIndex}
             />
@@ -172,16 +166,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     marginBottom: 10,
-  },
-  bannerContainer: {
-    height: 100,
-    // marginEnd: universalPaddingHorizontalHigh,
-    width: "100%",
-    // width:Screen.Width - 35,
-    // backgroundColor:"red",
-  },
-  container: {
-    // paddingHorizontal: universalPaddingHorizontalHigh,
   },
 });
 

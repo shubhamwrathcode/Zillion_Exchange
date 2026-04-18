@@ -1,13 +1,13 @@
 import React from "react";
 import { View, StyleSheet, Platform, Dimensions } from "react-native";
 import FastImage from "react-native-fast-image";
-import { AppText, SEMI_BOLD, TEN, TWELVE, FOURTEEN, FIFTEEN } from "../../shared";
+import { AppText, SEMI_BOLD, TEN, FOURTEEN, FIFTEEN } from "../../shared";
 import { colors } from "../../theme/colors";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import { BASE_URL } from "../../helper/Constants";
 import { toFixedFive, toFixedThree } from "../../helper/utility";
-import { useAppSelector } from "../../store/hooks";
 import MiniSparkline from "../../shared/components/MiniSparkline";
+import { useTheme } from "../../hooks/useTheme";
 
 const COIN_NAMES = { BTC: "Bitcoin", ETH: "Ethereum", BNB: "BNB" };
 
@@ -20,15 +20,14 @@ const formatVolume = (vol) => {
   return toFixedThree(n);
 };
 
-// Ref: 1) Full name, niche short name, samne icon → 2) Niche price → 3) Line chart (crypto style) → 4) Bottom today status
 const MarketFeaturedCard = ({ data, chartData, chartId, onPress }) => {
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors } = useTheme();
   const change = Number(data?.change_percentage) ?? 0;
   const isPositive = change >= 0;
   const ticker = data?.base_currency || "---";
   const coinName = COIN_NAMES[ticker] || ticker;
-  const textColor = theme !== "Dark" ? colors.black : colors.white;
-  const subTextColor = theme !== "Dark" ? "#6B7280" : "rgba(255,255,255,0.65)";
+  const textColor = themeColors.text;
+  const subTextColor = themeColors.secondaryText;
   const priceStr = toFixedFive(data?.buy_price);
   const volumeStr = formatVolume(data?.volume);
   const cardContentWidth = (Dimensions.get("window").width / 2 - 22) - 28;
@@ -39,11 +38,16 @@ const MarketFeaturedCard = ({ data, chartData, chartId, onPress }) => {
 
   return (
     <TouchableOpacityView
-      style={[styles.container, theme !== "Dark" ? styles.containerLight : styles.containerDark]}
+      style={[
+        styles.container, 
+        { 
+          backgroundColor: themeColors.card, 
+          borderColor: themeColors.border 
+        }
+      ]}
       activeOpacity={0.7}
       onPress={() => onPress?.(data)}
     >
-      {/* 1) Top: Full name (upar), niche short name, aur samne coin icon */}
       <View style={styles.topRow}>
         <View style={styles.nameBlock}>
           <AppText type={FOURTEEN} weight={SEMI_BOLD} color={textColor} numberOfLines={1}>
@@ -62,19 +66,14 @@ const MarketFeaturedCard = ({ data, chartData, chartId, onPress }) => {
         </View>
       </View>
 
-      {/* 2) Niche: Price (bada) + $ wala niche */}
       <View style={styles.priceSection}>
-        {/* <AppText type={FIFTEEN} weight={SEMI_BOLD} color={textColor} style={styles.bigPrice} numberOfLines={1}>
-          {priceStr}
-        </AppText> */}
-        <AppText type={FIFTEEN} style={[styles.dollarPrice, { color: colors.white }]} numberOfLines={1}>
+        <AppText type={FIFTEEN} weight={SEMI_BOLD} style={{ color: themeColors.text }} numberOfLines={1}>
           ${priceStr}
         </AppText>
       </View>
 
-      {/* 3) Line chart – dark area, bright line, soft shadow, thin bottom line */}
       <View
-        style={[styles.graphWrap,]}
+        style={styles.graphWrap}
         onLayout={(e) => {
           const w = e.nativeEvent.layout.width;
           if (w > 0) setChartWidth(w);
@@ -88,16 +87,12 @@ const MarketFeaturedCard = ({ data, chartData, chartId, onPress }) => {
           chartId={chartId}
           fallbackPrice={Number(data?.buy_price) || 100}
         />
-
-        
       </View>
 
-      {/* 4) 24H Volume row */}
-      <AppText type={TEN} style={[styles.volumeText, { color: subTextColor, }]} numberOfLines={1}>
+      <AppText type={TEN} style={[styles.volumeText, { color: subTextColor }]} numberOfLines={1}>
         24H Volume：{volumeStr} (USD)
       </AppText>
 
-      {/* 5) Today pill – position absolute, card ke bottom par */}
       <View style={[styles.todayPill, isPositive ? styles.todayPillPositive : styles.todayPillNegative]}>
         <AppText type={TEN} weight={SEMI_BOLD} style={[styles.todayPillText, { color: textColor }]}>
           {isPositive ? "▲ " : "▼ "}{absoluteStr} ({isPositive ? "+" : ""}{toFixedThree(change)}%) Today
@@ -116,21 +111,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 0.5,
     borderRadius: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
     ...(Platform.OS === "ios"
       ? { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8 }
       : { elevation: 3 }),
-  },
-  containerLight: {
-    backgroundColor: colors.themeElevationColor,
-    borderColor: "#E8E8E8",
-  },
-  containerDark: {
-    backgroundColor: colors.themeElevationColor,
-    borderColor: "#302F2F",
   },
   topRow: {
     flexDirection: "row",
@@ -156,12 +139,6 @@ const styles = StyleSheet.create({
   priceSection: {
     marginBottom: 10,
   },
-  bigPrice: {
-    fontSize: 18,
-    marginBottom: 2,
-  },
-  dollarPrice: {
-  },
   graphWrap: {
     width: "100%",
     alignSelf: "stretch",
@@ -170,16 +147,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
-    // borderBottomWidth: 1,
     overflow: "hidden",
-  },
-  graphWrapDark: {
-    backgroundColor: "rgba(0,0,0,0.28)",
-    borderBottomColor: "rgba(255,255,255,0.08)",
-  },
-  graphWrapLight: {
-    backgroundColor: "rgba(0,0,0,0.06)",
-    borderBottomColor: "rgba(0,0,0,0.08)",
   },
   volumeText: {
     fontSize: 11,
@@ -192,7 +160,6 @@ const styles = StyleSheet.create({
     marginHorizontal: -14,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 0,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     justifyContent: "center",

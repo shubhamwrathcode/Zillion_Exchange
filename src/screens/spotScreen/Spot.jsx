@@ -23,12 +23,12 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
 import React, { useCallback, useContext, useEffect, useRef, useState, useMemo, memo } from "react";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import WebView from "react-native-webview";
-import Reanimated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
-  Easing, 
-  interpolate 
+import Reanimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  interpolate
 } from "react-native-reanimated";
 
 import SpotHeader from "../../shared/components/spotHeader/SpotHeader";
@@ -100,6 +100,7 @@ import {
 import { cancelOrder, placeOrder } from "../../actions/homeActions";
 import NavigationService from "../../navigation/NavigationService";
 import moment from "moment";
+import { useTheme } from "../../hooks/useTheme";
 import { SocketContext } from "../../SocketProvider";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import { showError } from "../../helper/logger";
@@ -158,14 +159,15 @@ ChartWebView.displayName = "ChartWebView";
 // Memoized chart block: skeleton + WebView. Only re-renders when chart props change (avoids form/tab re-renders).
 // chartRevealed: true only after webViewReady + short delay to avoid black flash on first paint
 const SpotChartSection = memo(
-  ({ chartUri, webViewReady, chartRevealed, isSpotFocused, theme, colors, onChartLoaded, chartRef, showChartSkeleton: showChartSkeletonProp }) => {
+  ({ chartUri, webViewReady, chartRevealed, isSpotFocused, onChartLoaded, chartRef, showChartSkeleton: showChartSkeletonProp }) => {
+    const { colors: themeColors, theme, isDark } = useTheme();
     const showChartSkeleton = showChartSkeletonProp !== undefined ? showChartSkeletonProp : (!chartRevealed && isSpotFocused);
-    const bg = colors?.newThemeColor ?? CHART_BG_FALLBACK;
+    const bg = themeColors.background ?? CHART_BG_FALLBACK;
     return (
       <View style={{ position: "relative", backgroundColor: bg, overflow: "hidden" }}>
         {showChartSkeleton ? (
           <View style={{ width: Width, height: CHART_HEIGHT, backgroundColor: bg }} pointerEvents="none">
-            <ChartSkeleton theme={theme} colors={colors} height={CHART_HEIGHT} width={Width} />
+            <ChartSkeleton height={CHART_HEIGHT} width={Width} />
           </View>
         ) : null}
         <View
@@ -227,24 +229,29 @@ const orderBookSellRowAreEqual = (prev, next) =>
   String(prev.item?.price) === String(next.item?.price) &&
   String(prev.item?.remaining) === String(next.item?.remaining);
 
-const OrderBookSellRow = memo(({ item, maxVolume, theme, onPress, formatPrice, formatQuantity, styles }) => {
+const OrderBookSellRow = memo(({ item, maxVolume, onPress, formatPrice, formatQuantity, styles }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const remaining = toFiniteOB(item?.remaining);
   const denom = maxVolume > 0 ? maxVolume : 1;
   const ratio = clamp01OB(remaining / denom);
   const a = ratio;
   const b = Math.min(1, a + 1e-6);
   const handlePress = useCallback(() => { onPress(item?.price, item?.remaining); }, [onPress, item?.price, item?.remaining]);
+
+  // Adjusted tints for better theme awareness
+  const baseRed = isDark ? "#352933f7" : "#FFD9DB";
+
   return (
     <TouchableOpacity onPress={handlePress}>
       <LinearGradient
         style={styles.orderRow}
-        colors={theme !== "Dark" ? ["#FFD9DB80", "#FFD9DB80", "transparent", "transparent"] : ["#352933f7", "#352933f7", "transparent", "transparent"]}
+        colors={[baseRed, baseRed, "transparent", "transparent"]}
         start={{ x: 1, y: 0 }}
         end={{ x: 0, y: 0 }}
         locations={[0, a, b, 1]}
       >
-        <AppText style={styles.orderPrice}>{formatPrice(item?.price)}</AppText>
-        <AppText style={styles.orderSize}>{formatQuantity(item?.remaining)}</AppText>
+        <AppText style={[styles.orderPrice, { color: themeColors.red }]}>{formatPrice(item?.price)}</AppText>
+        <AppText style={[styles.orderSize, { color: themeColors.text }]}>{formatQuantity(item?.remaining)}</AppText>
       </LinearGradient>
     </TouchableOpacity>
   );
@@ -257,24 +264,29 @@ const orderBookBuyRowAreEqual = (prev, next) =>
   String(prev.item?.price) === String(next.item?.price) &&
   String(prev.item?.remaining) === String(next.item?.remaining);
 
-const OrderBookBuyRow = memo(({ item, maxVolume, theme, onPress, formatPrice, formatQuantity, styles }) => {
+const OrderBookBuyRow = memo(({ item, maxVolume, onPress, formatPrice, formatQuantity, styles }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const remaining = toFiniteOB(item?.remaining);
   const denom = maxVolume > 0 ? maxVolume : 1;
   const ratio = clamp01OB(remaining / denom);
   const a = ratio;
   const b = Math.min(1, a + 1e-6);
   const handlePress = useCallback(() => { onPress(item?.price, item?.remaining); }, [onPress, item?.price, item?.remaining]);
+
+  // Adjusted tints for better theme awareness
+  const baseGreen = isDark ? "#213438" : "#C6F9E9";
+
   return (
     <TouchableOpacity onPress={handlePress}>
       <LinearGradient
         style={styles.orderRow}
-        colors={theme !== "Dark" ? ["#C6F9E980", "#C6F9E980", "transparent", "transparent"] : ["#213438", "#213438", "transparent", "transparent"]}
+        colors={[baseGreen, baseGreen, "transparent", "transparent"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         locations={[0, a, b, 1]}
       >
-        <AppText style={[styles.orderPrice, { color: "#00BD83" }]}>{formatPrice(item?.price)}</AppText>
-        <AppText style={styles.orderSize}>{formatQuantity(item?.remaining)}</AppText>
+        <AppText style={[styles.orderPrice, { color: themeColors.green }]}>{formatPrice(item?.price)}</AppText>
+        <AppText style={[styles.orderSize, { color: themeColors.text }]}>{formatQuantity(item?.remaining)}</AppText>
       </LinearGradient>
     </TouchableOpacity>
   );
@@ -294,7 +306,8 @@ const orderBookPanelAreEqual = (prev, next) =>
 
 // Order book skeleton: shimmer rows (Price/Quantity columns). Wider strip + no shimmer on header text.
 const ORDER_BOOK_SHIMMER_STRIP_WIDTH = 240;
-const OrderBookSkeleton = ({ theme, colors }) => {
+const OrderBookSkeleton = () => {
+  const { colors: themeColors, isDark } = useTheme();
   const ROWS = 8;
   const ROW_HEIGHT = 22;
   const BONE_HEIGHT = 15;
@@ -312,8 +325,8 @@ const OrderBookSkeleton = ({ theme, colors }) => {
             paddingHorizontal: 4,
           }}
         >
-          <ShimmerBox width="52%" height={BONE_HEIGHT} borderRadius={BONE_RADIUS} theme={theme} colors={colors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
-          <ShimmerBox width="52%" height={BONE_HEIGHT} borderRadius={BONE_RADIUS} theme={theme} colors={colors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} style={{ marginLeft: 3 }} />
+          <ShimmerBox width="52%" height={BONE_HEIGHT} borderRadius={BONE_RADIUS} />
+          <ShimmerBox width="52%" height={BONE_HEIGHT} borderRadius={BONE_RADIUS} style={{ marginLeft: 3 }} />
         </View>
       ))}
     </View>
@@ -322,16 +335,16 @@ const OrderBookSkeleton = ({ theme, colors }) => {
 
 const SHIMMER_STRIP_WIDTH_DEFAULT = 100;
 const ShimmerBox = ({
-  width, height, borderRadius = 8, theme, colors: colorsProp, style,
+  width, height, borderRadius = 8, style,
   shimmerStripWidth = SHIMMER_STRIP_WIDTH_DEFAULT,
   shimmerDuration = 700,
   shimmerToValue,
   shimmerColorsOverride
 }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const stripW = typeof shimmerStripWidth === "number" ? shimmerStripWidth : SHIMMER_STRIP_WIDTH_DEFAULT;
-  const isDark = theme === "Dark";
-  const boneColor = colorsProp?.themeElevationColor ?? (isDark ? "rgba(100, 130, 180, 0.22)" : "rgba(160, 185, 220, 0.35)");
-  const shimmerColors = shimmerColorsOverride || (colorsProp
+  const boneColor = themeColors.themeElevationColor ?? (isDark ? "rgba(100, 130, 180, 0.22)" : "rgba(160, 185, 220, 0.35)");
+  const shimmerColors = shimmerColorsOverride || (themeColors
     ? ["transparent", "rgba(255,255,255,0.12)", "transparent"]
     : ["transparent", "rgba(200, 220, 255, 0.35)", "transparent"]);
   const shimmerX = useRef(new Animated.Value(-stripW)).current;
@@ -399,37 +412,37 @@ const SKELETON_CANDLES = [
   { bodyH: 25, bodyBot: 55, wickH: 40, wickBot: 45 },
 ];
 
-const ChartSkeleton = ({ theme, colors, height = CHART_HEIGHT, width = Width }) => {
-  const bg = colors?.newThemeColor ?? CHART_BG_FALLBACK;
+const ChartSkeleton = ({ height = CHART_HEIGHT, width = Width }) => {
+  const { colors: themeColors, isDark } = useTheme();
+  const bg = themeColors.background ?? CHART_BG_FALLBACK;
   return (
     <View style={{ width, height, backgroundColor: bg, paddingTop: 12, paddingHorizontal: 12, paddingBottom: 15, justifyContent: 'space-between' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
-        <ShimmerBox width={24} height={24} borderRadius={4} theme={theme} colors={colors} style={{ marginRight: 15 }} />
+        <ShimmerBox width={24} height={24} borderRadius={4} style={{ marginRight: 15 }} />
         {['1min', '5min', '15min', '1H', '1D'].map((v, i) => (
-          <ShimmerBox key={i} width={50} height={24} borderRadius={4} theme={theme} colors={colors} style={{ marginRight: 10 }} />
+          <ShimmerBox key={i} width={50} height={24} borderRadius={4} style={{ marginRight: 10 }} />
         ))}
       </View>
 
       <View style={{ flex: 1, flexDirection: 'row' }}>
         <View style={{ flex: 1, paddingRight: 15 }}>
-          <ShimmerBox width={140} height={16} borderRadius={4} theme={theme} colors={colors} style={{ marginBottom: 8 }} />
-          <ShimmerBox width={180} height={12} borderRadius={4} theme={theme} colors={colors} style={{ marginBottom: 16 }} />
+          <ShimmerBox width={140} height={16} borderRadius={4} style={{ marginBottom: 8 }} />
+          <ShimmerBox width={180} height={12} borderRadius={4} style={{ marginBottom: 16 }} />
 
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', flex: 1, paddingBottom: 15, marginTop: 10 }}>
             {SKELETON_CANDLES.map((candle, i) => {
-              const candleColors = { ...colors, themeElevationColor: theme === "Dark" ? "#444444" : "#D0D0D0" };
-              const candleShimmers = ["transparent", theme === "Dark" ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.8)", "transparent"];
+              // const candleColors = { ...colors, themeElevationColor: theme === "Dark" ? "#444444" : "#D0D0D0" };
               return (
                 <View key={i} style={{ alignItems: 'center', width: 8, height: '100%', justifyContent: 'flex-end' }}>
                   <ShimmerBox
-                    width={1.5} height={candle.wickH} borderRadius={1} theme={theme} colors={candleColors}
+                    width={1.5} height={candle.wickH} borderRadius={1}
                     style={{ position: 'absolute', bottom: candle.wickBot }}
-                    shimmerDuration={1500} shimmerToValue={60} shimmerStripWidth={60} shimmerColorsOverride={candleShimmers}
+                    shimmerDuration={1500} shimmerToValue={60} shimmerStripWidth={60} shimmerColorsOverride={["transparent", isDark ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.8)", "transparent"]}
                   />
                   <ShimmerBox
-                    width={6} height={candle.bodyH} borderRadius={2} theme={theme} colors={candleColors}
+                    width={6} height={candle.bodyH} borderRadius={2}
                     style={{ position: 'absolute', bottom: candle.bodyBot }}
-                    shimmerDuration={1500} shimmerToValue={60} shimmerStripWidth={60} shimmerColorsOverride={candleShimmers}
+                    shimmerDuration={1500} shimmerToValue={60} shimmerStripWidth={60} shimmerColorsOverride={["transparent", isDark ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.8)", "transparent"]}
                   />
                 </View>
               );
@@ -438,10 +451,10 @@ const ChartSkeleton = ({ theme, colors, height = CHART_HEIGHT, width = Width }) 
         </View>
 
         <View style={{ width: 45, justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: 25 }}>
-          <ShimmerBox width={40} height={12} borderRadius={4} theme={theme} colors={colors} />
-          <ShimmerBox width={40} height={12} borderRadius={4} theme={theme} colors={colors} />
-          <ShimmerBox width={40} height={12} borderRadius={4} theme={theme} colors={colors} />
-          <ShimmerBox width={40} height={12} borderRadius={4} theme={theme} colors={colors} />
+          <ShimmerBox width={40} height={12} borderRadius={4} />
+          <ShimmerBox width={40} height={12} borderRadius={4} />
+          <ShimmerBox width={40} height={12} borderRadius={4} />
+          <ShimmerBox width={40} height={12} borderRadius={4} />
         </View>
       </View>
     </View>
@@ -465,8 +478,6 @@ const OrderBookPanel = memo(({
   base_currency,
   orderBookReady,
   showOrderBookSkeleton,
-  theme,
-  colors,
   styles,
   renderSellOrderItem,
   renderBuyOrderItem,
@@ -474,13 +485,14 @@ const OrderBookPanel = memo(({
   buyKeyExtractor,
   getOrderItemLayout,
 }) => {
+  const { colors: themeColors, theme, isDark } = useTheme();
   const listEmptySell = useMemo(
     () => (
       <View style={styles.emptyOrderBook}>
         {showOrderBookSkeleton ? (
-          <OrderBookSkeleton theme={theme} colors={colors} />
+          <OrderBookSkeleton />
         ) : (
-          <AppText type={THIRTEEN} style={{ color: colors.secondaryText }}>No ask data</AppText>
+          <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText }}>No ask data</AppText>
         )}
       </View>
     ),
@@ -490,16 +502,16 @@ const OrderBookPanel = memo(({
     () => (
       <View style={styles.emptyOrderBook}>
         {showOrderBookSkeleton ? (
-          <OrderBookSkeleton theme={theme} colors={colors} />
+          <OrderBookSkeleton />
         ) : (
-          <AppText type={THIRTEEN} style={{ color: colors.secondaryText }}>No bid data</AppText>
+          <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText }}>No bid data</AppText>
         )}
       </View>
     ),
-    [showOrderBookSkeleton, colors, styles.emptyOrderBook, theme]
+    [showOrderBookSkeleton, themeColors, styles.emptyOrderBook, theme, isDark]
   );
-  const currentPriceColor = change_percentage < 0 ? colors.red : colors.green;
-  const bg = theme === "Dark" ? "#3A3E48" : "#E5E5E5";
+  const currentPriceColor = change_percentage < 0 ? themeColors.red : themeColors.green;
+  const bg = themeColors.themeElevationColor;
   return (
     <View style={styles.rightPanel}>
       {/* Price / Quantity header: always show text so shimmer doesn't cover labels */}
@@ -533,12 +545,12 @@ const OrderBookPanel = memo(({
       <View style={styles.currentPriceBox}>
         {showOrderBookSkeleton ? (
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-            <ShimmerBox width="52%" height={20} borderRadius={4} theme={theme} colors={colors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
-            <ShimmerBox width="50%" height={16} borderRadius={4} theme={theme} colors={colors} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} style={{ marginLeft: 3 }} />
+            <ShimmerBox width="52%" height={20} borderRadius={4} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} />
+            <ShimmerBox width="50%" height={16} borderRadius={4} shimmerStripWidth={ORDER_BOOK_SHIMMER_STRIP_WIDTH} style={{ marginLeft: 3 }} />
           </View>
         ) : (
           <>
-            <AppText style={styles.currentPrice}>{buy_price}</AppText>
+            <AppText style={[styles.currentPrice, { color: currentPriceColor }]}>{buy_price}</AppText>
             <AppText style={[styles.currentPriceUSD, { color: currentPriceColor }]}>
               {change_percentage}
             </AppText>
@@ -569,8 +581,6 @@ OrderBookPanel.displayName = "OrderBookPanel";
 
 // Isolated order book: subscribes to Redux here so Spot (and Open Orders / Order History tabs) does not re-render on every order book update → instant tab switching
 const OrderBookSection = memo(({
-  theme,
-  colors,
   styles,
   buy_price,
   change_percentage,
@@ -582,6 +592,7 @@ const OrderBookSection = memo(({
   formatPrice,
   formatQuantity,
 }) => {
+  const { colors: themeColors, theme, isDark } = useTheme();
   const buyOrders = useAppSelector((state) => state.home.buyOrders);
   const sellOrders = useAppSelector((state) => state.home.sellOrders);
 
@@ -669,8 +680,6 @@ const OrderBookSection = memo(({
       base_currency={base_currency}
       orderBookReady={orderBookReady}
       showOrderBookSkeleton={showOrderBookSkeleton}
-      theme={theme}
-      colors={colors}
       styles={styles}
       renderSellOrderItem={renderSellOrderItem}
       renderBuyOrderItem={renderBuyOrderItem}
@@ -691,6 +700,7 @@ OrderBookSection.displayName = "OrderBookSection";
  * - Focus: subscribe to exchange on focus; on blur unsubscribe but keep Redux cache. No getSpotOpenOrders on focus unless added elsewhere.
  */
 const Spot = () => {
+  const { colors: themeColors, theme, isDark } = useTheme();
   const route = useRoute();
   const navigation = useNavigation();
   const { subscribeToExchange, unsubscribeFromExchange, unsubscribeFromMarket, unsubscribeFromFutures } = useContext(SocketContext);
@@ -725,7 +735,6 @@ const Spot = () => {
   const webViewReadyFallbackRef = useRef(null);
   const chartReadyDelayRef = useRef(null);
   const chartRevealedOnceRef = useRef(false);
-  const theme = useAppSelector((state) => state.auth.theme);
   const coinData = useAppSelector((state) => state.home.coinData);
   const spotSelectedPair = useAppSelector((state) => state.home.spotSelectedPair);
   const coinBalance = useAppSelector((state) => state.home.coinBalance);
@@ -1795,13 +1804,13 @@ const Spot = () => {
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => selectNumber(item)}
-          style={styles.selectContainer}
+          style={[styles.selectContainer, { paddingVertical: 12, height: 'auto' }]}
         >
-          <AppText>{item.label}</AppText>
+          <AppText style={{ color: themeColors.text, fontSize: 14 }}>{item.label}</AppText>
           {numberSelect == item.label ? (
             <FastImage
               source={checkIc}
-              tintColor={colors.green}
+              tintColor={themeColors.green}
               resizeMode="stretch"
               style={styles.checkImage}
             />
@@ -1823,15 +1832,15 @@ const Spot = () => {
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => selectNumberLimitOn(item)}
-          style={styles.selectContainer}
+          style={[styles.selectContainer, { paddingVertical: 12, height: 'auto' }]}
         >
-          <AppText type={THIRTEEN} weight={SEMI_BOLD}>
+          <AppText type={THIRTEEN} weight={SEMI_BOLD} style={{ color: themeColors.text, fontSize: 14 }}>
             {item.name}
           </AppText>
           {numberSelectLimit == item.name ? (
             <FastImage
               source={checkIc}
-              tintColor={colors.white}
+              tintColor={colors.buttonBg}
               resizeMode="contain"
               style={styles.checkImage}
             />
@@ -1928,27 +1937,27 @@ const Spot = () => {
   // Get status color
   const getStatusColor = useCallback((status) => {
     if (status === "COMPLETE" || status === "Completed" || status === "FILLED" || status === "EXECUTED") {
-      return colors.green;
+      return themeColors.green;
     }
     if (status === "PENDING" || status === "OPEN") {
-      return colors.yellow || "#FFD700";
+      return themeColors.yellow || "#FFD700";
     }
     if (status === "CANCELLED" || status === "CANCELED") {
-      return colors.descText || colors.disabledText;
+      return themeColors.secondaryText;
     }
-    return colors.green;
-  }, []);
+    return themeColors.green;
+  }, [themeColors]);
 
   // Get side color
   const getSideColor = useCallback((side) => {
     if (side === "BUY" || side === "buy") {
-      return colors.green;
+      return themeColors.green;
     }
     if (side === "SELL" || side === "sell") {
-      return colors.red;
+      return themeColors.red;
     }
-    return theme !== "Dark" ? colors.black : colors.white;
-  }, [theme]);
+    return themeColors.text;
+  }, [themeColors]);
 
   // Memoized render function for open orders - Card Format (same design as OpenOrder.js screen)
   const renderOpenOrderItem = useCallback(({ item: inv, index: idx }) => {
@@ -1966,14 +1975,14 @@ const Spot = () => {
     const orderTypeLabel = (inv?.order_type === "MARKET" ? "Market" : "Limit") + " / " + (inv?.side === "BUY" ? "Buy" : "Sell");
     const statusLabel = status === "FILLED" ? "Filled" : (status === "CANCELLED" || status === "CANCELED" ? "Canceled" : (status === "OPEN" ? "Open" : (status === "PARTIAL" ? "Partial" : status)));
 
-    const textColor = theme === "Dark" ? colors.white : colors.black;
-    const labelColor = theme === "Dark" ? colors.descText : colors.textGray;
+    const textColor = themeColors.text;
+    const labelColor = themeColors.secondaryText;
 
     return (
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => NavigationService.navigate(SPOT_ORDER_HISTORY_DETAIL, { order: inv })}
-        style={styles.openOrderCard}
+        style={[styles.openOrderCard, { backgroundColor: themeColors.background }]}
       >
         <View style={styles.openOrderTopRow}>
           <View style={styles.pairRow}>
@@ -1987,7 +1996,7 @@ const Spot = () => {
         <AppText
           style={[
             styles.openOrderTypeLabel,
-            { color: inv?.side === "BUY" ? colors.green : colors.red },
+            { color: inv?.side === "BUY" ? themeColors.green : themeColors.red },
           ]}
         >
           {orderTypeLabel}
@@ -2012,10 +2021,10 @@ const Spot = () => {
           <AppText style={[styles.openOrderCardValue, { color: getStatusColor(inv?.status) }]}>{statusLabel}</AppText>
         </View>
 
-        <View style={styles.openOrderCardDivider} />
+        <View style={[styles.openOrderCardDivider, { backgroundColor: themeColors.themeBorderColor }]} />
       </TouchableOpacity>
     );
-  }, [theme, formatDateTimeCard, getStatusColor]);
+  }, [themeColors, formatDateTimeCard, getStatusColor]);
 
   // Format currency pair for past orders
   const formatCurrencyPair = useCallback((trade) => {
@@ -2047,14 +2056,14 @@ const Spot = () => {
     const orderTypeLabel = (inv?.order_type === "MARKET" ? "Market" : "Limit") + " / " + (inv?.side === "BUY" ? "Buy" : "Sell");
     const statusLabel = status === "FILLED" ? "Filled" : (status === "CANCELLED" || status === "CANCELED" ? "Canceled" : (status === "OPEN" ? "Open" : (status === "PARTIAL" ? "Partial" : status)));
 
-    const textColor = theme === "Dark" ? colors.white : colors.black;
-    const labelColor = theme === "Dark" ? colors.descText : colors.textGray;
+    const textColor = themeColors.text;
+    const labelColor = themeColors.secondaryText;
 
     return (
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => NavigationService.navigate(SPOT_ORDER_HISTORY_DETAIL, { order: inv })}
-        style={styles.openOrderCard}
+        style={[styles.openOrderCard, { backgroundColor: themeColors.background }]}
       >
         <View style={styles.openOrderTopRow}>
           <View style={styles.pairRow}>
@@ -2068,7 +2077,7 @@ const Spot = () => {
         <AppText
           style={[
             styles.openOrderTypeLabel,
-            { color: inv?.side === "BUY" ? colors.green : colors.red },
+            { color: inv?.side === "BUY" ? themeColors.green : themeColors.red },
           ]}
         >
           {orderTypeLabel}
@@ -2093,10 +2102,10 @@ const Spot = () => {
           <AppText style={[styles.openOrderCardValue, { color: getStatusColor(inv?.status) }]}>{statusLabel}</AppText>
         </View>
 
-        <View style={styles.openOrderCardDivider} />
+        <View style={[styles.openOrderCardDivider, { backgroundColor: themeColors.themeBorderColor }]} />
       </TouchableOpacity>
     );
-  }, [theme, formatDateTimeCard, getStatusColor]);
+  }, [themeColors, formatDateTimeCard, getStatusColor]);
 
   const changeSymbolChart = useCallback((symbol) => {
 
@@ -2109,11 +2118,11 @@ const Spot = () => {
 
   // Gatbits-style: always render full content (no focus-based wrapper) so chart + order book never unmount on tab switch
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: themeColors.background }}>
       <ScrollView
         contentContainerStyle={[
           styles.container,
-          { backgroundColor: colors.newThemeColor },
+          { backgroundColor: themeColors.background },
         ]}
       >
         <>
@@ -2121,20 +2130,20 @@ const Spot = () => {
             title={`${base_currency ?? effectiveCurrency?.base_currency ?? "-"}/${quote_currency ?? effectiveCurrency?.quote_currency ?? "-"}`}
             setCurrency={handleCurrencyChange}
             change={change_percentage}
-            theme={theme}
+            isDark={isDark}
             onCandlePress={handleCandlePress}
           />
           <View
             style={[
               styles.minicontainer,
-              { backgroundColor: colors.newThemeColor },
+              { backgroundColor: themeColors.background },
             ]}
           >
             <View>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
                 <Text
                   style={{
-                    color: (buy_price ?? 0) < 0 ? colors.red : colors.green,
+                    color: (buy_price ?? 0) < 0 ? themeColors.red : themeColors.green,
                     fontSize: 15,
                   }}
                 >
@@ -2144,11 +2153,11 @@ const Spot = () => {
                   source={buy_price < 0 ? downIcon : upIcon}
                   resizeMode="contain"
                   style={{ width: 10, height: 10 }}
-                  tintColor={buy_price < 0 ? colors.red : colors.green}
+                  tintColor={buy_price < 0 ? themeColors.red : themeColors.green}
                 />
               </View>
               <Text
-                style={{ color: (change_percentage ?? 0) < 0 ? colors.red : colors.green }}
+                style={{ color: (change_percentage ?? 0) < 0 ? themeColors.red : themeColors.green }}
               >
                 {" "}
                 {change_percentage != null ? `${toFixedThree(change_percentage)}%` : "-"}
@@ -2157,10 +2166,10 @@ const Spot = () => {
             <View style={{ width: "50%" }}>
               <View>
                 <View style={styles.contain}>
-                  <AppText style={{ color: "#898989" }}>24h High</AppText>
+                  <AppText style={{ color: themeColors.secondaryText }}>24h High</AppText>
                   <AppText
                     style={{
-                      color: theme !== "Dark" ? "#222" : "#fff",
+                      color: themeColors.text,
                       fontWeight: "500",
                     }}
                   >
@@ -2168,10 +2177,10 @@ const Spot = () => {
                   </AppText>
                 </View>
                 <View style={styles.contain}>
-                  <AppText style={{ color: "#898989" }}>24h Low</AppText>
+                  <AppText style={{ color: themeColors.secondaryText }}>24h Low</AppText>
                   <AppText
                     style={{
-                      color: theme !== "Dark" ? "#222" : "#fff",
+                      color: themeColors.text,
                       fontWeight: "500",
                     }}
                   >
@@ -2179,10 +2188,10 @@ const Spot = () => {
                   </AppText>
                 </View>
                 <View style={styles.contain}>
-                  <AppText style={{ color: "#898989" }}>24h Vol</AppText>
+                  <AppText style={{ color: themeColors.secondaryText }}>24h Vol</AppText>
                   <AppText
                     style={{
-                      color: theme !== "Dark" ? "#222" : "#fff",
+                      color: themeColors.text,
                       fontWeight: "500",
                     }}
                   >
@@ -2217,8 +2226,8 @@ const Spot = () => {
                 style={[
                   styles.tabContainer,
                   {
-                    borderWidth: 1,
-                    borderColor: theme !== "Dark" ? "rgba(0,0,0,0.12)" : "#40444C",
+                    borderWidth: 0.5,
+                    borderColor: themeColors.themeBorderColor,
                     borderRadius: 8,
                     overflow: "hidden",
                     marginBottom: 10,
@@ -2234,7 +2243,7 @@ const Spot = () => {
                 >
                   <ImageBackground
                     source={trade_btn}
-                    tintColor={tab === "Buy" ? colors.green : colors.newThemeColor}
+                    tintColor={tab === "Buy" ? themeColors.green : themeColors.background}
                     resizeMode="stretch"
                     style={{
                       position: "absolute",
@@ -2246,7 +2255,7 @@ const Spot = () => {
                       justifyContent: "center",
                     }}
                   >
-                    <AppText weight={SEMI_BOLD} style={[styles.tabText, { color: tab === "Buy" ? colors.white : colors.secondaryText }]}>Buy</AppText>
+                    <AppText weight={SEMI_BOLD} style={[styles.tabText, { color: tab === "Buy" ? themeColors.textOnButton : themeColors.secondaryText }]}>Buy</AppText>
                   </ImageBackground>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -2256,7 +2265,7 @@ const Spot = () => {
                 >
                   <ImageBackground
                     source={trade_btn}
-                    tintColor={tab === "Sell" ? colors.red : colors.newThemeColor}
+                    tintColor={tab === "Sell" ? themeColors.red : themeColors.background}
                     resizeMode="stretch"
                     style={{
                       position: "absolute",
@@ -2270,7 +2279,7 @@ const Spot = () => {
                     }}
                   >
                     <AppText weight={SEMI_BOLD} style={[styles.tabText, {
-                      color: tab === "Sell" ? colors.white : colors.secondaryText,
+                      color: tab === "Sell" ? themeColors.textOnButton : themeColors.secondaryText,
                       transform: [{ rotate: '180deg' }]
                     }]}>Sell</AppText>
                   </ImageBackground>
@@ -2281,80 +2290,79 @@ const Spot = () => {
                 style={[
                   styles.dropdown,
                   {
-                    backgroundColor:
-                      colors.themeElevationColor,
+                    backgroundColor: themeColors.themeElevationColor,
                   },
                 ]}
                 onPress={() => rbSheetlimit?.current?.open()}
               >
-                <AppText style={styles.dropdownText} >{numberSelectLimit}</AppText>
+                <AppText style={[styles.dropdownText, { color: themeColors.text }]} >{numberSelectLimit}</AppText>
                 <FastImage
                   source={downIcon}
                   resizeMode="contain"
                   style={{ width: 10, height: 10 }}
-                  tintColor={theme !== "Dark" ? colors.black : colors.white}
+                  tintColor={themeColors.text}
                 />
               </TouchableOpacity>
 
               {isLimit && (
                 <View style={styles.spotOrderInputBlock}>
-                  <AppText style={[styles.spotOrderInputLabel, { color: colors.secondaryText }]}>
+                  <AppText style={[styles.spotOrderInputLabel, { color: themeColors.secondaryText }]}>
                     Limit ({quote_currency})
                   </AppText>
-                  <View style={[styles.spotOrderInputBox, { backgroundColor: colors.themeElevationColor }]}>
+                  <View style={[styles.spotOrderInputBox, { backgroundColor: themeColors.themeElevationColor, borderWidth: 0.5, borderColor: themeColors.themeBorderColor }]}>
                     <TouchableOpacity onPress={() => handlePriceStep(-1)} style={styles.spotOrderStepBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                      <AppText style={[styles.spotOrderStepBtnText, { color: colors.secondaryText }]}>−</AppText>
+                      <AppText style={[styles.spotOrderStepBtnText, { color: themeColors.secondaryText }]}>−</AppText>
                     </TouchableOpacity>
                     <TextInput
                       placeholder={String(buy_price)}
-                      placeholderTextColor={colors.secondaryText}
+                      placeholderTextColor={themeColors.secondaryText}
                       value={price || formatTotal(buy_price)}
                       onChangeText={(text) => handlePriceInput(text, setPrice)}
                       onBlur={() => handlePriceBlur(price, setPrice)}
                       keyboardType="numeric"
-                      style={[styles.spotOrderInputValue, { color: theme !== "Dark" ? colors.black : colors.white }]}
+                      style={[styles.spotOrderInputValue, { color: themeColors.text }]}
                       editable={isLimit}
                     />
                     <TouchableOpacity onPress={() => handlePriceStep(1)} style={styles.spotOrderStepBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                      <AppText style={[styles.spotOrderStepBtnText, { color: colors.secondaryText }]}>+</AppText>
+                      <AppText style={[styles.spotOrderStepBtnText, { color: themeColors.secondaryText }]}>+</AppText>
                     </TouchableOpacity>
                   </View>
                 </View>
               )}
 
               <View style={styles.spotOrderInputBlock}>
-                <AppText style={[styles.spotOrderInputLabel, { color: colors.secondaryText }]}>
+                <AppText style={[styles.spotOrderInputLabel, { color: themeColors.secondaryText }]}>
                   Amount ({base_currency})
                 </AppText>
-                <View style={[styles.spotOrderInputBox, { backgroundColor: colors.themeElevationColor }]}>
+                <View style={[styles.spotOrderInputBox, { backgroundColor: themeColors.themeElevationColor, borderWidth: 0.5, borderColor: themeColors.themeBorderColor }]}>
                   <TouchableOpacity onPress={() => handleAmountStep(-1)} style={styles.spotOrderStepBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                    <AppText style={[styles.spotOrderStepBtnText, { color: colors.secondaryText }]}>−</AppText>
+                    <AppText style={[styles.spotOrderStepBtnText, { color: themeColors.secondaryText }]}>−</AppText>
                   </TouchableOpacity>
                   <TextInput
                     placeholder={"Amount"}
-                    placeholderTextColor={colors.secondaryText}
+                    placeholderTextColor={themeColors.secondaryText}
                     value={amount}
                     onChangeText={(text) => handleQty(text)}
                     onBlur={() => handleQuantityBlur(amount, setAmount)}
                     keyboardType="numeric"
-                    style={[styles.spotOrderInputValue, { color: theme !== "Dark" ? colors.black : colors.white }]}
+                    style={[styles.spotOrderInputValue, { color: themeColors.text }]}
                   />
                   <TouchableOpacity onPress={() => handleAmountStep(1)} style={styles.spotOrderStepBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                    <AppText style={[styles.spotOrderStepBtnText, { color: colors.secondaryText }]}>+</AppText>
+                    <AppText style={[styles.spotOrderStepBtnText, { color: themeColors.secondaryText }]}>+</AppText>
                   </TouchableOpacity>
                 </View>
               </View>
 
               <View style={styles.spotOrderInputBlock}>
-                <AppText style={[styles.spotOrderInputLabel, { color: colors.secondaryText }]}>
+                <AppText style={[styles.spotOrderInputLabel, { color: themeColors.secondaryText }]}>
                   Total ({quote_currency})
                 </AppText>
-                <View style={[styles.spotOrderInputBox, { backgroundColor: colors.themeElevationColor }]}>
+                <View style={[styles.spotOrderInputBox, { backgroundColor: themeColors.themeElevationColor, borderWidth: 0.5, borderColor: themeColors.themeBorderColor }]}>
                   <AppText
                     style={[
                       styles.spotOrderInputValue,
                       styles.spotOrderTotalValue,
-                      { color: theme !== "Dark" ? colors.black : colors.white },
+                      { color: themeColors.text },
                     ]}
                     numberOfLines={1}
                   >
@@ -2376,7 +2384,7 @@ const Spot = () => {
                   <AppText
                     style={[
                       styles.assetLabel,
-                      { color: theme !== "Dark" ? "#222" : "#fff" },
+                      { color: themeColors.text },
                     ]}
                   >
                     Coin
@@ -2384,21 +2392,21 @@ const Spot = () => {
                   <AppText
                     style={[
                       styles.assetLabel,
-                      { color: theme !== "Dark" ? "#222" : "#fff" },
+                      { color: themeColors.text },
                     ]}
                   >
                     Total Assets
                   </AppText>
                 </View>
                 <View style={styles.assetRow}>
-                  <AppText style={styles.assetValue}>{quote_currency}</AppText>
-                  <AppText style={styles.assetValue}>
+                  <AppText style={[styles.assetValue, { color: themeColors.text }]}>{quote_currency}</AppText>
+                  <AppText style={[styles.assetValue, { color: themeColors.text }]}>
                     {coinBalance?.quote_currency_balance || 0}
                   </AppText>
                 </View>
                 <View style={styles.assetRow}>
-                  <AppText style={styles.assetValue}>{base_currency}</AppText>
-                  <AppText style={styles.assetValue}>
+                  <AppText style={[styles.assetValue, { color: themeColors.text }]}>{base_currency}</AppText>
+                  <AppText style={[styles.assetValue, { color: themeColors.text }]}>
                     {coinBalance?.base_currency_balance || 0}
                   </AppText>
                 </View>
@@ -2410,8 +2418,7 @@ const Spot = () => {
                       style={[
                         styles.assetActionBtn,
                         {
-                          backgroundColor:
-                            colors.themeElevationColor,
+                          backgroundColor: themeColors.themeElevationColor,
                         },
                       ]}
                       onPress={() =>
@@ -2424,30 +2431,28 @@ const Spot = () => {
                         )
                       }
                     >
-                      <AppText style={styles.assetActionText}>{btn}</AppText>
+                      <AppText style={[styles.assetActionText, { color: themeColors.text }]}>{btn}</AppText>
                     </TouchableOpacity>
                   ))}
                 </View>
 
                 {/* Fee Information */}
                 {currencyData && (
-                  <View style={[styles.assetRow, { marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: "#D4D4D4" }]}>
+                  <View style={[styles.assetRow, { marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: themeColors.themeBorderColor }]}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%" }}>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                        {/* <Ionicons name="information-circle-outline" size={14} color={theme !== "Dark" ? "#222" : "#fff"} /> */}
-                        <AppText style={{ color: theme !== "Dark" ? "#222" : "#fff", fontSize: 11 }}>
+                        <AppText style={{ color: themeColors.text, fontSize: 11 }}>
                           Taker Fee
                         </AppText>
-                        <AppText style={{ color: theme !== "Dark" ? "#222" : "#fff", fontSize: 11, fontWeight: "600" }}>
+                        <AppText style={{ color: themeColors.text, fontSize: 11, fontWeight: "600" }}>
                           {currencyData?.taker_fee || "0"}%
                         </AppText>
                       </View>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                        {/* <Ionicons name="information-circle-outline" size={14} color={theme !== "Dark" ? "#222" : "#fff"} /> */}
-                        <AppText style={{ color: theme !== "Dark" ? "#222" : "#fff", fontSize: 11 }}>
+                        <AppText style={{ color: themeColors.text, fontSize: 11 }}>
                           Maker Fee
                         </AppText>
-                        <AppText style={{ color: theme !== "Dark" ? "#222" : "#fff", fontSize: 11, fontWeight: "600" }}>
+                        <AppText style={{ color: themeColors.text, fontSize: 11, fontWeight: "600" }}>
                           {currencyData?.maker_fee || "0"}%
                         </AppText>
                       </View>
@@ -2468,7 +2473,7 @@ const Spot = () => {
                 }
                 disabled={!amount}
                 containerStyle={[
-                  { backgroundColor: isBuy ? colors.buyButtonColor : colors.sellButtonColor },
+                  { backgroundColor: isBuy ? colors.buyBtnGreen : colors.sellButtonColor },
                 ]}
                 onPress={() => onSubmit()}
                 titleStyle={{ color: colors.white }}
@@ -2505,85 +2510,85 @@ const Spot = () => {
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                if (activeTab === 1) return;
-                LayoutAnimation.configureNext({
-                  duration: 280,
-                  update: { type: LayoutAnimation.Types.easeInEaseOut },
-                  create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-                });
-                setExpandedRowIndex(null);
-                setActiveTab(1);
-              }}
-              style={{ alignItems: "center", minHeight: 36, justifyContent: "center" }}
-            >
-              <AppText
-                numberOfLines={1}
-                style={{
-                  color: activeTab == 1 ? colors.white : colors.secondaryText,
-                  fontSize: 13,
-                  fontWeight: "600",
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  if (activeTab === 1) return;
+                  LayoutAnimation.configureNext({
+                    duration: 280,
+                    update: { type: LayoutAnimation.Types.easeInEaseOut },
+                    create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+                  });
+                  setExpandedRowIndex(null);
+                  setActiveTab(1);
                 }}
+                style={{ alignItems: "center", minHeight: 36, justifyContent: "center" }}
               >
-                Open Orders {openOrders?.length > 0 ? `(${openOrders.length})` : ""}
-              </AppText>
-              <View
-                style={{
-                  width: 24,
-                  height: 1.5,
-                  marginTop: 4,
-                  backgroundColor: activeTab == 1 ? (theme !== "Dark" ? "#F3BB2B" : colors.buttonDarkBg) : "transparent",
-                  borderRadius: 0.5,
+                <AppText
+                  numberOfLines={1}
+                  style={{
+                    color: activeTab == 1 ? themeColors.text : themeColors.secondaryText,
+                    fontSize: 13,
+                    fontWeight: "600",
+                  }}
+                >
+                  Open Orders {openOrders?.length > 0 ? `(${openOrders.length})` : ""}
+                </AppText>
+                <View
+                  style={{
+                    width: 30, // Increased slightly for better visibility
+                    height: 2, // Slightly thicker
+                    marginTop: 4,
+                    backgroundColor: activeTab == 1 ? colors.buttonBg : 'transparent',
+                    borderRadius: 1,
+                  }}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  if (activeTab === 2) return;
+                  LayoutAnimation.configureNext({
+                    duration: 280,
+                    update: { type: LayoutAnimation.Types.easeInEaseOut },
+                    create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+                  });
+                  setExpandedRowIndex(null);
+                  setActiveTab(2);
                 }}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                if (activeTab === 2) return;
-                LayoutAnimation.configureNext({
-                  duration: 280,
-                  update: { type: LayoutAnimation.Types.easeInEaseOut },
-                  create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-                });
-                setExpandedRowIndex(null);
-                setActiveTab(2);
-              }}
-              style={{ alignItems: "center", minHeight: 36, justifyContent: "center" }}
-            >
-              <AppText
-                numberOfLines={1}
-                style={{
-                  color: activeTab == 2 ? colors.white : colors.secondaryText,
-                  fontSize: 13,
-                  fontWeight: "600",
-                }}
+                style={{ alignItems: "center", minHeight: 36, justifyContent: "center" }}
               >
-                Order History {pastOrders?.length > 0 ? `(${pastOrders.length})` : ""}
-              </AppText>
-              <View
-                style={{
-                  width: 24,
-                  height: 1.5,
-                  marginTop: 4,
-                  backgroundColor: activeTab == 2 ? (theme !== "Dark" ? "#F3BB2B" : colors.buttonDarkBg) : "transparent",
-                  borderRadius: 0.5,
-                }}
-              />
-            </TouchableOpacity>
+                <AppText
+                  numberOfLines={1}
+                  style={{
+                    color: activeTab == 2 ? themeColors.text : themeColors.secondaryText,
+                    fontSize: 13,
+                    fontWeight: "600",
+                  }}
+                >
+                  Order History {pastOrders?.length > 0 ? `(${pastOrders.length})` : ""}
+                </AppText>
+                <View
+                  style={{
+                    width: 30, // Increased slightly
+                    height: 2, // Slightly thicker
+                    marginTop: 4,
+                    backgroundColor: activeTab == 2 ? colors.buttonBg : "transparent",
+                    borderRadius: 1,
+                  }}
+                />
+              </TouchableOpacity>
             </View>
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => NavigationService.navigate("Trade_History")}
-              style={{ paddingVertical: 8, paddingLeft: 4, justifyContent: "center" ,right:10}}
+              style={{ paddingVertical: 8, paddingLeft: 4, justifyContent: "center", right: 10 }}
             >
               <FastImage
                 source={printIcon}
                 style={{ width: 20, height: 20 }}
                 resizeMode="contain"
-                tintColor={theme !== "Dark" ? colors.black : colors.white}
+                tintColor={themeColors.text}
               />
             </TouchableOpacity>
           </View>
@@ -2631,7 +2636,7 @@ const Spot = () => {
                       <AppText
                         style={[
                           styles.viewAllText,
-                          { color: theme !== "Dark" ? "#F3BB2B" : colors.buttonDarkBg },
+                          { color: isDark ? themeColors.buttonDarkBg : "#F3BB2B" },
                         ]}
                       >
                         View More
@@ -2681,7 +2686,7 @@ const Spot = () => {
                       <AppText
                         style={[
                           styles.viewAllText,
-                          { color: theme !== "Dark" ? "#F3BB2B" : colors.buttonDarkBg },
+                          { color: isDark ? themeColors.buttonDarkBg : "#F3BB2B" },
                         ]}
                       >
                         View More
@@ -2716,7 +2721,7 @@ const Spot = () => {
         >
           <View
             style={{
-              backgroundColor: theme !== "Dark" ? "#FFFFFF" : "#1D1D1D",
+              backgroundColor: themeColors.themeElevationColor,
               borderRadius: 20,
               padding: 25,
               width: Dimensions.get("window").width * 0.85,
@@ -2736,7 +2741,7 @@ const Spot = () => {
               style={{
                 fontSize: 20,
                 fontWeight: "700",
-                color: theme !== "Dark" ? "#212121" : "#FFFFFF",
+                color: themeColors.text,
                 textAlign: "center",
                 marginBottom: 15,
               }}
@@ -2748,7 +2753,7 @@ const Spot = () => {
             <AppText
               style={{
                 fontSize: 15,
-                color: theme !== "Dark" ? "#757575" : "#B0B0B0",
+                color: themeColors.secondaryText,
                 textAlign: "center",
                 marginBottom: 25,
                 lineHeight: 22,
@@ -2769,16 +2774,15 @@ const Spot = () => {
               <TouchableOpacity
                 onPress={() => {
                   setIsConfirm(false);
-                  // Automatic socket emit (every 1 second) will handle data refresh
                 }}
                 style={{
                   flex: 1,
                   paddingVertical: 14,
                   paddingHorizontal: 20,
                   borderRadius: 12,
-                  backgroundColor: theme !== "Dark" ? "#F5F5F5" : "#2A2A2A",
+                  backgroundColor: themeColors.themeElevationColor,
                   borderWidth: 1,
-                  borderColor: theme !== "Dark" ? "#E0E0E0" : "#3A3A3A",
+                  borderColor: themeColors.themeBorderColor,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
@@ -2787,7 +2791,7 @@ const Spot = () => {
                   style={{
                     fontSize: 16,
                     fontWeight: "600",
-                    color: theme !== "Dark" ? "#424242" : "#E0E0E0",
+                    color: themeColors.text,
                   }}
                 >
                   Cancel
@@ -2805,10 +2809,10 @@ const Spot = () => {
                   paddingVertical: 14,
                   paddingHorizontal: 20,
                   borderRadius: 12,
-                  backgroundColor: colors.red,
+                  backgroundColor: themeColors.red,
                   alignItems: "center",
                   justifyContent: "center",
-                  shadowColor: colors.red,
+                  shadowColor: themeColors.red,
                   shadowOffset: {
                     width: 0,
                     height: 4,
@@ -2822,7 +2826,7 @@ const Spot = () => {
                   style={{
                     fontSize: 16,
                     fontWeight: "600",
-                    color: "#FFFFFF",
+                    color: themeColors.textOnButton,
                   }}
                 >
                   Confirm
@@ -2840,7 +2844,7 @@ const Spot = () => {
           animationType="none"
           customStyles={{
             container: {
-              backgroundColor: "#EBEAE7",
+              backgroundColor: themeColors.themeElevationColor,
               height: 300,
               borderRadius: 10,
               paddingHorizontal: universalPaddingHorizontal,
@@ -2859,22 +2863,22 @@ const Spot = () => {
           ref={rbSheetlimit}
           closeOnDragDown={true}
           closeOnPressMask={true}
-          height={100}
+          height={180}
           animationType="none"
           customStyles={{
             container: {
-              backgroundColor:
-                theme !== "Dark" ? "#EBEAE7" : colors.white_fifteen,
-              height: 150,
+              backgroundColor: themeColors.themeElevationColor,
+              height: 180,
               borderRadius: 10,
               paddingHorizontal: universalPaddingHorizontal,
+              paddingTop: 10,
             },
             wrapper: {
               backgroundColor: "#0006",
             },
             draggableIcon: {
-              // backgroundColor: 'transparent',
-              width: 120,
+              backgroundColor: themeColors.themeBorderColor,
+              width: 50,
             },
           }}
         >
@@ -2961,7 +2965,6 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   ordersTabPanel: {
-    backgroundColor: colors.themeElevationColor,
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderRadius: 10,
@@ -3124,7 +3127,7 @@ const styles = StyleSheet.create({
   orderBookTabRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: colors.grey,
+    borderBottomColor: "#ccc",
     marginBottom: 8,
   },
   orderBookTab: {
@@ -3272,7 +3275,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 10,
     borderWidth: borderWidth,
-    borderColor: colors.overlayColor,
+    borderColor: "#ccc",
     width: "100%",
     alignSelf: "center",
     backgroundColor: colors.themeElevationColor,
@@ -3449,7 +3452,7 @@ const styles = StyleSheet.create({
   },
   openOrderCardDivider: {
     height: 1,
-    backgroundColor: colors.overlayColor,
+    backgroundColor: "#ccc",
     marginTop: 14,
   },
 });

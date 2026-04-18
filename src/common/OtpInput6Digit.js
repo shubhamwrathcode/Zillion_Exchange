@@ -1,11 +1,8 @@
-/**
- * 6-digit OTP input: 6 boxes + one hidden TextInput that receives focus on tap.
- * Use this instead of OTPInputView so keyboard opens reliably on real devices (sheets/modals).
- */
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { AppText } from './AppText';
 import { colors } from '../theme/colors';
+import { useTheme } from '../hooks/useTheme';
 
 const CODE_LENGTH = 6;
 
@@ -25,11 +22,9 @@ const styles = StyleSheet.create({
     width: 42,
     height: 48,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.themeElevationColor,
   },
   boxHighlight: {
     borderColor: colors.buttonBg,
@@ -52,16 +47,17 @@ const styles = StyleSheet.create({
 });
 
 const OtpInput6Digit = forwardRef(function OtpInput6Digit(
-  { value = '', onChangeText, label, isDark, labelStyle, containerStyle },
+  { value = '', onChangeText, label, labelStyle, containerStyle },
   ref
 ) {
+  const { colors: themeColors, isDark } = useTheme();
   const inputRef = useRef(null);
   useImperativeHandle(ref, () => ({
     focus: () => inputRef.current?.focus(),
   }));
 
   const normalized = String(value).replace(/\D/g, '').slice(0, CODE_LENGTH);
-  const textColor = isDark ? colors.white : colors.black;
+  const textColor = themeColors.text;
 
   const handleChange = (t) => {
     const next = t.replace(/\D/g, '').slice(0, CODE_LENGTH);
@@ -84,8 +80,11 @@ const OtpInput6Digit = forwardRef(function OtpInput6Digit(
               key={i}
               style={[
                 styles.box,
-                { borderColor: isDark ? colors.inputBorder : colors.inputBorder },
-                normalized.length === i && styles.boxHighlight,
+                { 
+                  borderColor: themeColors.border, 
+                  backgroundColor: themeColors.input 
+                },
+                normalized.length === i && [styles.boxHighlight, { borderColor: themeColors.button }],
               ]}
             >
               <AppText style={{ fontSize: 14, fontWeight: '600', color: textColor }}>
@@ -103,7 +102,7 @@ const OtpInput6Digit = forwardRef(function OtpInput6Digit(
           style={styles.hiddenInput}
           caretHidden
           contextMenuHidden
-          selectionColor={colors.white}
+          selectionColor={themeColors.button}
         />
       </TouchableOpacity>
     </View>

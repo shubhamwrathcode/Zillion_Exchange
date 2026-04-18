@@ -18,8 +18,10 @@ import {
   YELLOW,
 } from "../../shared";
 import FastImage from "react-native-fast-image";
+import LinearGradient from "react-native-linear-gradient";
 import { NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 import { BASE_URL } from "../../helper/Constants";
 import { toFixedFive } from "../../helper/utility";
 import moment from "moment";
@@ -27,6 +29,7 @@ import moment from "moment";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const PADDING = 20;
 const PORTFOLIO_CARD_WIDTH = SCREEN_WIDTH - PADDING * 2;
+const SHIMMER_STRIP_WIDTH = 100;
 
 const formatNum = (val, decimals = 2) => {
   if (val == null || val === undefined) return "0.00";
@@ -44,18 +47,21 @@ const parseAmount = (val) => {
 };
 
 const EarningDashboard = ({
-  theme,
   earningPortfolio = [],
   portfolioSummary = {},
   children,
 }) => {
+  const { colors: themeColors, theme, isDark } = useTheme();
   const [portfolioCarouselIndex, setPortfolioCarouselIndex] = useState(0);
-  const isDark = theme === "Dark";
   const textColor = isDark ? colors.white : colors.black;
   const secondaryColor = isDark ? colors.descText : "#666";
-  const cardBg = colors.themeElevationColor;
+  const cardBg = themeColors.themeElevationColor;
   const cardBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
   const dividerColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
+  const boneColor = themeColors.themeElevationColor;
+  const shimmerColors = isDark 
+    ? ["transparent", "rgba(255,255,255,0.16)", "transparent"]
+    : ["transparent", "rgba(0,0,0,0.05)", "transparent"];
 
   const summary = useMemo(
     () => ({
@@ -73,6 +79,17 @@ const EarningDashboard = ({
     { label: "Running Investment", value: formatNum(summary.runningInvestment), key: "running" },
     { label: "Bonus Remaining", value: formatNum(summary.bonusRemaining), key: "bonus" },
   ];
+
+  const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
+    const shimmerX = useRef(new Animated.Value(-SHIMMER_STRIP_WIDTH)).current;
+    return (
+      <View style={[{ width: w, height, borderRadius, backgroundColor: boneColor, overflow: 'hidden' }, style]}>
+        <Animated.View style={{ width: SHIMMER_STRIP_WIDTH, height: '100%', transform: [{ translateX: shimmerX }] }}>
+          <LinearGradient colors={shimmerColors} style={{ flex: 1 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />
+        </Animated.View>
+      </View>
+    );
+  };
 
   const renderAssetRow = (item, index) => {
     const invested = item?.invested_amount ?? item?.invested ?? 0;

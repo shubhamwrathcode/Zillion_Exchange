@@ -5,6 +5,7 @@ import {
   TextStyle,
   TouchableOpacityProps,
   ViewStyle,
+  StyleProp,
 } from 'react-native';
 import { AppText } from '.';
 import { buttonHeight } from '../theme/dimens';
@@ -15,8 +16,8 @@ import { useAppSelector } from '../store/hooks';
 
 interface ButtonProps extends TouchableOpacityProps {
   children?: React.ReactNode;
-  containerStyle?: ViewStyle;
-  titleStyle?: TextStyle;
+  containerStyle?: StyleProp<ViewStyle>;
+  titleStyle?: StyleProp<TextStyle>;
   disabled?: boolean;
   isSecond?: boolean;
   loading?: boolean;
@@ -51,10 +52,8 @@ const Button = ({
         typeof children === 'string' ? (
           <AppText
             type={FIFTEEN}
-            // color={theme === "Dark" ? BLACK : isSecond || disabled ? WHITE : BLACK}
-            color={colors.white}
             weight={SEMI_BOLD}
-            style={titleStyle}>
+            style={StyleSheet.flatten([{ color: colors.white }, titleStyle])}>
             {children}
           </AppText>
         ) : (

@@ -13,6 +13,7 @@ import Animated, {
   FadeInRight,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
+import { useTheme } from '../../hooks/useTheme';
 
 interface HomeCoinTabsProps {
   activeTab: number;
@@ -68,15 +69,14 @@ const AnimatedTab = React.memo(({
 });
 
 const HomeCoinTabs = ({
-  isGuest = false,
   activeTab,
   setActiveTab,
 }: HomeCoinTabsProps) => {
-  const theme = useAppSelector(state => state.auth.theme);
+  const { colors: themeColors } = useTheme();
   const languages = useAppSelector(state => state.account.languages);
 
-  const activeTextColor = theme === 'Dark' ? colors.white : colors.black;
-  const inactiveTextColor = theme === 'Dark' ? colors.descText : colors.textGray;
+  const activeTextColor = themeColors.text;
+  const inactiveTextColor = themeColors.secondaryText;
 
   const tabTextStyle = (isActive: boolean) => [
     styles.tabName,
@@ -144,8 +144,6 @@ const HomeCoinTabs = ({
           </AppText>
         </View>
       </AnimatedTab>
-
-
     </View>
   );
 };
@@ -164,7 +162,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 6,
-    paddingHorizontal: 12, // Content-based width needs padding
+    paddingHorizontal: 12,
     marginRight: 0,
   },
   tabContent: {
@@ -173,17 +171,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 2,
   },
-  tabIcon: {
-    width: 14,
-    height: 14,
-  },
-  tabIconGainer: {
-    width: 13,
-    height: 13,
-  },
   tabName: {
     fontSize: 13.5,
-    // fontWeight: '600',
     textAlign: 'center',
   },
 });

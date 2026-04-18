@@ -8,7 +8,6 @@ import {
   ScrollView,
   Keyboard,
   useWindowDimensions,
-  ActivityIndicator,
 } from "react-native";
 import RBSheet from "react-native-raw-bottom-sheet";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
@@ -16,18 +15,17 @@ import { clearPending2FA } from "../../slices/authSlice";
 import { sendLoginOtp, verifyUser, verifyPasskeyLogin } from "../../actions/authActions";
 import NavigationService from "../../navigation/NavigationService";
 import { LOGIN_SCREEN } from "../../navigation/routes";
-import { AppText, AppSafeAreaView, Button, BOLD, FOURTEEN, SEMI_BOLD, THIRTEEN, EIGHTEEN, TEN, FIFTEEN, TWELVE, SIXTEEN } from "../../shared";
+import { AppText, AppSafeAreaView, Button, BOLD, FOURTEEN as FOURTEEN_CONST, SEMI_BOLD, THIRTEEN, EIGHTEEN, SIXTEEN } from "../../shared";
 import { colors } from "../../theme/colors";
 import FastImage from "react-native-fast-image";
-import { back_ic, closeIcon, EMAIL, FINGERPRINT, PHONE, LOCK_ICON, KEY_ICON, SHARE_NEW_ICON } from "../../helper/ImageAssets";
-// @ts-ignore - no types for react-native-vector-icons
-import Ionicons from "react-native-vector-icons/Ionicons";
+import { back_ic, closeIcon, EMAIL, FINGERPRINT, PHONE, KEY_ICON, SHARE_NEW_ICON } from "../../helper/ImageAssets";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import { OtpInput6Digit } from "../../shared";
 import { showError } from "../../helper/logger";
 import QRCode from "react-native-qrcode-svg";
 import { BASE_URL } from "../../helper/Constants";
 import { SpinnerSecond } from "../../shared/components/SpinnerSecond";
+import { useTheme } from "../../hooks/useTheme";
 
 const getMethodIcon = (type: number) => {
   switch (type) {
@@ -35,7 +33,7 @@ const getMethodIcon = (type: number) => {
     case 2: return "";
     case 3: return PHONE;
     case 4: return FINGERPRINT;
-    default: return "shield-checkmark-outline";
+    default: return "";
   }
 };
 
@@ -46,12 +44,12 @@ export interface AuthVerificationContentProps {
 /** 2FA verification content – use inside full screen or inside RBSheet on Login. */
 export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProps) => {
   const dispatch = useAppDispatch();
+  const { colors: themeColors, isDark } = useTheme();
   const pending2FA = useAppSelector((state) => state.auth.pending2FA);
   const isLoading = useAppSelector((state) => state.auth.isLoading);
   const loadingFor = useAppSelector((state) => state.auth.loadingFor);
   const showButtonLoading = isLoading && loadingFor === 'otp';
-  // Priority: Passkey → Google Auth → (Email/Phone based on login credential)
-  // Phone se login → phone verification pehle, Email se login → email verification pehle
+  
   const getFirstMethod = () => {
     if (!pending2FA) return 1;
     const baseMethods = pending2FA.availableMethods ?? [];
@@ -83,15 +81,17 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
   const lastAutoSentForMethod = useRef<number | null>(null);
   const { height: winHeight } = useWindowDimensions();
   const passkeyQRSheetHeight = Math.min(winHeight * 0.9, 450);
+  
   const sheetCustomStyles = {
     container: {
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
-      backgroundColor: colors.sheetColor,
+      backgroundColor: themeColors.card,
     },
     wrapper: { backgroundColor: "rgba(0,0,0,0.5)" },
     draggableIcon: { backgroundColor: "transparent" as const },
   };
+
   useEffect(() => {
     if (pending2FA) {
       const firstMethod = getFirstMethod();
@@ -99,17 +99,14 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
 
       setSelectedAuthMethod(firstMethod);
       setOtpCode("");
-      // Only reset timer if NOT auto-sending this method (avoids flicker when useEffect runs after initial state)
       if (firstMethod !== 1 && firstMethod !== 3) {
         setResendTimer(0);
       }
       setPasskeyCancelledOrFailed(false);
 
-      // Auto-send OTP when email or phone verification is required
       if ((firstMethod === 1 || firstMethod === 3) && lastAutoSentForMethod.current !== firstMethod) {
         const signId = pending2FA.loginSignId ?? "";
-        const methods = baseMethods;
-        const m = methods?.find((x: any) => x.type === firstMethod);
+        const m = baseMethods?.find((x: any) => x.type === firstMethod);
         const identifier = m?.value ?? signId;
         if (identifier) {
           lastAutoSentForMethod.current = firstMethod;
@@ -127,8 +124,6 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
       return () => clearTimeout(t);
     }
   }, [resendTimer]);
-
-  // Passkey: no auto-open QR. User chooses "Use fingerprint / Face" (native) or "Use another device" (QR).
 
   const getVerifySignId = (): string => {
     if (!pending2FA) return "";
@@ -153,7 +148,6 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
       default: return "Verification";
     }
   };
-  const mutedClr =  "#888" 
 
   const getVerificationDescription = (): string => {
     const method = pending2FA?.availableMethods?.find((m: any) => m.type === selectedAuthMethod);
@@ -188,7 +182,6 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
     Keyboard.dismiss();
     dispatch(verifyUser({ email_or_phone: getVerifySignId(), otp: otpCode, type: selectedAuthMethod }));
   };
-  const accentColor = colors.buttonBg || "#F3BB2B";
 
   const getMaskedEmail = (): string => {
     const signId = getVerifySignId() || "";
@@ -208,20 +201,20 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
     pending2FA?.data?.hasPasskey && !hasPasskeyInList
       ? [{ type: 4, label: "Passkey", description: "Use Face ID, Touch ID, or Windows Hello" }, ...baseMethods]
       : baseMethods;
-  // Sheet me sirf doosre options – jis method par abhi ho usko list me mat dikhao
+  
   const alternativeMethods = (methodsForOptions ?? []).filter((m: any) => m.type !== selectedAuthMethod);
   const hasAlternative = alternativeMethods.length > 0;
-  // Verification options sheet: height content-based (header + option rows + padding)
+  
   const optionsSheetHeight = Math.min(
     Math.max(180, 124 + 56 * alternativeMethods.length),
     winHeight * 0.6
   );
 
-  // Auto-trigger passkey when it's the selected method (no click needed)
   const hasAutoTriggeredPasskey = useRef(false);
   useEffect(() => {
     if (selectedAuthMethod !== 4) hasAutoTriggeredPasskey.current = false;
   }, [selectedAuthMethod]);
+
   useEffect(() => {
     if (!pending2FA || selectedAuthMethod !== 4 || passkeyCancelledOrFailed || passkeyVerifying || hasAutoTriggeredPasskey.current) return;
     hasAutoTriggeredPasskey.current = true;
@@ -238,8 +231,9 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
   }, [pending2FA, selectedAuthMethod, passkeyCancelledOrFailed, passkeyVerifying]);
 
   if (!pending2FA) return null;
+
   return (
-    <AppSafeAreaView style={{ flex: 1, backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -252,16 +246,16 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
         >
           <View style={styles.navRow}>
             <TouchableOpacity onPress={onClose} style={styles.navBtn}>
-              <FastImage source={back_ic} resizeMode="contain" style={styles.navIcon} />
+              <FastImage source={back_ic} resizeMode="contain" style={styles.navIcon} tintColor={themeColors.text} />
             </TouchableOpacity>
           </View>
 
           {selectedAuthMethod !== 4 && (
             <>
-              <AppText weight={BOLD} type={EIGHTEEN} color={colors.white} style={styles.title}>
+              <AppText weight={BOLD} type={EIGHTEEN} style={[styles.title, { color: themeColors.text }]}>
                 {getVerificationTitle()}
               </AppText>
-              <AppText type={THIRTEEN} color={colors.descText} style={styles.description}>
+              <AppText type={THIRTEEN} style={[styles.description, { color: themeColors.secondaryText }]}>
                 {getVerificationDescription()}
               </AppText>
             </>
@@ -271,11 +265,11 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
             <View style={styles.passkeyPageWrap}>
               {passkeyCancelledOrFailed ? (
                 <>
-                  <AppText weight={BOLD} type={EIGHTEEN} color={colors.white} style={styles.passkeyPageTitle}>
+                  <AppText weight={BOLD} type={EIGHTEEN} style={[styles.passkeyPageTitle, { color: themeColors.text }]}>
                     Verify with passkey
                   </AppText>
                   {getMaskedEmail() ? (
-                    <AppText type={THIRTEEN} color={colors.descText} style={styles.passkeyPageEmail}>
+                    <AppText type={THIRTEEN} style={[styles.passkeyPageEmail, { color: themeColors.secondaryText }]}>
                       {getMaskedEmail()}
                     </AppText>
                   ) : null}
@@ -284,10 +278,10 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
                       source={FINGERPRINT}
                       resizeMode="contain"
                       style={styles.passkeyPageIcon}
-                      tintColor={colors.buttonBg}
+                      tintColor={themeColors.button}
                     />
                   </View>
-                  <AppText type={THIRTEEN} color={colors.descText} style={styles.passkeyPageMessage}>
+                  <AppText type={THIRTEEN} style={[styles.passkeyPageMessage, { color: themeColors.secondaryText }]}>
                     Verification cancelled. Please try again or switch to another verification method.
                   </AppText>
                   <Button
@@ -301,32 +295,24 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
                       setPasskeyVerifying(false);
                       if (!ok) setPasskeyCancelledOrFailed(true);
                     }}
-                    containerStyle={StyleSheet.flatten([styles.passkeyBtn, { backgroundColor: colors.buttonBg }])}
+                    containerStyle={StyleSheet.flatten([styles.passkeyBtn, { backgroundColor: themeColors.button }])}
                   />
-                  <TouchableOpacityView
-                    onPress={() => passkeyQRSheetRef.current?.open()}
-                    style={[styles.passkeyPageSwitchRow, { marginTop: 12 }]}
-                  >
-                    {/* <AppText type={FOURTEEN} style={{ color: colors.buttonBg }}>
-                      Use passkey on another device
-                    </AppText> */}
-                  </TouchableOpacityView>
                   {hasAlternative && (
                     <TouchableOpacityView onPress={() => optionsSheetRef.current?.open()} style={styles.passkeyPageSwitchRow}>
-                      <AppText type={FOURTEEN} style={{ color: colors.buttonBg }}>
+                      <AppText type={FOURTEEN_CONST} style={{ color: themeColors.button }}>
                         Switch to Another Verification Method{'  '}
                       </AppText>
-                      <FastImage source={SHARE_NEW_ICON} style={{ width: 15, height: 15 }} tintColor={accentColor} resizeMode="contain" />
+                      <FastImage source={SHARE_NEW_ICON} style={{ width: 15, height: 15 }} tintColor={themeColors.button} resizeMode="contain" />
                     </TouchableOpacityView>
                   )}
                 </>
               ) : (
                 <>
-                  <AppText weight={BOLD} type={EIGHTEEN} color={colors.white} style={styles.passkeyPageTitle}>
+                  <AppText weight={BOLD} type={EIGHTEEN} style={[styles.passkeyPageTitle, { color: themeColors.text }]}>
                     Verify with passkey
                   </AppText>
                   {getMaskedEmail() ? (
-                    <AppText type={THIRTEEN} color={colors.descText} style={styles.passkeyPageEmail}>
+                    <AppText type={THIRTEEN} style={[styles.passkeyPageEmail, { color: themeColors.secondaryText }]}>
                       {getMaskedEmail()}
                     </AppText>
                   ) : null}
@@ -335,10 +321,10 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
                       source={FINGERPRINT}
                       resizeMode="contain"
                       style={styles.passkeyPageIcon}
-                      tintColor={colors.buttonBg}
+                      tintColor={themeColors.button}
                     />
                   </View>
-                  <AppText type={THIRTEEN} color={colors.descText} style={styles.passkeyPageMessage}>
+                  <AppText type={THIRTEEN} style={[styles.passkeyPageMessage, { color: themeColors.secondaryText }]}>
                     Use your fingerprint or face to sign in on this device.
                   </AppText>
                   <Button
@@ -351,24 +337,14 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
                       setPasskeyVerifying(false);
                       if (!ok) setPasskeyCancelledOrFailed(true);
                     }}
-                    containerStyle={StyleSheet.flatten([styles.passkeyBtn, { backgroundColor: colors.buttonBg }])}
+                    containerStyle={StyleSheet.flatten([styles.passkeyBtn, { backgroundColor: themeColors.button }])}
                   />
-                  <TouchableOpacityView
-                    onPress={() => passkeyQRSheetRef.current?.open()}
-                    style={[styles.passkeyPageSwitchRow, { marginTop: 12 }]}
-                  >
-                    {/* <AppText type={FOURTEEN} style={{ color: colors.buttonBg }}>
-                      Use passkey on another device
-                    </AppText> */}
-                  </TouchableOpacityView>
                   {hasAlternative && (
                     <TouchableOpacityView onPress={() => optionsSheetRef.current?.open()} style={styles.passkeyPageSwitchRow}>
-
-                      <AppText type={FOURTEEN} style={{ color: colors.buttonBg }}>
+                      <AppText type={FOURTEEN_CONST} style={{ color: themeColors.button }}>
                         Switch to Another Verification Method{'  '}
                       </AppText>
-                      <FastImage source={SHARE_NEW_ICON} style={{ width: 15, height: 15 }} tintColor={accentColor} resizeMode="contain" />
-
+                      <FastImage source={SHARE_NEW_ICON} style={{ width: 15, height: 15 }} tintColor={themeColors.button} resizeMode="contain" />
                     </TouchableOpacityView>
                   )}
                 </>
@@ -380,21 +356,20 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
                 label={getInputLabel()}
                 value={otpCode}
                 onChangeText={setOtpCode}
-                isDark={true}
+                isDark={isDark}
               />
               {selectedAuthMethod !== 2 && (
                 <View style={styles.resendRow}>
                   {resendTimer > 0 ? (
                     <View style={{ alignItems: "flex-end", width: "100%" }}>
-                      <AppText type={THIRTEEN}  style={{ color: mutedClr }}>
+                      <AppText type={THIRTEEN} style={{ color: themeColors.secondaryText }}>
                         Resend ({resendTimer}s)
                       </AppText>
                     </View>
                   ) : (
                     <TouchableOpacityView onPress={handleGetOtp} style={{ alignItems: "flex-end", width: "100%" }}>
-                      <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{
-                        color: colors.white,
-
+                      <AppText type={FOURTEEN_CONST} weight={SEMI_BOLD} style={{
+                        color: themeColors.text,
                       }}>
                         Get OTP
                       </AppText>
@@ -414,44 +389,34 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
 
           {hasAlternative && selectedAuthMethod !== 4 && (
             <TouchableOpacityView onPress={() => optionsSheetRef.current?.open()} style={styles.linkRow}>
-              <AppText type={FOURTEEN} style={{ color: colors.buttonBg }}>
+              <AppText type={FOURTEEN_CONST} style={{ color: themeColors.button }}>
                 Switch to Another Verification Method{'  '}
               </AppText>
-              <FastImage source={SHARE_NEW_ICON} style={{ width: 15, height: 15 }} tintColor={accentColor} resizeMode="contain" />
-
+              <FastImage source={SHARE_NEW_ICON} style={{ width: 15, height: 15 }} tintColor={themeColors.button} resizeMode="contain" />
             </TouchableOpacityView>
           )}
-
-          {/* <TouchableOpacityView style={styles.linkRow}>
-            <AppText type={FOURTEEN} color={colors.buttonBg}>
-              Security verification unavailable?
-            </AppText>
-          </TouchableOpacityView> */}
-
-
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Verification Options – RBSheet */}
       <RBSheet
         ref={optionsSheetRef}
         height={optionsSheetHeight}
         closeOnDragDown={false}
-        closeOnPressMask={false}
+        closeOnPressMask={true}
         customStyles={sheetCustomStyles}
       >
         <View style={sheetStyles.wrap}>
           <View style={sheetStyles.header}>
             <View>
-              <AppText weight={BOLD} type={SIXTEEN} color={colors.white}>
+              <AppText weight={BOLD} type={SIXTEEN} style={{ color: themeColors.text }}>
                 Select a Verification Option
               </AppText>
-              <AppText type={THIRTEEN} style={{ marginTop: 4, color: colors.descText }}>
+              <AppText type={THIRTEEN} style={{ marginTop: 4, color: themeColors.secondaryText }}>
                 Choose how you want to verify your identity
               </AppText>
             </View>
-            <TouchableOpacity onPress={() => optionsSheetRef.current?.close()} style={sheetStyles.closeBtn}>
-              <FastImage source={closeIcon} resizeMode="contain" tintColor={colors.white} style={{ width: 10, height: 10 }} />
+            <TouchableOpacity onPress={() => optionsSheetRef.current?.close()} style={[sheetStyles.closeBtn, { borderColor: themeColors.border }]}>
+              <FastImage source={closeIcon} resizeMode="contain" tintColor={themeColors.text} style={{ width: 10, height: 10 }} />
             </TouchableOpacity>
           </View>
           <ScrollView showsVerticalScrollIndicator={false} style={sheetStyles.scroll}>
@@ -464,24 +429,23 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
                   setOtpCode("");
                   setResendTimer(0);
                 }}
-                style={sheetStyles.optionRow}
+                style={[sheetStyles.optionRow, { borderBottomColor: themeColors.border }]}
               >
                 <View style={sheetStyles.optionLeft}>
                   {method.type === 2 ? (
-                    // <Ionicons name="key-outline" size={20} color={colors.white} />
                     <FastImage source={KEY_ICON} style={{ width: 20, height: 20 }}
-                      tintColor={colors.white}
+                      tintColor={themeColors.text}
                       resizeMode="contain" />
-                  ) : typeof getMethodIcon(method.type) === "string" ? (
+                  ) : typeof getMethodIcon(method.type) === "string" && getMethodIcon(method.type) !== "" ? (
                     <FastImage source={getMethodIcon(method.type) as any} style={{ width: 20, height: 20 }} resizeMode="contain" />
                   ) : (
-                    <FastImage source={getMethodIcon(method.type)} resizeMode="contain" style={{ width: 20, height: 20 }} tintColor={colors.white} />
+                    <FastImage source={getMethodIcon(method.type)} resizeMode="contain" style={{ width: 20, height: 20 }} tintColor={themeColors.text} />
                   )}
                   <View style={{ marginLeft: 10 }}>
-                    <AppText weight={SEMI_BOLD} type={FOURTEEN} color={colors.white}>
+                    <AppText weight={SEMI_BOLD} type={FOURTEEN_CONST} style={{ color: themeColors.text }}>
                       {method.label || (method.type === 1 ? "Email OTP" : method.type === 2 ? "Authenticator" : method.type === 3 ? "Mobile OTP" : "Passkey")}
                     </AppText>
-                    <AppText type={THIRTEEN} style={{ marginTop: 2, color: colors.descText }}>
+                    <AppText type={THIRTEEN} style={{ marginTop: 2, color: themeColors.secondaryText }}>
                       {method.description || (method.type === 1 ? "Receive verification codes via email" : method.type === 2 ? "Use Google Authenticator app" : method.type === 3 ? "Receive verification codes via SMS" : "Use Face ID, Touch ID, or Windows Hello")}
                     </AppText>
                   </View>
@@ -492,53 +456,50 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
         </View>
       </RBSheet>
 
-      {/* Passkey QR – RBSheet (scanner). On close without success → show cancelled state */}
       <RBSheet
         ref={passkeyQRSheetRef}
         height={passkeyQRSheetHeight}
         closeOnDragDown={false}
-        closeOnPressMask={false}
+        closeOnPressMask={true}
         onClose={() => selectedAuthMethod === 4 && setPasskeyCancelledOrFailed(true)}
         customStyles={sheetCustomStyles}
       >
         <View style={[sheetStyles.wrap, styles.passkeyQRSheetContent]}>
           <View style={sheetStyles.header}>
-            <AppText weight={BOLD} type={EIGHTEEN} color={colors.white}>
+            <AppText weight={BOLD} type={EIGHTEEN} style={{ color: themeColors.text }}>
               Passkeys
             </AppText>
-            <TouchableOpacity onPress={() => passkeyQRSheetRef.current?.close()} style={sheetStyles.closeBtn}>
-              <FastImage source={closeIcon} resizeMode="contain" tintColor={colors.white} style={{ width: 10, height: 10 }} />
+            <TouchableOpacity onPress={() => passkeyQRSheetRef.current?.close()} style={[sheetStyles.closeBtn, { borderColor: themeColors.border }]}>
+              <FastImage source={closeIcon} resizeMode="contain" tintColor={themeColors.text} style={{ width: 10, height: 10 }} />
             </TouchableOpacity>
           </View>
-          <AppText type={FOURTEEN} color={colors.white} style={{ marginBottom: 12 }}>
+          <AppText type={FOURTEEN_CONST} style={{ marginBottom: 12, color: themeColors.text }}>
             Scan this QR code with the device that has your passkey
           </AppText>
           <View style={{ alignItems: "center", marginVertical: 16 }}>
             <QRCode
               value={`${BASE_URL.replace(/\/$/, "")}/v1/security/passkey/auth?signId=${encodeURIComponent(getVerifySignId())}`}
               size={200}
-              backgroundColor="#fff"
-              color="#000"
+              backgroundColor={isDark ? "#fff" : "#000"}
+              color={isDark ? "#000" : "#fff"}
             />
           </View>
           <TouchableOpacity onPress={() => passkeyQRSheetRef.current?.close()} style={{ paddingVertical: 12 }}>
-            <AppText type={FOURTEEN} weight={SEMI_BOLD} color={colors.buttonBg}>Cancel</AppText>
+            <AppText type={FOURTEEN_CONST} weight={SEMI_BOLD} style={{ color: themeColors.button }}>Cancel</AppText>
           </TouchableOpacity>
         </View>
       </RBSheet>
 
       <SpinnerSecond />
     </AppSafeAreaView>
-
   );
 };
 
 const AuthVerificationScreen = () => {
+  const { colors: themeColors } = useTheme();
   const dispatch = useAppDispatch();
   const pending2FA = useAppSelector((state) => state.auth.pending2FA);
 
-  // Only redirect to Login on mount if no pending2FA (e.g. direct nav). Do NOT redirect when
-  // pending2FA becomes falsy after successful OTP/Passkey verify – the auth action will navigate to main app.
   useEffect(() => {
     if (!pending2FA) {
       NavigationService.navigate(LOGIN_SCREEN);
@@ -553,16 +514,15 @@ const AuthVerificationScreen = () => {
   };
 
   return (
-    <AppSafeAreaView style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <AuthVerificationContent onClose={handleClose} />
-    </AppSafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.lightBlack,
   },
   flex: { flex: 1 },
   scrollContent: {
@@ -607,20 +567,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 32,
-  },
-  lockIcon: {
-    width: 14,
-    height: 14,
-    marginRight: 6,
-  },
-  footerText: {
-    color: colors.placeholderColor,
-  },
   passkeyPageWrap: {
     marginVertical: 24,
   },
@@ -646,35 +592,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     paddingHorizontal: 8,
   },
-  passkeyVerifyAgainBtn: {
-    backgroundColor: colors.buttonBg,
-  },
   passkeyPageSwitchRow: {
     marginTop: 20,
     alignItems: "center",
     flexDirection: "row",
-  },
-  verifyingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 16,
-  },
-  passkeyBlock: {
-    alignItems: "center",
-    marginVertical: 24,
-  },
-  passkeyIconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.green,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  passkeyText: {
-    marginBottom: 16,
   },
   passkeyBtn: {
     width: "100%",
@@ -697,7 +618,6 @@ const sheetStyles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    borderColor: colors.white,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -706,7 +626,6 @@ const sheetStyles = StyleSheet.create({
   optionRow: {
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: colors.inputBorder,
   },
   optionLeft: {
     flexDirection: "row",

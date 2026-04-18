@@ -8,6 +8,7 @@ import NavigationService from "../../navigation/NavigationService";
 import { WALLET_SCREEN } from "../../navigation/routes";
 import { colors } from "../../theme/colors";
 import { Coin, tetherIcon, bitcoinIcon, bnbIcon } from "../../helper/ImageAssets";
+import { useTheme } from "../../hooks/useTheme";
 
 const QUOTE_OPTIONS = [
   { key: "All", label: "All", icon: Coin },
@@ -24,10 +25,9 @@ const TYPE_OPTIONS = [
 ];
 
 const SpotMarket = ({ coinPairs, search = "" }) => {
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors } = useTheme();
   const [spotQuoteCurrency, setSpotQuoteCurrency] = useState("USDT");
   const [spotFilterType, setSpotFilterType] = useState("All");
-  const isDark = theme === "Dark";
 
   const filterData = useMemo(() => {
     if (!coinPairs || !Array.isArray(coinPairs)) return [];
@@ -65,12 +65,13 @@ const SpotMarket = ({ coinPairs, search = "" }) => {
     NavigationService.navigate(WALLET_SCREEN, { coinDetail: item });
   };
 
-  const chipBg = (selected) => (selected ? colors.themeElevationColor : "transparent");
-  const chipTextColor = (selected) => (selected ? colors.white : (isDark ? "#9D9D9D" : "#666"));
+  const chipBg = (selected) => (selected ? themeColors.card : "transparent");
+  const chipTextColor = (selected) => (selected ? themeColors.text : themeColors.secondaryText);
+  const chipBorder = (selected) => (selected ? themeColors.border : "transparent");
 
   return (
     <View style={styles.container}>
-      {/* Row 1 (upar): All, Gainers, Losers, Trending */}
+      {/* Row 1: Filter Type */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -81,7 +82,14 @@ const SpotMarket = ({ coinPairs, search = "" }) => {
           <TouchableOpacity
             key={key}
             onPress={() => setSpotFilterType(key)}
-            style={[styles.chip, { backgroundColor: "transparent" }]}
+            style={[
+              styles.chip, 
+              { 
+                backgroundColor: chipBg(spotFilterType === key),
+                borderColor: chipBorder(spotFilterType === key),
+                borderWidth: 1
+              }
+            ]}
             activeOpacity={0.8}
           >
             <AppText type={ELEVEN} weight={SEMI_BOLD} style={{ color: chipTextColor(spotFilterType === key) }}>
@@ -91,7 +99,7 @@ const SpotMarket = ({ coinPairs, search = "" }) => {
         ))}
       </ScrollView>
 
-      {/* Row 2 (niche): All, USDT, BTC, ETH, BNB */}
+      {/* Row 2: Quote Currency */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -102,7 +110,15 @@ const SpotMarket = ({ coinPairs, search = "" }) => {
           <TouchableOpacity
             key={opt.key}
             onPress={() => setSpotQuoteCurrency(opt.key)}
-            style={[styles.chip, styles.chipWithIcon, { backgroundColor: chipBg(spotQuoteCurrency === opt.key) }]}
+            style={[
+              styles.chip, 
+              styles.chipWithIcon, 
+              { 
+                backgroundColor: chipBg(spotQuoteCurrency === opt.key),
+                borderColor: chipBorder(spotQuoteCurrency === opt.key),
+                borderWidth: 1
+              }
+            ]}
             activeOpacity={0.8}
           >
             {opt.key !== "All" && (

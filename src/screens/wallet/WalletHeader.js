@@ -5,8 +5,10 @@ import { colors } from "../../theme/colors";
 import { useState, useRef } from "react";
 import { back_ic } from "../../helper/ImageAssets";
 import FastImage from "react-native-fast-image";
+import { useTheme } from "../../hooks/useTheme";
 
-const WalletHeader = ({ activeTab, setActiveTab, theme }) => {
+const WalletHeader = ({ activeTab, setActiveTab }) => {
+  const { colors: themeColors, theme } = useTheme();
   const scrollRef = useRef(null);
   const [layoutWidth, setLayoutWidth] = useState(0);
   const [contentWidth, setContentWidth] = useState(0);
@@ -93,7 +95,7 @@ const WalletHeader = ({ activeTab, setActiveTab, theme }) => {
           <AppText
             weight={BOLD}
             type={THIRTEEN}
-            color={activeTab === "Overview" ? YELLOW : BLACK}
+            style={{ color: activeTab === "Overview" ? colors.buttonBg : themeColors.secondaryText }}
           >
             Overview
           </AppText>
@@ -105,7 +107,7 @@ const WalletHeader = ({ activeTab, setActiveTab, theme }) => {
           <AppText
             weight={BOLD}
             type={THIRTEEN}
-            color={activeTab === "Main" ? YELLOW : BLACK}
+            style={{ color: activeTab === "Main" ? colors.buttonBg : themeColors.secondaryText }}
           >
             Main
           </AppText>
@@ -117,7 +119,7 @@ const WalletHeader = ({ activeTab, setActiveTab, theme }) => {
           <AppText
             weight={BOLD}
             type={THIRTEEN}
-            color={activeTab === "Spot" ? YELLOW : BLACK}
+            style={{ color: activeTab === "Spot" ? colors.buttonBg : themeColors.secondaryText }}
           >
             Spot
           </AppText>
@@ -129,7 +131,7 @@ const WalletHeader = ({ activeTab, setActiveTab, theme }) => {
           <AppText
             weight={BOLD}
             type={THIRTEEN}
-            color={activeTab === "Swap" ? YELLOW : BLACK}
+            style={{ color: activeTab === "Swap" ? colors.buttonBg : themeColors.secondaryText }}
           >
             Swap
           </AppText>
@@ -141,7 +143,7 @@ const WalletHeader = ({ activeTab, setActiveTab, theme }) => {
           <AppText
             weight={BOLD}
             type={THIRTEEN}
-            color={activeTab === "Earning" ? YELLOW : BLACK}
+            style={{ color: activeTab === "Earning" ? colors.buttonBg : themeColors.secondaryText }}
           >
             Earning
           </AppText>
@@ -153,7 +155,7 @@ const WalletHeader = ({ activeTab, setActiveTab, theme }) => {
           <AppText
             weight={BOLD}
             type={THIRTEEN}
-            color={activeTab === "Futures" ? YELLOW : BLACK}
+            style={{ color: activeTab === "Futures" ? colors.buttonBg : themeColors.secondaryText }}
           >
             Futures
           </AppText>

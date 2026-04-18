@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated, Dimensions } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width, height } = Dimensions.get("window");
 const H_PADDING = 20;
@@ -9,6 +10,7 @@ const CONTENT_WIDTH = width - H_PADDING * 2;
 const SHIMMER_STRIP_WIDTH = 80;
 
 const ShimmerBox = ({ width: w, height, borderRadius = 8, style }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const shimmerX = useRef(new Animated.Value(-SHIMMER_STRIP_WIDTH)).current;
 
   useEffect(() => {
@@ -27,8 +29,10 @@ const ShimmerBox = ({ width: w, height, borderRadius = 8, style }) => {
     return () => shimmerX.stopAnimation();
   }, [shimmerX, w]);
 
-  const boneColor = colors.themeElevationColor;
-  const shimmerColors = ["transparent", "rgba(255,255,255,0.16)", "transparent"];
+  const boneColor = themeColors.themeElevationColor;
+  const shimmerColors = isDark 
+    ? ["transparent", "rgba(255,255,255,0.16)", "transparent"]
+    : ["transparent", "rgba(0,0,0,0.05)", "transparent"];
 
   return (
     <View
@@ -68,10 +72,11 @@ const ShimmerBox = ({ width: w, height, borderRadius = 8, style }) => {
 };
 
 const TransferSkeleton = ({ contentOnly = false }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const content = (
     <>
       {/* From / To card */}
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: themeColors.themeElevationColor }]}>
         <View style={styles.cardRows}>
           <View style={styles.rowLeft}>
             <ShimmerBox width={40} height={12} borderRadius={4} />
@@ -103,7 +108,7 @@ const TransferSkeleton = ({ contentOnly = false }) => {
       </View>
 
       {/* Amount input */}
-      <View style={styles.amountRow}>
+      <View style={[styles.amountRow, { backgroundColor: themeColors.themeElevationColor }]}>
         <ShimmerBox width={CONTENT_WIDTH * 0.45} height={26} borderRadius={6} />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
           <ShimmerBox width={40} height={14} borderRadius={4} />
@@ -130,7 +135,7 @@ const TransferSkeleton = ({ contentOnly = false }) => {
   }
 
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, { backgroundColor: themeColors.background }]}>
       <View style={styles.headerRow}>
         <ShimmerBox width={28} height={28} borderRadius={16} />
         <ShimmerBox width={90} height={22} borderRadius={6} />

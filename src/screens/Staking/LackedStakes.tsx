@@ -22,8 +22,10 @@ import {BREAK_STAKING, Laked_staking_income} from '../../actions/homeActions';
 import {Screen} from '../../theme/dimens';
 import SpaceBetweenView from '../../shared/components/SpaceBetweenView';
 import { twoFixedTwo } from '../../helper/utility';
+import { useTheme } from '../../hooks/useTheme';
 
 const LackedStakes = () => {
+  const { colors: themeColors, theme, isDark } = useTheme();
   const dispatch = useAppDispatch();
   const [modalVisible, setModalVisible] = useState(false);
   const [modalData, setModalData] = useState('');
@@ -53,9 +55,9 @@ const LackedStakes = () => {
 };
 
   return (
-    <AppSafeAreaView>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <Toolbar isLogo={false} isSecond title="Locked Staking" />
-      <ScrollView style={{flex: 1}}>
+      <ScrollView style={{flex: 1, backgroundColor: themeColors.background }}>
         {lakedStakeData?.length > 0 ? (
           <ScrollView horizontal>
             <Modal
@@ -67,7 +69,7 @@ const LackedStakes = () => {
                 style={styles.modalBackground}
                 activeOpacity={1}
                 onPressOut={() => setModalVisible(false)}>
-                <View style={styles.modalContent}>
+                <View style={[styles.modalContent, { backgroundColor: themeColors.themeElevationColor }]}>
                   <AppText type={FOURTEEN}>
                     Do you want to break staking?
                   </AppText>
@@ -75,7 +77,7 @@ const LackedStakes = () => {
                     style={{
                       width: Screen.Width - 50,
                       height: 0.5,
-                      backgroundColor: colors.white,
+                      backgroundColor: themeColors.border,
                       marginVertical: 10,
                     }}></View>
                   <View style={{width: Screen.Width - 50}}>
@@ -121,7 +123,7 @@ const LackedStakes = () => {
                         titleStyle={{color: 'white'}}
                         children="Cancel"
                         containerStyle={{
-                          backgroundColor: '#3b4041a1',
+                          backgroundColor: themeColors.border,
                           width: Screen.Width / 2 - 50,
                         }}
                         onPress={() => {
@@ -284,7 +286,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: 120,
     padding: 10,
-    color: colors.white,
   },
 });
 

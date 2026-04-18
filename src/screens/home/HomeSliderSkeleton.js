@@ -5,6 +5,7 @@ import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated, Dimensions } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width } = Dimensions.get("window");
 const SLIDER_HEIGHT = 110;
@@ -12,6 +13,7 @@ const MARGIN_H = 20;
 const SHIMMER_STRIP_WIDTH = 80;
 
 const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const shimmerX = useRef(new Animated.Value(-SHIMMER_STRIP_WIDTH)).current;
   const mounted = useRef(true);
 
@@ -38,8 +40,10 @@ const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
     };
   }, [shimmerX, w]);
 
-  const boneColor = colors.themeElevationColor;
-  const shimmerColors = ["transparent", "rgba(255,255,255,0.16)", "transparent"];
+  const boneColor = themeColors.themeElevationColor;
+  const shimmerColors = isDark 
+    ? ["transparent", "rgba(255,255,255,0.16)", "transparent"]
+    : ["transparent", "rgba(0,0,0,0.05)", "transparent"];
 
   return (
     <View
@@ -67,10 +71,11 @@ const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
 };
 
 const HomeSliderSkeleton = () => {
+  const { colors: themeColors } = useTheme();
   const contentWidth = width - MARGIN_H * 2;
   return (
     <>
-      <View style={styles.sliderWrap}>
+      <View style={[styles.sliderWrap, { borderTopColor: themeColors.border, borderBottomColor: themeColors.border }]}>
         <View style={styles.sliderInner}>
           <View style={styles.bannerRow}>
             <ShimmerBox width={70} height={70} borderRadius={12} />

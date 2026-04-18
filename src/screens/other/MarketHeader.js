@@ -1,8 +1,8 @@
+import React from "react";
 import {
   View,
   TextInput,
   StyleSheet,
-  TouchableOpacity as RNTouchableOpacity,
   ScrollView,
   Dimensions,
 } from "react-native";
@@ -11,9 +11,9 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { AppText, FOURTEEN, SEMI_BOLD } from "../../shared";
 import FastImage from "react-native-fast-image";
 import { colors } from "../../theme/colors";
-import { useAppSelector } from "../../store/hooks";
 import NavigationService from "../../navigation/NavigationService";
 import { SEARCH_SCREEN } from "../../navigation/routes";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const H_PAD = Math.max(14, SCREEN_WIDTH * 0.04);
@@ -27,17 +27,17 @@ const TABS = [
 ];
 
 const MarketHeader = ({ activeTab, setActiveTab, search, onSearchChange, showSearch }) => {
-  const theme = useAppSelector((state) => state.auth.theme);
-  const isDark = theme === "Dark";
-  const textColor = isDark ? colors.white : colors.black;
-  const placeholderColor = isDark ? "#6E6E6E" : "#9D9D9D";
-  const tabInactiveColor = isDark ? "#9D9D9D" : "#666";
+  const { colors: themeColors } = useTheme();
+
+  const textColor = themeColors.text;
+  const placeholderColor = themeColors.secondaryText;
+  const tabInactiveColor = themeColors.secondaryText;
 
   return (
-    <View style={[styles.wrapper, { backgroundColor: colors.newThemeColor }]}>
+    <View style={[styles.wrapper, { backgroundColor: themeColors.background }]}>
       {/* Search bar - full width, reference style */}
       {showSearch && (
-        <View style={[styles.searchBar, { backgroundColor: isDark ? colors.themeElevationColor : "#F0F0F0" }]}>
+        <View style={[styles.searchBar, { backgroundColor: themeColors.card, borderColor: themeColors.border, borderWidth: 0.8 }]}>
           <FastImage
             source={searchIcon}
             resizeMode="contain"
@@ -58,7 +58,7 @@ const MarketHeader = ({ activeTab, setActiveTab, search, onSearchChange, showSea
       {!showSearch && (
         <TouchableOpacity
           onPress={() => NavigationService.navigate(SEARCH_SCREEN)}
-          style={[styles.searchBar, { backgroundColor: isDark ? colors.themeElevationColor : "#F0F0F0" }]}
+          style={[styles.searchBar, { backgroundColor: themeColors.card, borderColor: themeColors.border, borderWidth: 0.8 }]}
         >
           <FastImage source={searchIcon} resizeMode="contain" style={styles.searchIcon} tintColor={placeholderColor} />
           <AppText style={[styles.searchPlaceholder, { color: placeholderColor }]}>Search Coin Pairs</AppText>
@@ -92,7 +92,7 @@ const MarketHeader = ({ activeTab, setActiveTab, search, onSearchChange, showSea
               >
                 {label}
               </AppText>
-              {isActive && <View style={[styles.tabUnderline, { backgroundColor: colors.buttonBg }]} />}
+              {isActive && <View style={[styles.tabUnderline, { backgroundColor: themeColors.button }]} />}
             </TouchableOpacity>
           );
         })}

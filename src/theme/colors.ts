@@ -75,3 +75,43 @@ export const colors = {
   blueThemeColor: '#1e56f5',
   starColor:"#ffc108"
 };
+
+export const lightTheme = {
+  background: '#FFFFFF',
+  text: '#000000',
+  secondaryText: '#6E6E6E',
+  button: '#1e56f5',
+  buttonText: '#FFFFFF',
+  card: '#F8F9FA',
+  border: '#DDDDDD',
+  input: '#F1F1F1',
+  inputBorder: '#DDDDDD',
+  tabBar: '#FFFFFF',
+  inactiveTab: '#999999',
+  themeSelection: '#F0F0F0',
+  themeElevationColor: '#F8F9FA',
+  themeBorderColor: '#DDDDDD',
+  textOnButton: '#FFFFFF',
+  red: '#FF4F4F',
+  green: '#4ED46C',
+};
+
+export const darkTheme = {
+  background: '#171a20',
+  text: '#FFFFFF',
+  secondaryText: 'rgba(255, 255, 255, 0.6)',
+  button: '#1e56f5',
+  buttonText: '#FFFFFF',
+  card: '#2b313d',
+  border: '#3b4659',
+  input: '#CFCFCF33',
+  inputBorder: '#23262F',
+  tabBar: '#171a20',
+  inactiveTab: '#EEEEEE',
+  themeSelection: '#303744',
+  themeElevationColor: '#2b313d',
+  themeBorderColor: '#3b4659',
+  textOnButton: '#FFFFFF',
+  red: '#FF4F4F',
+  green: '#4ED46C',
+};

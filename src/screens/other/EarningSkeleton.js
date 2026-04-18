@@ -6,6 +6,7 @@ import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Platform, Animated, Dimensions } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width } = Dimensions.get("window");
 const HORIZONTAL_PADDING = 20; // same as Earning.js KeyBoardAware
@@ -16,6 +17,7 @@ const CARD_WIDTH = (CAROUSEL_WIDTH - CARD_GAP) / 2;
 const SHIMMER_STRIP_WIDTH = 80;
 
 const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const shimmerX = useRef(new Animated.Value(-SHIMMER_STRIP_WIDTH)).current;
 
   useEffect(() => {
@@ -34,8 +36,10 @@ const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
     return () => shimmerX.stopAnimation();
   }, [shimmerX, w]);
 
-  const boneColor = colors.themeElevationColor;
-  const shimmerColors = ["transparent", "rgba(255,255,255,0.16)", "transparent"];
+  const boneColor = themeColors.themeElevationColor;
+  const shimmerColors = isDark
+    ? ["transparent", "rgba(255,255,255,0.16)", "transparent"]
+    : ["transparent", "rgba(0,0,0,0.05)", "transparent"];
 
   return (
     <View
@@ -75,6 +79,7 @@ const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
 };
 
 const EarningSkeleton = () => {
+  const { colors: themeColors, isDark } = useTheme();
   return (
     <View style={styles.wrap}>
       {/* Header banner */}
@@ -86,7 +91,7 @@ const EarningSkeleton = () => {
       </View>
 
       {/* Simple Earn banner */}
-      <View style={styles.simpleEarnBanner}>
+      <View style={[styles.simpleEarnBanner, { backgroundColor: themeColors.themeElevationColor }]}>
         <ShimmerBox
           width={56}
           height={22}
@@ -121,7 +126,7 @@ const EarningSkeleton = () => {
       {/* Carousel - 2 cards */}
       <View style={[styles.carouselRow, { width: CAROUSEL_WIDTH }]}>
         {[1, 2].map((i) => (
-          <View key={i} style={[styles.carouselCard, { width: CARD_WIDTH }]}>
+          <View key={i} style={[styles.carouselCard, { width: CARD_WIDTH, backgroundColor: themeColors.themeElevationColor }]}>
             <View style={styles.currencyBit}>
               <View style={styles.currencyBitInner}>
                 <ShimmerBox width={34} height={34} borderRadius={17} />
@@ -157,7 +162,7 @@ const EarningSkeleton = () => {
       <View style={styles.allPlansBlock}>
         <ShimmerBox width={80} height={16} borderRadius={4} style={styles.allPlansHeading} />
         {[1, 2, 3, 4].map((i) => (
-          <View key={i} style={styles.allPlansCard}>
+          <View key={i} style={[styles.allPlansCard, { backgroundColor: themeColors.themeElevationColor }]}>
             <View style={styles.allPlansCardHeader}>
               <View style={styles.allPlansCardTitleRow}>
                 <ShimmerBox width={32} height={32} borderRadius={8} />
@@ -195,7 +200,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     paddingTop: 24,
-    backgroundColor: colors.themeElevationColor,
+
     overflow: "hidden",
     ...Platform.select({
       android: { elevation: 4 },
@@ -253,7 +258,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   carouselCard: {
-    backgroundColor: colors.themeElevationColor,
+
     borderRadius: 12,
     padding: 10,
     marginRight: CARD_GAP,
@@ -292,7 +297,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   allPlansCard: {
-    backgroundColor: colors.themeElevationColor,
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,

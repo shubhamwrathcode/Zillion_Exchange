@@ -9,6 +9,7 @@ import {
   TEN,
   Toolbar,
 } from '../../shared';
+import { useTheme } from '../../hooks/useTheme';
 import {useAppSelector} from '../../store/hooks';
 import KeyBoardAware from '../../shared/components/KeyboardAware';
 import {StyleSheet, View} from 'react-native';
@@ -28,9 +29,10 @@ import { bitcoin_ic, HomeBg } from '../../helper/ImageAssets';
 import FastImage from 'react-native-fast-image';
 
 const WalletHistory = () => {
+  const { colors: themeColors, isDark } = useTheme();
 
   return (
-    <AppSafeAreaView source={HomeBg}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <Toolbar isSecond title={'Wallet History'} />
       <KeyBoardAware>
         <View style={styles.container}>

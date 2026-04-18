@@ -12,10 +12,20 @@ import { downArrowIcon, downIcon } from '../helper/ImageAssets';
 import CountryPicker from 'react-native-country-picker-modal';
 
 import { colors } from '../theme/colors';
+import { useTheme } from '../hooks/useTheme';
+
 const CountrySelector = ({ visible, onSelectCountry, onCountry, country, style, countryCode }) => {
+  const { colors: themeColors, isDark } = useTheme();
 
   return (
-    <View style={[styles.dropdownWrapper, style]}>
+    <View style={[
+      styles.dropdownWrapper, 
+      { 
+        backgroundColor: themeColors.input, 
+        borderColor: themeColors.border 
+      }, 
+      style
+    ]}>
       <CountryPicker
         onSelect={(country) => {
           // console.log(country, "country");
@@ -27,12 +37,21 @@ const CountrySelector = ({ visible, onSelectCountry, onCountry, country, style, 
         withCallingCode
         countryCode={country}
         visible={visible}
+        theme={isDark ? {
+          backgroundColor: themeColors.background,
+          onBackgroundTextColor: themeColors.text,
+          fontSize: 14,
+          filterPlaceholderTextColor: themeColors.textGrey,
+          activeOpacity: 0.5,
+          itemHeight: 50,
+          flagSize: 20,
+        } : undefined}
       />
       <FastImage
         source={downIcon}
         resizeMode="contain"
         style={styles.downArrowStyle}
-        tintColor={colors.disabledText}
+        tintColor={themeColors.text}
       />
     </View>
   );
@@ -46,10 +65,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Platform.OS === 'ios' ? universalPaddingVertical : 5,
     alignItems: 'center',
     borderWidth: borderWidth,
-    borderColor: colors.white,
     flexDirection: 'row',
     bottom: 5,
-    backgroundColor: colors.newThemeColor,
   },
 
   downArrowStyle: {

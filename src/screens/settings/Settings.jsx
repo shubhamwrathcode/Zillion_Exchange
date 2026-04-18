@@ -5,6 +5,7 @@ import {
   ScrollView,
   Clipboard,
   Dimensions,
+  Switch,
 } from "react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
@@ -57,6 +58,8 @@ import NameDetails from "../../shared/components/NameDetails";
 import { showSuccess } from "../../helper/utility";
 import { logout } from "../../actions/authActions";
 import { ANTI_PHISHING_CODE_SCREEN, CHANGE_PASSWORD_SCREEN } from "../../navigation/routes";
+import { useTheme } from "../../hooks/useTheme";
+import { setTheme } from "../../slices/authSlice";
 
 const SETTINGS_PAD = 16;
 const SETTINGS_INNER_W = Dimensions.get("window").width - SETTINGS_PAD * 2;
@@ -133,6 +136,7 @@ const SettingsScreenSkeleton = () => (
 
 const SettingsScreen = () => {
   const dispatch = useDispatch();
+  const { colors: themeColors, isDark, theme } = useTheme();
   const changeName = useRef();
   const changeEmail = useRef();
   const changePhone = useRef();
@@ -241,25 +245,29 @@ const SettingsScreen = () => {
 
   const SectionHeader = ({ title, desc }) => (
     <View style={styles.sectionHeader}>
-      <AppText weight={SEMI_BOLD} type={SIXTEEN} style={{ color: colors.white }}>{title}</AppText>
-      {desc && <AppText type={ELEVEN} style={{ color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>{desc}</AppText>}
+      <AppText weight={SEMI_BOLD} type={SIXTEEN} style={{ color: themeColors.text }}>{title}</AppText>
+      {desc && <AppText type={ELEVEN} style={{ color: themeColors.secondaryText, marginTop: 4 }}>{desc}</AppText>}
     </View>
   );
 
   const CurrencyCard = ({ name, icon, code }) => (
     <TouchableOpacity
       activeOpacity={0.8}
-      style={[styles.currencyCard, selectedCurrency === code && styles.currencyCardActive]}
+      style={[
+         styles.currencyCard, 
+         { backgroundColor: themeColors.input },
+         selectedCurrency === code && { borderColor: themeColors.button, backgroundColor: `${themeColors.button}15` }
+      ]}
       onPress={() => setSelectedCurrency(code)}
     >
       <FastImage source={icon} style={styles.currencyIcon} resizeMode="contain" />
-      <AppText weight={selectedCurrency === code ? SEMI_BOLD : undefined} type={TEN} style={{ color: colors.white, textAlign: 'center' }}>{name}</AppText>
-      {selectedCurrency === code && <View style={styles.selectedTriangle} />}
+      <AppText weight={selectedCurrency === code ? SEMI_BOLD : undefined} type={TEN} style={{ color: themeColors.text, textAlign: 'center' }}>{name}</AppText>
+      {selectedCurrency === code && <View style={[styles.selectedTriangle, { borderBottomColor: themeColors.button }]} />}
     </TouchableOpacity>
   );
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => NavigationService.goBack()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
@@ -267,10 +275,10 @@ const SettingsScreen = () => {
             source={back_ic}
             resizeMode="contain"
             style={{ width: 20, height: 20 }}
-            tintColor={colors.white}
+            tintColor={themeColors.text}
           />
         </TouchableOpacity>
-        <AppText weight={SEMI_BOLD} type={SIXTEEN} style={styles.headerTitle}>Account Info</AppText>
+        <AppText weight={SEMI_BOLD} type={SIXTEEN} style={[styles.headerTitle, { color: themeColors.text }]}>Account Info</AppText>
         <View></View>
       </View>
 
@@ -278,24 +286,47 @@ const SettingsScreen = () => {
         <SettingsScreenSkeleton />
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
+          {/* Theme Section */}
+          <View style={[styles.webStyleCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <SectionHeader title="Appearance" desc="Customize your theme settings" />
+            <View style={styles.webStyleRow}>
+              <View style={styles.rowLeft}>
+                <FastImage source={eye_open_icon} style={styles.rowIcon} tintColor={themeColors.text} />
+                <View style={{ flex: 1, marginLeft: 15 }}>
+                  <AppText weight={SEMI_BOLD} type={FOURTEEN} color={themeColors.text}>Dark Theme</AppText>
+                  <AppText type={TEN} style={{ color: themeColors.secondaryText, marginTop: 2 }}>
+                    Switch between Light and Dark mode
+                  </AppText>
+                </View>
+              </View>
+              <Switch
+                value={isDark}
+                onValueChange={(val) => dispatch(setTheme(val ? "Dark" : "Light"))}
+                trackColor={{ true: themeColors.button, false: "#767577" }}
+                thumbColor={isDark ? "#FFFFFF" : "#f4f3f4"}
+              />
+            </View>
+          </View>
+
           {/* Profile Section */}
-          <View style={styles.webStyleCard}>
+          <View style={[styles.webStyleCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             <SectionHeader title="Profile" desc="To protect your account, we recommend that you enable at least one 2FA" />
-            <View style={styles.profileInnerContent}>
+            <View style={[styles.profileInnerContent, { borderColor: themeColors.border }]}>
               {/* Row 1: Icon + Title */}
               <View style={styles.rowLeft}>
-                <FastImage source={KEY_ICON} style={styles.rowIcon} tintColor={colors.white} />
-                <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: colors.white, marginLeft: 10 }}>Name & Avatar</AppText>
+                <FastImage source={KEY_ICON} style={styles.rowIcon} tintColor={themeColors.text} />
+                <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.text, marginLeft: 10 }}>Name & Avatar</AppText>
               </View>
 
               {/* Description */}
-              <AppText type={ELEVEN} style={{ color: 'rgba(255,255,255,0.5)', marginTop: 12, lineHeight: 18 }}>
+              <AppText type={ELEVEN} style={{ color: themeColors.secondaryText, marginTop: 12, lineHeight: 18 }}>
                 Update your name and avatar to personalize your profile. Save changes to keep your account up to date.
               </AppText>
 
               {/* User Details Row */}
               <View style={[styles.rowLeft, { marginTop: 15 }]}>
-                <View style={styles.userIconCircle}>
+                <View style={[styles.userIconCircle, { borderColor: themeColors.border, backgroundColor: themeColors.input }]}>
                   <FastImage
                     source={userData?.profilepicture ? { uri: IMAGE_BASE_URL + userData?.profilepicture } : defaultPic}
                     style={styles.avatarMini}
@@ -303,22 +334,21 @@ const SettingsScreen = () => {
                   />
                 </View>
                 <View style={{ marginLeft: 12 }}>
-                  <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: colors.white }}>
+                  <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.text }}>
                     {userData?.firstName ? `${userData.firstName} ${userData.lastName || ""}` : "User Name"}
                   </AppText>
-                  {/* <AppText type={TEN} color={colors.secondaryText}>UID: {userData?._id?.substring(0, 8)}</AppText> */}
                 </View>
               </View>
 
               {/* Change Button - Full Width style */}
-              <TouchableOpacity style={styles.changeBtnFull} onPress={handleEditProfile}>
-                <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: colors.white }}>Change</AppText>
+              <TouchableOpacity style={[styles.changeBtnFull, { borderColor: themeColors.border, backgroundColor: themeColors.input }]} onPress={handleEditProfile}>
+                <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.text }}>Change</AppText>
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Currency Preference */}
-          <View style={styles.webStyleCard}>
+          <View style={[styles.webStyleCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             <SectionHeader title="Currency Preference" desc="Select your preferred display currency for all markets" />
 
             <View style={styles.currencyGrid}>
@@ -327,45 +357,49 @@ const SettingsScreen = () => {
               <CurrencyCard name="BNB" icon={bnbIcon} code="BNB" />
             </View>
             <TouchableOpacity
-              style={styles.saveCurrencyBtn}
+              style={[styles.saveCurrencyBtn, { backgroundColor: themeColors.button }]}
               onPress={handleSaveCurrency}
               activeOpacity={0.8}
             >
-              <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: colors.black }}>Save Currency Preference</AppText>
+              <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.buttonText }}>Save Currency Preference</AppText>
             </TouchableOpacity>
           </View>
 
           {/* Security Settings Section */}
-          <View style={styles.webStyleCard}>
+          <View style={[styles.webStyleCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             <SectionHeader title="Security Settings" desc="Manage your account security and password settings" />
-            <View style={[styles.webStyleRow, { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)', paddingBottom: 15 }]}>
+            <View style={[styles.webStyleRow, { borderBottomWidth: 1, borderBottomColor: themeColors.border, paddingBottom: 15 }]}>
               <View style={styles.rowLeft}>
-                <FastImage source={lock} style={styles.rowIcon} tintColor={colors.white} />
+                <FastImage source={lock} style={styles.rowIcon} tintColor={themeColors.text} />
                 <View style={{ flex: 1, marginLeft: 15 }}>
-                  <AppText weight={SEMI_BOLD} type={FOURTEEN} color={colors.white}>Login Password</AppText>
-                  <AppText type={TEN} style={{ color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+                  <AppText weight={SEMI_BOLD} type={FOURTEEN} color={themeColors.text}>Login Password</AppText>
+                  <AppText type={TEN} style={{ color: themeColors.secondaryText, marginTop: 2 }}>
                     Change your account password. You will need to verify with OTP sent to your registered mobile number.
                   </AppText>
                 </View>
               </View>
-              <TouchableOpacity style={styles.changeBtnLarge} onPress={() => NavigationService.navigate(CHANGE_PASSWORD_SCREEN)}>
-                <AppText type={TEN} color={colors.white}>Change Password</AppText>
+              <TouchableOpacity style={[styles.changeBtnLarge, { borderColor: themeColors.border, backgroundColor: themeColors.input }]} onPress={() => NavigationService.navigate(CHANGE_PASSWORD_SCREEN)}>
+                <AppText type={TEN} color={themeColors.text}>Change Password</AppText>
               </TouchableOpacity>
             </View>
 
             {/* Anti-phishing code */}
             <View style={[styles.webStyleRow, { marginTop: 15 }]}>
               <View style={styles.rowLeft}>
-                <FastImage source={lock_ic} style={styles.rowIcon} tintColor={colors.white} />
+                <FastImage source={lock_ic} style={styles.rowIcon} tintColor={themeColors.text} />
                 <View style={{ flex: 1, marginLeft: 15 }}>
-                  <AppText weight={SEMI_BOLD} type={FOURTEEN} color={colors.white}>Anti-phishing Code</AppText>
-                  <AppText type={TEN} style={{ color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+                  <AppText weight={SEMI_BOLD} type={FOURTEEN} color={themeColors.text}>Anti-phishing Code</AppText>
+                  <AppText type={TEN} style={{ color: themeColors.secondaryText, marginTop: 2 }}>
                     Set a unique 5-8 digit code that will appear in legitimate emails and notifications.
                   </AppText>
                 </View>
               </View>
               <TouchableOpacity
-                style={[styles.changeBtn, hasAntiPhishingCode && styles.changeBtnRemove]}
+                style={[
+                  styles.changeBtn, 
+                  { borderColor: themeColors.border, backgroundColor: themeColors.input },
+                  hasAntiPhishingCode && styles.changeBtnRemove
+                ]}
                 onPress={() =>
                   NavigationService.navigate(
                     ANTI_PHISHING_CODE_SCREEN,
@@ -373,15 +407,12 @@ const SettingsScreen = () => {
                   )
                 }
               >
-                <AppText type={TEN} color={hasAntiPhishingCode ? colors.red : colors.white}>
+                <AppText type={TEN} color={hasAntiPhishingCode ? colors.red : themeColors.text}>
                   {hasAntiPhishingCode ? "Remove" : "+ Set Code"}
                 </AppText>
               </TouchableOpacity>
             </View>
           </View>
-
-
-
         </ScrollView>
       )}
 
@@ -392,15 +423,15 @@ const SettingsScreen = () => {
         onPressCamera={onPressCamera}
       />
 
-      <RBSheet ref={changeEmail} closeOnDragDown draggableIcon={false} customStyles={rbStyles} height={350} closeOnPressMask={false}>
+      <RBSheet ref={changeEmail} closeOnDragDown draggableIcon={false} customStyles={{ container: { ...rbStyles.container, backgroundColor: themeColors.card } }} height={350} closeOnPressMask={false}>
         <ChangeEmail userData={userData} email={email} setEmail={setEmail} otp={otp} setOtp={setOtp} onCloseEmail={() => changeEmail.current.close()} />
       </RBSheet>
 
-      <RBSheet ref={changePhone} closeOnDragDown draggableIcon={false} customStyles={rbStyles} height={350} closeOnPressMask={false}>
+      <RBSheet ref={changePhone} closeOnDragDown draggableIcon={false} customStyles={{ container: { ...rbStyles.container, backgroundColor: themeColors.card } }} height={350} closeOnPressMask={false}>
         <ChangePhone userData={userData} phone={phone} setPhone={setPhone} otp={otp} setOtp={setOtp} onClosePhone={() => changePhone.current.close()} countryCode={countryCode} country={country} setCountryCode={setCountryCode} setCountry={setCountry} />
       </RBSheet>
 
-      <RBSheet ref={changeName} closeOnDragDown draggableIcon={false} customStyles={rbStyles} height={550} closeOnPressMask={false}>
+      <RBSheet ref={changeName} closeOnDragDown draggableIcon={false} customStyles={{ container: { ...rbStyles.container, backgroundColor: themeColors.card } }} height={550} closeOnPressMask={false}>
         <NameDetails
           userData={userData}
           onCloseNominee={() => changeName.current.close()}

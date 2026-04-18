@@ -6,6 +6,7 @@ import {
   TextStyle,
   View,
   ViewStyle,
+  StyleProp,
 } from "react-native";
 import {
   borderWidth,
@@ -24,15 +25,15 @@ import { useAppSelector } from "../store/hooks";
 
 interface InputProps extends TextInputProps {
   value?: string;
-  containerStyle?: ViewStyle;
-  inputStyle?: TextStyle;
+  containerStyle?: StyleProp<ViewStyle>;
+  inputStyle?: StyleProp<TextStyle>;
   isSecure?: boolean;
   onPressVisible?: () => void;
   isOtp?: boolean;
   onSendOtp?: () => void;
   otpText?: string;
   title?: string;
-  mainContainer?: ViewStyle;
+  mainContainer?: StyleProp<ViewStyle>;
   currency?: string;
   onfocus?: any;
   assignRef?: any;
@@ -40,6 +41,8 @@ interface InputProps extends TextInputProps {
   onMax?: () => void;
   isOtpDisabled?: boolean;
 }
+
+import { useTheme } from "../hooks/useTheme";
 
 const Input = ({
   value,
@@ -68,23 +71,28 @@ const Input = ({
   isOtpDisabled,
   ...props
 }: InputProps) => {
-  const theme = useAppSelector(state => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
+  
   return (
     <View style={[styles.inputWrapper, mainContainer]}>
-      {title && <AppText style={styles.title} weight={SEMI_BOLD}>{title}</AppText>}
+      {title && <AppText style={[styles.title, { color: themeColors.text }]} weight={SEMI_BOLD}>{title}</AppText>}
       <View
         style={[
           styles.container,
-          title ? { marginTop: 0 } : null,
+          { 
+            backgroundColor: themeColors.input, 
+            borderColor: themeColors.border,
+            ...(title ? { marginTop: 0 } : {})
+          },
           containerStyle && typeof containerStyle === "object" ? containerStyle : undefined,
         ]}
       >
         <TextInput
           {...props}
           placeholder={placeholder}
-          placeholderTextColor={theme === "Dark" ? colors.disabledText : colors.placeholderColor}
+          placeholderTextColor={isDark ? colors.disabledText : colors.placeholderColor}
           autoCorrect={false}
-          style={[styles.inputF, inputStyle, { color: theme === "Dark" ? colors.white : colors.black }]}
+          style={[styles.inputF, inputStyle, { color: themeColors.text }]}
           value={value}
           onChangeText={onChangeText}
           onEndEditing={onEndEditing}
@@ -107,13 +115,13 @@ const Input = ({
               source={secureTextEntry ? eye_close_icon : eye_open_icon}
               style={styles.eyeIcon}
               resizeMode="contain"
-              tintColor={colors.disabledText}
+              tintColor={isDark ? colors.disabledText : colors.placeholderColor}
             />
           </TouchableOpacityView>
         )}
         {max && (
           <AppText
-            style={{ color: colors.secondaryText, marginHorizontal: 10, fontSize: 14 }}
+            style={{ color: themeColors.button, marginHorizontal: 10, fontSize: 14 }}
             weight={SEMI_BOLD}
             onPress={onMax}
           >
@@ -123,8 +131,8 @@ const Input = ({
         {isOtp && (
           <Button
             children={otpText}
-            titleStyle={[styles.titleStyle,{color: colors.black}]}
-            containerStyle={[styles.containerStyle,{backgroundColor: colors.white}]}
+            titleStyle={[styles.titleStyle,{color: themeColors.buttonText}]}
+            containerStyle={[styles.containerStyle,{backgroundColor: themeColors.button}]}
             onPress={onSendOtp}
             disabled={isOtpDisabled}
           />
@@ -133,7 +141,7 @@ const Input = ({
           <AppText
             // style={styles.eyeIconContainer}
             type={FOURTEEN}
-            color={BLACK}
+            style={{ color: themeColors.text }}
           >
             {currency}
           </AppText>

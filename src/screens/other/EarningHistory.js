@@ -11,6 +11,7 @@ import {
   WHITE,
   YELLOW,
 } from "../../shared";
+import { useTheme } from "../../hooks/useTheme";
 import KeyBoardAware from "../../shared/components/KeyboardAware";
 import { useAppSelector } from "../../store/hooks";
 import { back_ic, BACK_ICON, folder, NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
@@ -22,7 +23,7 @@ import moment from "moment";
 import { toFixedFive, twoFixedTwo } from "../../helper/utility";
 
 const EarningHistory = () => {
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, theme, isDark } = useTheme();
   const subscribedActivePackages = useAppSelector(
     (state) => state.wallet.subscribedActivePackages
   );
@@ -43,17 +44,8 @@ const EarningHistory = () => {
       : subscribedCancelPackages;
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <KeyBoardAware style={{ paddingHorizontal: 20 }}>
-        {/* <View
-          style={{
-            borderWidth: 1,
-            borderColor: "#595959",
-            marginTop: 50,
-            borderRadius: 12,
-            margin: 10,
-          }}
-        > */}
         <View style={{flexDirection: "row", alignItems: "center", gap: 20}}>
         <TouchableOpacity
           style={{ marginVertical: 20 }}
@@ -62,11 +54,11 @@ const EarningHistory = () => {
           <FastImage
             source={back_ic}
             style={{ width: 20, height: 20 }}
-            resizeMode="contain"Recent 
-            tintColor={colors.white}
+            resizeMode="contain"
+            tintColor={themeColors.text}
           />
         </TouchableOpacity>
-        <AppText style={{ margin: 10 }} weight={SEMI_BOLD} type={SIXTEEN} color={colors.white}>
+        <AppText style={{ margin: 10 }} weight={SEMI_BOLD} type={SIXTEEN}>
           Recent Plans{" "}
         </AppText>
         </View>
@@ -81,11 +73,10 @@ const EarningHistory = () => {
             onPress={() => setActiveTab("Active")}
           >
             <AppText
-             
               weight={SEMI_BOLD}
               type={SIXTEEN}
               style={[styles.tabLabel,{
-              color: activeTab === "Active" ? colors.white : colors.secondaryText
+              color: activeTab === "Active" ? colors.buttonBg : themeColors.text
               }]}
             >
               Active
@@ -102,7 +93,7 @@ const EarningHistory = () => {
               weight={SEMI_BOLD}
               type={SIXTEEN}
               style={[styles.tabLabel,{
-                color: activeTab === "Completed" ? colors.white : colors.secondaryText
+                color: activeTab === "Completed" ? colors.buttonBg : themeColors.text
               }]}
             >
               Completed
@@ -117,13 +108,13 @@ const EarningHistory = () => {
             contentContainerStyle={styles.scrollContent}
           >
             {data?.map((item, index) => (
-              <View key={item?._id || index} style={styles.historyCard}>
+              <View key={item?._id || index} style={[styles.historyCard, { backgroundColor: themeColors.themeElevationColor, borderColor: themeColors.border, borderWidth: 1 }]}>
                 <View style={styles.cardRow}>
-                  <AppText type={ELEVEN} color={colors.secondaryText}>Currency</AppText>
-                  <AppText type={ELEVEN} weight={SEMI_BOLD} color={colors.white}>{item?.currency}</AppText>
+                  <AppText type={ELEVEN} color={themeColors.secondaryText}>Currency</AppText>
+                  <AppText type={ELEVEN} weight={SEMI_BOLD} color={themeColors.text}>{item?.currency}</AppText>
                 </View>
                 <View style={styles.cardRow}>
-                  <AppText type={ELEVEN} color={colors.secondaryText}>
+                  <AppText type={ELEVEN} color={themeColors.secondaryText}>
                     {activeTab === "Active" ? "Deducted From" : "Received In"}
                   </AppText>
                   <AppText type={ELEVEN} style={{color: colors.buttonBg}}>
@@ -134,29 +125,29 @@ const EarningHistory = () => {
                   </AppText>
                 </View>
                 <View style={styles.cardRow}>
-                  <AppText type={ELEVEN} color={colors.secondaryText}>Duration</AppText>
-                  <AppText type={ELEVEN} color={colors.white}>{item?.duration_days} days</AppText>
+                  <AppText type={ELEVEN} color={themeColors.secondaryText}>Duration</AppText>
+                  <AppText type={ELEVEN} color={themeColors.text}>{item?.duration_days} days</AppText>
                 </View>
                 <View style={styles.cardRow}>
-                  <AppText type={ELEVEN} color={colors.secondaryText}>Start Date</AppText>
-                  <AppText type={ELEVEN} color={colors.white}>
+                  <AppText type={ELEVEN} color={themeColors.secondaryText}>Start Date</AppText>
+                  <AppText type={ELEVEN} color={themeColors.text}>
                     {moment(item?.start_date).format("YYYY-MM-DD")}
                   </AppText>
                 </View>
                 <View style={styles.cardRow}>
-                  <AppText type={ELEVEN} color={colors.secondaryText}>Mature Date</AppText>
-                  <AppText type={ELEVEN} color={colors.white}>
+                  <AppText type={ELEVEN} color={themeColors.secondaryText}>Mature Date</AppText>
+                  <AppText type={ELEVEN} color={themeColors.text}>
                     {moment(item?.end_date).format("YYYY-MM-DD")}
                   </AppText>
                 </View>
                 <View style={styles.cardRow}>
-                  <AppText type={ELEVEN} color={colors.secondaryText}>Subscription Amount</AppText>
-                  <AppText type={ELEVEN} color={colors.white}>
+                  <AppText type={ELEVEN} color={themeColors.secondaryText}>Subscription Amount</AppText>
+                  <AppText type={ELEVEN} color={themeColors.text}>
                     {toFixedFive(Number(item?.invested_amount?.$numberDecimal || 0))} {item?.currency}
                   </AppText>
                 </View>
                 <View style={styles.cardRow}>
-                  <AppText type={ELEVEN} color={colors.secondaryText}>Bonus Amount</AppText>
+                  <AppText type={ELEVEN} color={themeColors.secondaryText}>Bonus Amount</AppText>
                   <AppText type={ELEVEN} color={YELLOW}>
                     +{toFixedFive(
                       Number(
@@ -167,15 +158,15 @@ const EarningHistory = () => {
                   </AppText>
                 </View>
                 <View style={styles.cardRow}>
-                  <AppText type={ELEVEN} color={colors.secondaryText}>
+                  <AppText type={ELEVEN} color={themeColors.secondaryText}>
                     {activeTab === "Active" ? "Receivable Amount" : "Received Amount"}
                   </AppText>
-                  <AppText type={ELEVEN} color={colors.white}>
+                  <AppText type={ELEVEN} color={themeColors.text}>
                     {toFixedFive(Number(item?.expected_return?.$numberDecimal || 0))} {item?.currency}
                   </AppText>
                 </View>
                 <View style={[styles.cardRow, styles.cardRowLast]}>
-                  <AppText type={ELEVEN} color={colors.secondaryText}>Status</AppText>
+                  <AppText type={ELEVEN} color={themeColors.secondaryText}>Status</AppText>
                   <AppText type={ELEVEN}  style={{color: colors.buttonBg}}>
                     {item?.status}
                   </AppText>

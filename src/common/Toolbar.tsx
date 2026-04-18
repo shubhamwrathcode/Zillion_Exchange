@@ -6,8 +6,7 @@ import {
   LOCKED,
   back_ic,
   history,
-  logo,
-  logoTwo,
+  zillionLogo,
   starFillIcon,
   starIcon,
 } from '../helper/ImageAssets';
@@ -37,11 +36,13 @@ interface ToolbarProps {
   isFifth?: boolean;
   onFifthPress?: () => void;
   isLock?: boolean;
-  isCommit: boolean;
-  isStake: boolean;
-  isLogin: boolean;
-  style: any;
+  isCommit?: boolean;
+  isStake?: boolean;
+  isLogin?: boolean;
+  style?: any;
 }
+import { useTheme } from '../hooks/useTheme';
+
 const Toolbar = ({
   isLogo = true,
   isSecond,
@@ -58,6 +59,7 @@ const Toolbar = ({
   style,
   isLock = false,
 }: ToolbarProps) => {
+  const { colors: themeColors, isDark } = useTheme();
   const p2p = useAppSelector(state => state.home.p2p);
   const theme = useAppSelector(state => state.auth.theme);
   const dispatch = useAppDispatch();
@@ -80,19 +82,19 @@ const Toolbar = ({
           source={back_ic}
           style={styles.backIcon}
           resizeMode="contain"
-          tintColor={theme !== "Dark" ? colors.black : colors.white}
+          tintColor={themeColors.text}
         />
       </TouchableOpacityView>}
 
       {isLogo && !isSecond && (
         <FastImage
-          source={logoTwo}
+          source={zillionLogo}
           style={styles.mainLogo}
           resizeMode="contain"
         />
       )}
       {isSecond && (
-        <AppText type={SIXTEEN} weight={SEMI_BOLD} style={styles.title}>
+        <AppText type={SIXTEEN} weight={SEMI_BOLD} style={[styles.title, { color: themeColors.text }]}>
           {title}
         </AppText>
       )}

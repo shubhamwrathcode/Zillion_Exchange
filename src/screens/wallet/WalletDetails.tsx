@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AppSafeAreaView,
   AppText,
@@ -14,10 +14,10 @@ import {
   Toolbar,
   TWENTY,
 } from '../../shared';
-import {useRoute} from '@react-navigation/native';
-import {useAppDispatch, useAppSelector} from '../../store/hooks';
+import { useRoute } from '@react-navigation/native';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import KeyBoardAware from '../../shared/components/KeyboardAware';
-import {StyleSheet, View} from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import {
   calculateDifference,
   calculatePrice,
@@ -38,18 +38,18 @@ import {
 import moment from 'moment';
 import TouchableOpacityView from '../../shared/components/TouchableOpacityView';
 import FastImage from 'react-native-fast-image';
-import {depositIconWallet, HomeBg} from '../../helper/ImageAssets';
-import {colors} from '../../theme/colors';
-import {Circle} from 'react-native-svg';
-import {AreaChart} from 'react-native-svg-charts';
-import {HistoricDataProps} from '../../helper/types';
-import {SpinnerSecond} from '../../shared/components/SpinnerSecond';
+import { depositIconWallet, HomeBg } from '../../helper/ImageAssets';
+import { colors } from '../../theme/colors';
+import { Circle } from 'react-native-svg';
+import { AreaChart } from 'react-native-svg-charts';
+import { HistoricDataProps } from '../../helper/types';
+import { SpinnerSecond } from '../../shared/components/SpinnerSecond';
 import {
   getTransactionHistory,
   getCoinDetails,
 } from '../../actions/walletActions';
-import {WalletHistoryRender} from './Wallet';
-import {setSelectedWalletHistory} from '../../slices/walletSlice';
+import { WalletHistoryRender } from './Wallet';
+import { setSelectedWalletHistory } from '../../slices/walletSlice';
 import NavigationService from '../../navigation/NavigationService';
 import {
   DEPOSIT_INR_SCREEN,
@@ -58,8 +58,9 @@ import {
   WITHDRAW_INR_SCREEN,
   WITHDRAW_SCREEN,
 } from '../../navigation/routes';
-import {ListEmptyComponent} from '../home/MarketCoinList';
-import {showError} from '../../helper/logger';
+import { ListEmptyComponent } from '../home/MarketCoinList';
+import { showError } from '../../helper/logger';
+import { useTheme } from '../../hooks/useTheme';
 
 // export const Dots = props => {
 //   const {x, y, data} = props;
@@ -90,6 +91,7 @@ import {showError} from '../../helper/logger';
 // };
 
 const WalletDetails = () => {
+  const { colors: themeColors, theme, isDark } = useTheme();
   const route = useRoute();
   const dispatch = useAppDispatch();
   const coinData = useAppSelector(state => state.home.coinData);
@@ -112,12 +114,12 @@ const WalletDetails = () => {
   //   state => state.home.fiveYearSymbolData,
   // );
   const detail = route?.params?.item ?? '';
-  const {balance, currency, short_name, currency_id} = detail ?? '';
+  const { balance, currency, short_name, currency_id } = detail ?? '';
 
   const [currencyDetail, setCurrencyDetail] = useState(undefined);
   // const [selectedTime, setSelectedTime] = useState('5D');
   // const [data, setData] = useState<HistoricDataProps[]>([]);
-  const {buy_price, change, high, low, createdAt} = currencyDetail ?? '';
+  const { buy_price, change, high, low, createdAt } = currencyDetail ?? '';
 
   useEffect(() => {
     let _currency = coinData.find(e => {
@@ -172,7 +174,7 @@ const WalletDetails = () => {
     let data = {
       currency_id: id,
     };
-   dispatch(getCoinDetails(data, "withdraw",balance));
+    dispatch(getCoinDetails(data, "withdraw", balance));
     // if (coinDetails?.withdrawal_status === 'ACTIVE') {
     //   short_name === 'INR'
     //     ? NavigationService.navigate(WITHDRAW_INR_SCREEN, {
@@ -249,7 +251,7 @@ const WalletDetails = () => {
   // };
   // console.log(coinDetails, 'coinDetails');
   return (
-    <AppSafeAreaView source={HomeBg}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <Toolbar isLogo />
       <KeyBoardAware>
         <View style={styles.headerContainer}>
@@ -359,7 +361,7 @@ const WalletDetails = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
           }}>
-          <View style={{alignItems: 'center', marginVertical: 5}}>
+          <View style={{ alignItems: 'center', marginVertical: 5 }}>
             <AppText numberOfLines={1} color={SECOND} type={FIFTEEN}>
               Available Balance
             </AppText>
@@ -367,7 +369,7 @@ const WalletDetails = () => {
               {twoFixedTwo(Number(detail?.balance))}
             </AppText>
           </View>
-          <View style={{alignItems: 'center', marginVertical: 5}}>
+          <View style={{ alignItems: 'center', marginVertical: 5 }}>
             <AppText numberOfLines={1} color={SECOND} type={FIFTEEN}>
               Locked Balance
             </AppText>
@@ -375,7 +377,7 @@ const WalletDetails = () => {
               {twoFixedTwo(Number(detail?.locked_balance))}
             </AppText>
           </View>
-          <View style={{alignItems: 'center', marginVertical: 5}}>
+          <View style={{ alignItems: 'center', marginVertical: 5 }}>
             <AppText numberOfLines={1} color={SECOND} type={FIFTEEN}>
               Total Balance
             </AppText>
@@ -468,11 +470,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   container: {
-    backgroundColor: colors.white_fifteen,
     marginVertical: 20,
     padding: universalPaddingHorizontal,
     borderWidth: borderWidth,
-    borderColor: colors.inputBorder,
     borderRadius: 10,
   },
   walletHistorySingle: {

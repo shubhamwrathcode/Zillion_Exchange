@@ -4,7 +4,7 @@
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated, Dimensions } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width } = Dimensions.get("window");
 const PAD = 16;
@@ -13,6 +13,7 @@ const CARD_WIDTH = (width - PAD * 2 - GAP * 2) / 3;
 const SHIMMER_STRIP_WIDTH = 80;
 
 const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
+  const { isDark, colors: themeColors } = useTheme();
   const shimmerX = useRef(new Animated.Value(-SHIMMER_STRIP_WIDTH)).current;
   const mounted = useRef(true);
 
@@ -39,8 +40,10 @@ const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
     };
   }, [shimmerX, w]);
 
-  const boneColor = colors.themeElevationColor;
-  const shimmerColors = ["transparent", "rgba(255,255,255,0.16)", "transparent"];
+  const boneColor = themeColors.card;
+  const shimmerColors = isDark 
+    ? ["transparent", "rgba(255,255,255,0.08)", "transparent"]
+    : ["transparent", "rgba(0,0,0,0.05)", "transparent"];
 
   return (
     <View
@@ -67,14 +70,17 @@ const ShimmerBox = ({ width: w, height, borderRadius = 6, style }) => {
   );
 };
 
-const MemexCardSkeleton = () => (
-  <View style={styles.card}>
-    <ShimmerBox width={CARD_WIDTH - 12} height={110} borderRadius={10} />
-    <ShimmerBox width={CARD_WIDTH * 0.6} height={11} borderRadius={4} style={{ marginTop: 8, marginHorizontal: 4 }} />
-    <ShimmerBox width={40} height={10} borderRadius={4} style={{ marginTop: 6, marginHorizontal: 4 }} />
-    <ShimmerBox width={36} height={10} borderRadius={4} style={{ marginTop: 6, marginHorizontal: 4 }} />
-  </View>
-);
+const MemexCardSkeleton = () => {
+  const { colors: themeColors } = useTheme();
+  return (
+    <View style={[styles.card, { backgroundColor: themeColors.card }]}>
+      <ShimmerBox width={CARD_WIDTH - 12} height={110} borderRadius={10} />
+      <ShimmerBox width={CARD_WIDTH * 0.6} height={11} borderRadius={4} style={{ marginTop: 8, marginHorizontal: 4 }} />
+      <ShimmerBox width={40} height={10} borderRadius={4} style={{ marginTop: 6, marginHorizontal: 4 }} />
+      <ShimmerBox width={36} height={10} borderRadius={4} style={{ marginTop: 6, marginHorizontal: 4 }} />
+    </View>
+  );
+};
 
 const MemexSkeleton = () => {
   return (
@@ -120,7 +126,6 @@ const styles = StyleSheet.create({
     gap: GAP,
   },
   card: {
-    backgroundColor: colors.themeElevationColor,
     width: CARD_WIDTH,
     paddingVertical: 6,
     borderRadius: 8,

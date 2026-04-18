@@ -59,12 +59,13 @@ import RBSheet from "react-native-raw-bottom-sheet";
 import DepositSheet from "../../shared/components/DepositSheet";
 import WithdrawSheet from "../../shared/components/WithdrawSheet";
 import { useFocusEffect } from "@react-navigation/native";
+import { useTheme } from "../../hooks/useTheme";
 
 const WalletNew = () => {
   const dispatch = useDispatch();
   const depsoitSheet = useRef(null);
   const withdrawSheet = useRef(null);
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, theme, isDark } = useTheme();
   const walletBalance = useAppSelector((state) => {
     return state.wallet.walletBalance;
   });
@@ -169,7 +170,7 @@ const WalletNew = () => {
   );
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <KeyBoardAware>
         <WalletHeader
           activeTab={activeTab}
@@ -179,231 +180,229 @@ const WalletNew = () => {
         {contentLoading ? (
           <WalletSkeleton />
         ) : (
-        <>
-        <View style={{ marginVertical: 20, paddingHorizontal: 20 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <AppText color={BLACK} weight={SEMI_BOLD}>
-              {activeTab === "Overview"
-                ? "Total Equity"
-                : activeTab === "Main"
-                ? "Estimated Main Wallet Assets"
-                : activeTab === "Spot"
-                ? "Estimated Spot Wallet Assets"
-                : activeTab === "Swap"
-                ? "Estimated Swap Wallet Assets"
-                : activeTab === "Earning"
-                ? "Estimated Earning Wallet"
-                : 
-                  activeTab === "Futures"
-                  ? "Estimated Futures Wallet Assets"
-                  : activeTab === "Options"
-                  ? "Estimated Options Wallet Assets"
-                  :
-                  ""}
-            </AppText>
-       
-            <TouchableOpacity onPress={() => setShowBalance(!showBalance)}>
-              <FastImage
-                source={showBalance ? eye_close_icon : eye_open_icon}
-                resizeMode="contain"
-                style={{ width: 20, height: 20 }}
-                tintColor={
-                  theme !== "Dark"
-                    ? colors.disclaimText
-                    : colors.disclaimDarText
-                }
-              />
-            </TouchableOpacity>
-          </View>
-          <View style={{ marginTop: 10 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
-              <AppText type={FIFTEEN} weight={SEMI_BOLD}>
-                {!showBalance
-                  ? "********"
-                  : !isBalanceLoaded
-                  ? "..."
-                  : toFixedFive(
-                      activeTab === "Overview"
-                        ? walletBalance?.currencyPrice
-                        : activeTab === "Main"
-                        ? walletBalanceMain?.currencyPrice
-                        : activeTab === "Spot"
-                        ? walletBalanceSpot?.currencyPrice
+          <>
+            <View style={{ marginVertical: 20, paddingHorizontal: 20 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <AppText weight={SEMI_BOLD}>
+                  {activeTab === "Overview"
+                    ? "Total Equity"
+                    : activeTab === "Main"
+                      ? "Estimated Main Wallet Assets"
+                      : activeTab === "Spot"
+                        ? "Estimated Spot Wallet Assets"
                         : activeTab === "Swap"
-                        ? walletBalanceSwap?.currencyPrice
-                        : activeTab === "Earning"
-                        ? walletBalanceEarning?.currencyPrice
-                        : activeTab === "Futures"
-                        ? walletBalanceFutures?.currencyPrice
-                        : activeTab === "Options"
-                        ? walletBalanceOptions?.currencyPrice
-                        : walletBalanceArbitrage?.currencyPrice
-                    )}{" "}
-              </AppText>
-              <TouchableOpacity
-                onPress={() =>
-                  NavigationService.navigate(CURRENCY_PREFERENCE_SCREEN)
-                }
-                style={{ flexDirection: "row", alignItems: "center" }}
-              >
-                <AppText color={DISCLAIMTEXT}>
-                  {isBalanceLoaded ? (walletBalance?.Currency || "") : "..."}{" "}
+                          ? "Estimated Swap Wallet Assets"
+                          : activeTab === "Earning"
+                            ? "Estimated Earning Wallet"
+                            :
+                            activeTab === "Futures"
+                              ? "Estimated Futures Wallet Assets"
+                              : activeTab === "Options"
+                                ? "Estimated Options Wallet Assets"
+                                :
+                                ""}
                 </AppText>
-                <FastImage
-                  source={externalLinkIcon}
-                  resizeMode="contain"
-                  style={{ width: 10, height: 10 }}
-                  tintColor={theme === "Dark" ? colors.white : colors.black}
-                />
-              </TouchableOpacity>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}>
-              <AppText type={FIFTEEN} weight={SEMI_BOLD}>
-                {!showBalance
-                  ? "********"
-                  : !isBalanceLoaded
-                  ? "..."
-                  : toFixedFive(
-                      activeTab === "Overview"
-                        ? walletBalance?.dollarPrice || 0
-                        : activeTab === "Main"
-                        ? walletBalanceMain?.dollarPrice || 0
-                        : activeTab === "Spot"
-                        ? walletBalanceSpot?.dollarPrice || 0
-                        : activeTab === "Swap"
-                        ? walletBalanceSwap?.dollarPrice || 0
-                        : activeTab === "Earning"
-                        ? walletBalanceEarning?.dollarPrice || 0
-                        : activeTab === "Futures"
-                        ? walletBalanceFutures?.dollarPrice || 0
-                        : activeTab === "Options"
-                        ? walletBalanceOptions?.dollarPrice || 0
-                        : 0
-                    )}{" "}
-              </AppText>
-              <AppText color={DISCLAIMTEXT}>USDT</AppText>
-            </View>
-          </View>
-        </View>
-        <WalletMenu
-          theme={theme}
-          onDeposit={()=>{
-            NavigationService.navigate(DEPOSIT_COIN_SCREEN)
-          }}
-          onWithdraw={()=>{
-            NavigationService.navigate(WALLET_WITHDRAW_SCREEN)
-          }}
-        />
-        <View style={{ marginVertical: 20, paddingHorizontal: 20 }}>
-          {activeTab === "Overview" && (
-            <>
-              <AppText color={BLACK} weight={SEMI_BOLD} type={FIFTEEN}>
-                Portfolio
-              </AppText>
+
+                <TouchableOpacity onPress={() => setShowBalance(!showBalance)}>
+                  <FastImage
+                    source={showBalance ? eye_close_icon : eye_open_icon}
+                    resizeMode="contain"
+                    style={{ width: 20, height: 20 }}
+                    tintColor={
+                      theme !== "Dark"
+                        ? colors.disclaimText
+                        : colors.disclaimDarText
+                    }
+                  />
+                </TouchableOpacity>
+              </View>
               <View style={{ marginTop: 10 }}>
-                <TouchableOpacity
-                  style={{
-                    flexDirection: "row",
-                    borderWidth: 1,
-                    borderColor: theme !== "Dark" ? "#D4D4D4" : "#595959",
-                    borderRadius: 10,
-                    padding: 15,
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: 10,
-                    backgroundColor:
-                     colors.themeElevationColor,
-                  }}
-                  onPress={() => setActiveTab("Main")}
-                >
-                  <View>
-                    <AppText
-                      style={{
-                        color: theme !== "Dark" ? "#404040" : "#A8A7A7",
-                        fontWeight: SEMI_BOLD,
-                        marginBottom: 5,
-                      }}
-                      type={FOURTEEN}
-                    >
-                      Main Wallet
+                <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
+                  <AppText type={FIFTEEN} weight={SEMI_BOLD}>
+                    {!showBalance
+                      ? "********"
+                      : !isBalanceLoaded
+                        ? "..."
+                        : toFixedFive(
+                          activeTab === "Overview"
+                            ? walletBalance?.currencyPrice
+                            : activeTab === "Main"
+                              ? walletBalanceMain?.currencyPrice
+                              : activeTab === "Spot"
+                                ? walletBalanceSpot?.currencyPrice
+                                : activeTab === "Swap"
+                                  ? walletBalanceSwap?.currencyPrice
+                                  : activeTab === "Earning"
+                                    ? walletBalanceEarning?.currencyPrice
+                                    : activeTab === "Futures"
+                                      ? walletBalanceFutures?.currencyPrice
+                                      : activeTab === "Options"
+                                        ? walletBalanceOptions?.currencyPrice
+                                        : walletBalanceArbitrage?.currencyPrice
+                        )}{" "}
+                  </AppText>
+                  <TouchableOpacity
+                    onPress={() =>
+                      NavigationService.navigate(CURRENCY_PREFERENCE_SCREEN)
+                    }
+                    style={{ flexDirection: "row", alignItems: "center" }}
+                  >
+                    <AppText color={DISCLAIMTEXT}>
+                      {isBalanceLoaded ? (walletBalance?.Currency || "") : "..."}{" "}
                     </AppText>
-
-                    <View
+                    <FastImage
+                      source={externalLinkIcon}
+                      resizeMode="contain"
+                      style={{ width: 10, height: 10 }}
+                      tintColor={theme === "Dark" ? colors.white : colors.black}
+                    />
+                  </TouchableOpacity>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}>
+                  <AppText type={FIFTEEN} weight={SEMI_BOLD}>
+                    {!showBalance
+                      ? "********"
+                      : !isBalanceLoaded
+                        ? "..."
+                        : toFixedFive(
+                          activeTab === "Overview"
+                            ? walletBalance?.dollarPrice || 0
+                            : activeTab === "Main"
+                              ? walletBalanceMain?.dollarPrice || 0
+                              : activeTab === "Spot"
+                                ? walletBalanceSpot?.dollarPrice || 0
+                                : activeTab === "Swap"
+                                  ? walletBalanceSwap?.dollarPrice || 0
+                                  : activeTab === "Earning"
+                                    ? walletBalanceEarning?.dollarPrice || 0
+                                    : activeTab === "Futures"
+                                      ? walletBalanceFutures?.dollarPrice || 0
+                                      : activeTab === "Options"
+                                        ? walletBalanceOptions?.dollarPrice || 0
+                                        : 0
+                        )}{" "}
+                  </AppText>
+                  <AppText color={DISCLAIMTEXT}>USDT</AppText>
+                </View>
+              </View>
+            </View>
+            <WalletMenu
+              theme={theme}
+              onDeposit={() => {
+                NavigationService.navigate(DEPOSIT_COIN_SCREEN)
+              }}
+              onWithdraw={() => {
+                NavigationService.navigate(WALLET_WITHDRAW_SCREEN)
+              }}
+            />
+            <View style={{ marginVertical: 20, paddingHorizontal: 20 }}>
+              {activeTab === "Overview" && (
+                <>
+                  <AppText weight={SEMI_BOLD} type={FIFTEEN}>
+                    Portfolio
+                  </AppText>
+                  <View style={{ marginTop: 10 }}>
+                    <TouchableOpacity
                       style={{
                         flexDirection: "row",
+                        borderWidth: 1,
+                        borderColor: themeColors.border,
+                        borderRadius: 10,
+                        padding: 15,
+                        justifyContent: "space-between",
                         alignItems: "center",
-                        gap: 5,
+                        marginTop: 10,
+                        backgroundColor: themeColors.themeElevationColor,
                       }}
+                      onPress={() => setActiveTab("Main")}
                     >
-                      <AppText color={BLACK} weight={SEMI_BOLD} type={FOURTEEN}>
-                        {toFixedFive(walletBalanceMain?.currencyPrice) || 0}
-                      </AppText>
-                      <AppText color={BLACK}>{walletBalance?.Currency}</AppText>
-                    </View>
-                  </View>
-                  <FastImage
-                    source={back_ic}
-                    resizeMode="contain"
-                    style={{
-                      width: 20,
-                      height: 20,
-                      transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
-                    }}
-                    tintColor={theme !== "Dark" ? colors.black : colors.white}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{
-                    flexDirection: "row",
-                    borderWidth: 1,
-                    borderColor: theme !== "Dark" ? "#D4D4D4" : "#595959",
-                    borderRadius: 10,
-                    padding: 15,
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: 10,
-                    backgroundColor:
-                      colors.themeElevationColor,
-                  }}
-                  onPress={() => setActiveTab("Spot")}
-                >
-                  <View>
-                    <AppText
-                      style={{
-                        color: theme !== "Dark" ? "#404040" : "#A8A7A7",
-                        fontWeight: SEMI_BOLD,
-                        marginBottom: 5,
-                      }}
-                      type={FOURTEEN}
-                    >
-                      Spot Wallet
-                    </AppText>
+                      <View>
+                        <AppText
+                          style={{
+                            color: theme !== "Dark" ? "#404040" : "#A8A7A7",
+                            fontWeight: SEMI_BOLD,
+                            marginBottom: 5,
+                          }}
+                          type={FOURTEEN}
+                        >
+                          Main Wallet
+                        </AppText>
 
-                    <View
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          <AppText weight={SEMI_BOLD} type={FOURTEEN}>
+                            {toFixedFive(walletBalanceMain?.currencyPrice) || 0}
+                          </AppText>
+                          <AppText>{walletBalance?.Currency}</AppText>
+                        </View>
+                      </View>
+                      <FastImage
+                        source={back_ic}
+                        resizeMode="contain"
+                        style={{
+                          width: 20,
+                          height: 20,
+                          transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
+                        }}
+                        tintColor={theme !== "Dark" ? colors.black : colors.white}
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
                       style={{
                         flexDirection: "row",
+                        borderWidth: 1,
+                        borderColor: themeColors.border,
+                        borderRadius: 10,
+                        padding: 15,
+                        justifyContent: "space-between",
                         alignItems: "center",
-                        gap: 5,
+                        marginTop: 10,
+                        backgroundColor: themeColors.themeElevationColor,
                       }}
+                      onPress={() => setActiveTab("Spot")}
                     >
-                      <AppText color={BLACK} weight={SEMI_BOLD} type={FOURTEEN}>
-                        {toFixedFive(walletBalanceSpot?.currencyPrice) || 0}
-                      </AppText>
-                      <AppText color={BLACK}>{walletBalance?.Currency}</AppText>
-                    </View>
-                  </View>
-                  <FastImage
-                    source={back_ic}
-                    resizeMode="contain"
-                    style={{
-                      width: 20,
-                      height: 20,
-                      transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
-                    }}
-                    tintColor={theme !== "Dark" ? colors.black : colors.white}
-                  />
-                </TouchableOpacity>
-                {/* <TouchableOpacity
+                      <View>
+                        <AppText
+                          style={{
+                            color: theme !== "Dark" ? "#404040" : "#A8A7A7",
+                            fontWeight: SEMI_BOLD,
+                            marginBottom: 5,
+                          }}
+                          type={FOURTEEN}
+                        >
+                          Spot Wallet
+                        </AppText>
+
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          <AppText weight={SEMI_BOLD} type={FOURTEEN}>
+                            {toFixedFive(walletBalanceSpot?.currencyPrice) || 0}
+                          </AppText>
+                          <AppText>{walletBalance?.Currency}</AppText>
+                        </View>
+                      </View>
+                      <FastImage
+                        source={back_ic}
+                        resizeMode="contain"
+                        style={{
+                          width: 20,
+                          height: 20,
+                          transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
+                        }}
+                        tintColor={theme !== "Dark" ? colors.black : colors.white}
+                      />
+                    </TouchableOpacity>
+                    {/* <TouchableOpacity
                   style={{
                     flexDirection: "row",
                     borderWidth: 1,
@@ -454,135 +453,133 @@ const WalletNew = () => {
                     tintColor={theme !== "Dark" ? colors.black : colors.white}
                   />
                 </TouchableOpacity> */}
-                <TouchableOpacity
-                  style={{
-                    flexDirection: "row",
-                    borderWidth: 1,
-                    borderColor: theme !== "Dark" ? "#D4D4D4" : "#595959",
-                    borderRadius: 10,
-                    padding: 15,
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: 10,
-                    backgroundColor:
-                      colors.themeElevationColor,
-                  }}
-                  onPress={() => setActiveTab("Earning")}
-                >
-                  <View>
-                    <AppText
-                      style={{
-                        color: theme !== "Dark" ? "#404040" : "#A8A7A7",
-                        fontWeight: SEMI_BOLD,
-                        marginBottom: 5,
-                      }}
-                      type={FOURTEEN}
-                    >
-                      Earning Wallet
-                    </AppText>
-
-                    <View
+                    <TouchableOpacity
                       style={{
                         flexDirection: "row",
+                        borderWidth: 1,
+                        borderColor: themeColors.border,
+                        borderRadius: 10,
+                        padding: 15,
+                        justifyContent: "space-between",
                         alignItems: "center",
-                        gap: 5,
+                        marginTop: 10,
+                        backgroundColor: themeColors.themeElevationColor,
                       }}
+                      onPress={() => setActiveTab("Earning")}
                     >
-                      <AppText color={BLACK} weight={SEMI_BOLD} type={FOURTEEN}>
-                        {toFixedFive(walletBalanceEarning?.currencyPrice) || 0}
-                      </AppText>
-                      <AppText color={BLACK}>{walletBalance?.Currency}</AppText>
-                    </View>
-                  </View>
-                  <FastImage
-                    source={back_ic}
-                    resizeMode="contain"
-                    style={{
-                      width: 20,
-                      height: 20,
-                      transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
-                    }}
-                    tintColor={theme !== "Dark" ? colors.black : colors.white}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{
-                    flexDirection: "row",
-                    borderWidth: 1,
-                    borderColor: theme !== "Dark" ? "#D4D4D4" : "#595959",
-                    borderRadius: 10,
-                    padding: 15,
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: 10,
-                    backgroundColor:
-                      colors.themeElevationColor,
-                  }}
-                  onPress={() => setActiveTab("Futures")}
-                >
-                  <View>
-                    <AppText
-                      style={{
-                        color: theme !== "Dark" ? "#404040" : "#A8A7A7",
-                        fontWeight: SEMI_BOLD,
-                        marginBottom: 5,
-                      }}
-                      type={FOURTEEN}
-                    >
-                      Futures Wallet
-                    </AppText>
+                      <View>
+                        <AppText
+                          style={{
+                            color: theme !== "Dark" ? "#404040" : "#A8A7A7",
+                            fontWeight: SEMI_BOLD,
+                            marginBottom: 5,
+                          }}
+                          type={FOURTEEN}
+                        >
+                          Earning Wallet
+                        </AppText>
 
-                    <View
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          <AppText weight={SEMI_BOLD} type={FOURTEEN}>
+                            {toFixedFive(walletBalanceEarning?.currencyPrice) || 0}
+                          </AppText>
+                          <AppText>{walletBalance?.Currency}</AppText>
+                        </View>
+                      </View>
+                      <FastImage
+                        source={back_ic}
+                        resizeMode="contain"
+                        style={{
+                          width: 20,
+                          height: 20,
+                          transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
+                        }}
+                        tintColor={theme !== "Dark" ? colors.black : colors.white}
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
                       style={{
                         flexDirection: "row",
+                        borderWidth: 1,
+                        borderColor: themeColors.border,
+                        borderRadius: 10,
+                        padding: 15,
+                        justifyContent: "space-between",
                         alignItems: "center",
-                        gap: 5,
+                        marginTop: 10,
+                        backgroundColor: themeColors.themeElevationColor,
                       }}
+                      onPress={() => setActiveTab("Futures")}
                     >
-                      <AppText color={BLACK} weight={SEMI_BOLD} type={FOURTEEN}>
-                        {toFixedFive(walletBalanceFutures?.currencyPrice) || 0}
-                      </AppText>
-                      <AppText color={BLACK}>{walletBalance?.Currency}</AppText>
-                    </View>
-                  </View>
-                  <FastImage
-                    source={back_ic}
-                    resizeMode="contain"
-                    style={{
-                      width: 20,
-                      height: 20,
-                      transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
-                    }}
-                    tintColor={theme !== "Dark" ? colors.black : colors.white}
-                  />
-                </TouchableOpacity>
-               
-              </View>
-            </>
-          )}
+                      <View>
+                        <AppText
+                          style={{
+                            color: theme !== "Dark" ? "#404040" : "#A8A7A7",
+                            fontWeight: SEMI_BOLD,
+                            marginBottom: 5,
+                          }}
+                          type={FOURTEEN}
+                        >
+                          Futures Wallet
+                        </AppText>
 
-          <WalletList
-            userWallet={
-              activeTab === "Overview"
-                ? userWallet
-                : activeTab === "Main"
-                ? userMainWallet
-                : activeTab === "Spot"
-                ? userSpotWallet
-                : activeTab === "Swap"
-                ? userSwapWallet
-                : activeTab === "Earning"
-                ? userEarningWallet
-                : activeTab === "Futures"
-                ? userFuturesWallet
-                : // activeTab === "Options" ? userOptionsWallet
-                ""
-            }
-            onSheetOpen={handleSheetOpen}
-            theme={theme}
-          />
-        </View>
-        </>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          <AppText weight={SEMI_BOLD} type={FOURTEEN}>
+                            {toFixedFive(walletBalanceFutures?.currencyPrice) || 0}
+                          </AppText>
+                          <AppText>{walletBalance?.Currency}</AppText>
+                        </View>
+                      </View>
+                      <FastImage
+                        source={back_ic}
+                        resizeMode="contain"
+                        style={{
+                          width: 20,
+                          height: 20,
+                          transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
+                        }}
+                        tintColor={theme !== "Dark" ? colors.black : colors.white}
+                      />
+                    </TouchableOpacity>
+
+                  </View>
+                </>
+              )}
+
+              <WalletList
+                userWallet={
+                  activeTab === "Overview"
+                    ? userWallet
+                    : activeTab === "Main"
+                      ? userMainWallet
+                      : activeTab === "Spot"
+                        ? userSpotWallet
+                        : activeTab === "Swap"
+                          ? userSwapWallet
+                          : activeTab === "Earning"
+                            ? userEarningWallet
+                            : activeTab === "Futures"
+                              ? userFuturesWallet
+                              : // activeTab === "Options" ? userOptionsWallet
+                              ""
+                }
+                onSheetOpen={handleSheetOpen}
+                theme={theme}
+              />
+            </View>
+          </>
         )}
         {/* </ImageBackground> */}
       </KeyBoardAware>
@@ -594,7 +591,7 @@ const WalletNew = () => {
         animationType="none"
         customStyles={{
           container: {
-            backgroundColor: theme !== "Dark" ? colors.white : "#18191D",
+            backgroundColor: themeColors.background,
             height: 250,
             borderTopRightRadius: 40,
             borderTopLeftRadius: 40,
@@ -617,7 +614,7 @@ const WalletNew = () => {
         animationType="fade"
         customStyles={{
           container: {
-            backgroundColor: theme !== "Dark" ? colors.white : "#18191D",
+            backgroundColor: themeColors.background,
             height: 250,
             borderTopRightRadius: 40,
             borderTopLeftRadius: 40,

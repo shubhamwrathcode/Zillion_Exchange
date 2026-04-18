@@ -66,13 +66,16 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 import { CountrySelector } from "../../shared/components/CountrySelector";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { setLoading } from "../../slices/authSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SpinnerSecond } from "../../shared/components/SpinnerSecond";
 import { Passkey } from "react-native-passkey";
 
 const RenderTabBarAuth = (props: any) => {
+  const { colors: themeColors, isDark } = useTheme();
   const languages = useAppSelector((state) => {
     return state.account.languages;
   });
@@ -89,17 +92,16 @@ const RenderTabBarAuth = (props: any) => {
             onPress={() => {
               props?.setIndex(i), props?.setShowPassField(false);
             }}
-            style={
+            style={[
               i === props?.index
-                ? authStyles.tabBarActive
+                ? [authStyles.tabBarActive, { borderBottomColor: themeColors.button, borderBottomWidth: 2 }]
                 : authStyles.tabBarInActive
-            }
+            ]}
           >
             <AppText
               type={FOURTEEN}
               weight={SEMI_BOLD}
-              style={{ color: i === props?.index ? colors.white : '#707a8a' }}
-            // color={i === props?.index ? YELLOW : BLACK}
+              style={{ color: i === props?.index ? (isDark ? colors.white : themeColors.button) : themeColors.secondaryText }}
             >
               {route.title}
             </AppText>
@@ -112,6 +114,7 @@ const RenderTabBarAuth = (props: any) => {
 
 const Login = (): JSX.Element => {
   const dispatch = useAppDispatch();
+  const { colors: themeColors, isDark } = useTheme();
   const isLoading = useAppSelector((state) => state.auth.isLoading);
   const showButtonLoading = useAppSelector((state) => state.auth.isLoading && state.auth.loadingFor !== 'otp');
   const languages = useAppSelector((state) => state.account.languages);
@@ -128,6 +131,7 @@ const Login = (): JSX.Element => {
   const [isGoogleSignInInProgress, setIsGoogleSignInInProgress] =
     useState(false);
   const [passkeySupported, setPasskeySupported] = useState(false);
+  const [hasPasskey, setHasPasskey] = useState(false);
 
   useEffect(() => {
     setSignUpId("");
@@ -135,11 +139,20 @@ const Login = (): JSX.Element => {
   }, [index]);
 
   useEffect(() => {
-    try {
-      setPasskeySupported(!!Passkey.isSupported());
-    } catch {
-      setPasskeySupported(false);
-    }
+    const checkPasskey = async () => {
+      try {
+        const supported = !!Passkey.isSupported();
+        setPasskeySupported(supported);
+        if (supported) {
+          const locallyHas = await AsyncStorage.getItem('hasPasskey');
+          setHasPasskey(locallyHas === 'true');
+        }
+      } catch {
+        setPasskeySupported(false);
+        setHasPasskey(false);
+      }
+    };
+    checkPasskey();
   }, []);
 
   // Configure native Google Sign-In once
@@ -296,7 +309,7 @@ const Login = (): JSX.Element => {
   };
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <KeyBoardAware style={{ paddingHorizontal: 20 }}>
         <View style={{ marginVertical: 20 }}>
           <TouchableOpacityView
@@ -306,14 +319,14 @@ const Login = (): JSX.Element => {
               source={back_ic}
               resizeMode="contain"
               style={{ width: 15, height: 15 }}
+              tintColor={themeColors.text}
             />
           </TouchableOpacityView>
         </View>
         <AppText
-          color={BLACK}
           weight={BOLD}
           type={TWENTY_SIX}
-          style={{ marginHorizontal: 10 }}
+          style={{ marginHorizontal: 10, color: themeColors.text }}
         >
           Login
         </AppText>
@@ -356,7 +369,8 @@ const Login = (): JSX.Element => {
               children={"Next"}
               disabled={!isValid}
               onPress={() => setShowPassField(true)}
-              containerStyle={{ marginTop: 30 }}
+              containerStyle={{ marginTop: 30, backgroundColor: themeColors.button }}
+              titleStyle={{ color: themeColors.buttonText }}
             />
           )}
 
@@ -377,7 +391,7 @@ const Login = (): JSX.Element => {
                 onPressVisible={() => setIsPasswordVisible(!isPasswordVisible)}
               />
               <AppText
-                style={{ alignSelf: "flex-end", marginTop: 5 }}
+                style={{ alignSelf: "flex-end", marginTop: 5, color: themeColors.text }}
                 onPress={() =>
                   NavigationService.navigate(FORGOT_PASSWORD_SCREEN)
                 }
@@ -390,7 +404,8 @@ const Login = (): JSX.Element => {
                 disabled={!password}
                 onPress={onSubmit}
                 loading={showButtonLoading}
-                containerStyle={{ marginTop: 30 }}
+                containerStyle={{ marginTop: 30, backgroundColor: themeColors.button }}
+                titleStyle={{ color: themeColors.buttonText }}
               />
             </>
           )}
@@ -408,17 +423,17 @@ const Login = (): JSX.Element => {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <View
               style={{
-                backgroundColor: colors.lightGrey,
+                backgroundColor: themeColors.border,
                 width: 100,
                 height: StyleSheet.hairlineWidth,
               }}
             ></View>
-            <AppText color={LIGHTGREY} type={TEN}>
+            <AppText type={TEN} style={{ color: themeColors.secondaryText }}>
               Or login with
             </AppText>
             <View
               style={{
-                backgroundColor: colors.lightGrey,
+                backgroundColor: themeColors.border,
                 width: 100,
                 height: StyleSheet.hairlineWidth,
               }}
@@ -428,7 +443,7 @@ const Login = (): JSX.Element => {
             <TouchableOpacityView
               style={{
                 borderWidth: 1,
-                borderColor: colors.themeElevationColor,
+                borderColor: themeColors.border,
                 borderRadius: 40,
                 width: 35, height: 35,
                 alignItems: "center",
@@ -443,11 +458,11 @@ const Login = (): JSX.Element => {
                 style={{ width: 22, height: 22 }}
               />
             </TouchableOpacityView>
-            {passkeySupported && (
+            {passkeySupported && hasPasskey && (
               <TouchableOpacityView
                 style={{
                   borderWidth: 1,
-                  borderColor: colors.themeElevationColor,
+                  borderColor: themeColors.border,
                   borderRadius: 40,
                   width: 35, height: 35,
                   alignItems: "center",
@@ -460,14 +475,15 @@ const Login = (): JSX.Element => {
                   source={passkey_login}
                   resizeMode="contain"
                   style={{ width: 20, height: 20 }}
+                  tintColor={themeColors.text}
                 />
               </TouchableOpacityView>
             )}
           </View>
-          <AppText color={LIGHTGREY} type={TEN}>
+          <AppText type={TEN} style={{ color: themeColors.secondaryText, textAlign: 'center', paddingHorizontal: 20 }}>
             By signing in, I agree to Zillion Exchange user{" "}
             <AppText
-              style={{ color: colors.buttonBg, textDecorationLine: "underline" }}
+              style={{ color: themeColors.button, textDecorationLine: "underline" }}
               type={TEN}
               onPress={() => {
                 NavigationService.navigate(CMS_SCREEN, {

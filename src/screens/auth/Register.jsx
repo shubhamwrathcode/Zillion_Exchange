@@ -49,6 +49,7 @@ import { CountrySelector } from "../../shared/components/CountrySelector";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { setLoading } from "../../slices/authSlice";
+import { useTheme } from "../../hooks/useTheme";
 import {
   GoogleSignin,
   statusCodes,
@@ -69,15 +70,16 @@ const logRegisterPayload = (label, path, data) => {
   const safe =
     data && typeof data === "object"
       ? {
-          ...data,
-          password: data.password != null ? "[redacted]" : undefined,
-          Token: data.Token != null ? "[redacted]" : undefined,
-        }
+        ...data,
+        password: data.password != null ? "[redacted]" : undefined,
+        Token: data.Token != null ? "[redacted]" : undefined,
+      }
       : data;
- 
+
 };
 
 const RenderTabBarAuth = (props) => {
+  const { colors: themeColors, isDark } = useTheme();
   const languages = useAppSelector((state) => {
     return state.account.languages;
   });
@@ -95,16 +97,16 @@ const RenderTabBarAuth = (props) => {
             onPress={() => {
               props?.setIndex(i);
             }}
-            style={
+            style={[
               i === props?.index
-                ? authStyles.tabBarActive
+                ? [authStyles.tabBarActive, { borderBottomColor: themeColors.button, borderBottomWidth: 2 }]
                 : authStyles.tabBarInActive
-            }
+            ]}
           >
             <AppText
               type={FOURTEEN}
               weight={SEMI_BOLD}
-              style={{ color: i === props?.index ? colors.white : '#707a8a' }}
+              style={{ color: i === props?.index ? (isDark ? colors.white : themeColors.button) : themeColors.secondaryText }}
             >
               {route.title}
             </AppText>
@@ -138,6 +140,7 @@ const Register = () => {
   const [isGoogleSignInInProgress, setIsGoogleSignInInProgress] = useState(false);
   const [checkTermsEmail, setCheckTermsEmail] = useState(false);
   const [checkTermsPhone, setCheckTermsPhone] = useState(false);
+  const { colors: themeColors, isDark } = useTheme();
 
   useEffect(() => {
     setSignUpId("");
@@ -341,7 +344,7 @@ const Register = () => {
 
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       {/* <Toolbar /> */}
       <KeyBoardAware style={{ paddingHorizontal: 20 }}>
         <View style={{ marginVertical: 20 }}>
@@ -350,14 +353,14 @@ const Register = () => {
               source={back_ic}
               resizeMode="contain"
               style={{ width: 15, height: 15 }}
+              tintColor={themeColors.text}
             />
           </TouchableOpacityView>
         </View>
         <AppText
-          color={BLACK}
+          style={{ marginHorizontal: 10, color: themeColors.text }}
           weight={BOLD}
           type={TWENTY_SIX}
-          style={{ marginHorizontal: 10 }}
         >
           Sign Up
         </AppText>
@@ -414,12 +417,12 @@ const Register = () => {
             }}
             onPress={() => setShowRefer(!showRefer)}
           >
-            <AppText>Invitation Code (Optional)</AppText>
+            <AppText style={{ color: themeColors.text }}>Invitation Code (Optional)</AppText>
             <FastImage
               source={!showRefer ? downIcon : upIcon}
               resizeMode="contain"
               style={{ width: 10, height: 10 }}
-              tintColor={colors.white}
+              tintColor={themeColors.text}
             />
           </TouchableOpacityView>
 
@@ -453,11 +456,11 @@ const Register = () => {
                 else setCheckTermsPhone((c) => !c);
               }}
             />
-            <AppText type={THIRTEEN} color={colors.white}>
+            <AppText type={THIRTEEN} style={{ color: themeColors.text }}>
               I agree to Zillion{" "}
               <AppText
                 type={THIRTEEN}
-                 style={{color: colors.buttonBg}}
+                style={{ color: colors.buttonBg }}
                 onPress={() =>
                   NavigationService.navigate(CMS_SCREEN, {
                     id: "https://zillion.wrathcode.com/TermsofUse",
@@ -516,7 +519,7 @@ const Register = () => {
         <TouchableOpacityView
           style={{
             borderWidth: 1,
-            borderColor: colors.inputBorder,
+            borderColor: themeColors.border,
             borderRadius: 40,
             padding: 3,
           }}
@@ -528,9 +531,9 @@ const Register = () => {
             style={{ width: 25, height: 25 }}
           />
         </TouchableOpacityView>
-        <AppText color={LIGHTGREY} type={TEN}>
+        <AppText color={LIGHTGREY} type={TEN} style={{ color: themeColors.textGrey }}>
           By signing up, I agree to Zillion Exchange user{" "}
-          <AppText style={{color: colors.buttonBg,textDecorationLine: 'underline'}} type={TEN} onPress={() => {
+          <AppText style={{ color: colors.buttonBg, textDecorationLine: 'underline' }} type={TEN} onPress={() => {
             NavigationService.navigate(CMS_SCREEN, {
               id: 'https://zillion.wrathcode.com/TermsofUse',
             });

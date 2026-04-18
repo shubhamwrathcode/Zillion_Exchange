@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Dimensions, Animated } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width } = Dimensions.get("window");
 const SIDE_SPACE = 12;
@@ -9,6 +10,7 @@ const ITEM_WIDTH = width / 2 - SIDE_SPACE - 6;
 const SHIMMER_STRIP_WIDTH_DEFAULT = 80;
 
 const ShimmerBox = ({ width: w, height, borderRadius = 10, style }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const stripW = SHIMMER_STRIP_WIDTH_DEFAULT;
   const shimmerX = useRef(new Animated.Value(-stripW)).current;
   const mounted = useRef(true);
@@ -36,8 +38,10 @@ const ShimmerBox = ({ width: w, height, borderRadius = 10, style }) => {
     };
   }, [shimmerX, w]);
 
-  const boneColor = colors.themeElevationColor;
-  const shimmerColors = ["transparent", "rgba(255,255,255,0.16)", "transparent"];
+  const boneColor = themeColors.themeElevationColor;
+  const shimmerColors = isDark 
+    ? ["transparent", "rgba(255,255,255,0.16)", "transparent"]
+    : ["transparent", "rgba(0,0,0,0.05)", "transparent"];
 
   return (
     <View style={[{ width: w, height, borderRadius, overflow: "hidden", backgroundColor: boneColor }, style]}>
@@ -60,13 +64,14 @@ const ShimmerBox = ({ width: w, height, borderRadius = 10, style }) => {
 };
 
 const CoinSliderSkeleton = () => {
+  const { colors: themeColors } = useTheme();
   const cards = [0, 1, 2];
   return (
     <View style={{ paddingHorizontal: SIDE_SPACE }}>
       <View style={styles.row}>
         {cards.map((i) => (
           <View key={i} style={styles.cardWrapper}>
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: themeColors.themeElevationColor }]}>
               <ShimmerBox width={40} height={40} borderRadius={20} style={styles.icon} />
               <View style={styles.textBlock}>
                 <ShimmerBox width={ITEM_WIDTH * 0.6} height={12} borderRadius={6} style={styles.line} />

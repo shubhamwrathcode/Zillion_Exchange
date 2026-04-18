@@ -57,8 +57,11 @@ import { useDispatch } from "react-redux";
 import { useAppSelector } from "../../store/hooks";
 import { colors } from "../../theme/colors";
 import EarningSkeleton from "./EarningSkeleton";
-import { BASE_URL } from "../../helper/Constants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setTheme } from "../../slices/authSlice";
+import { BASE_URL, IMAGE_BASE_URL } from "../../helper/Constants";
 import NavigationService from "../../navigation/NavigationService";
+import { useTheme } from "../../hooks/useTheme";
 import { toFixedFive } from "../../helper/utility";
 import moment from "moment";
 import Carousel from "react-native-reanimated-carousel";
@@ -89,7 +92,7 @@ const baseOptions = {
 const Earning = () => {
   const dispatch = useDispatch();
   const route = useRoute();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, theme, isDark } = useTheme();
   const packageList = useAppSelector((state) => state.wallet.packageList);
   // const earningPortfolio = useAppSelector(
   //   (state) => state.wallet.earningPortfolio
@@ -183,7 +186,7 @@ const Earning = () => {
   const renderItem = ({ item }) => {
     return (
       <TouchableOpacity
-        style={[styles.carouselCard, { width: CARD_WIDTH, marginRight: CARD_GAP }]}
+        style={[styles.carouselCard, { width: CARD_WIDTH, marginRight: CARD_GAP, backgroundColor: themeColors.themeElevationColor }]}
         activeOpacity={0.7}
         onPress={() => NavigationService.navigate("BuyPackage", { data: item })}
       >
@@ -195,27 +198,27 @@ const Earning = () => {
               resizeMode="contain"
             />
             <View>
-              <AppText weight={SEMI_BOLD} type={SIXTEEN} color={colors.white}>
+              <AppText weight={SEMI_BOLD} type={SIXTEEN} color={themeColors.text}>
                 {item?.currency}
               </AppText>
-              <AppText type={TWELVE} color={colors.descText} numberOfLines={1}>
+              <AppText type={TWELVE} color={themeColors.secondaryText} numberOfLines={1}>
                 ({item?.currency_fullname})
               </AppText>
             </View>
           </View>
           <View style={styles.trendingBadge}>
-            <AppText type={TEN} color={colors.white}>Trending</AppText>
+            <AppText type={TEN} color={"#fff"}>Trending</AppText>
           </View>
         </View>
         <View style={styles.usdDetailList}>
           <View>
-            <AppText type={TEN} color={colors.descText}>Days</AppText>
-            <AppText type={FOURTEEN} weight={SEMI_BOLD} color={colors.white}>
+            <AppText type={TEN} color={themeColors.secondaryText}>Days</AppText>
+            <AppText type={FOURTEEN} weight={SEMI_BOLD} color={themeColors.text}>
               {item?.max_duration_days}
             </AppText>
           </View>
           <View style={{ alignItems: "flex-end" }}>
-            <AppText type={TEN} color={colors.descText}>% APY</AppText>
+            <AppText type={TEN} color={themeColors.secondaryText}>% APY</AppText>
             <AppText type={FOURTEEN} weight={SEMI_BOLD} color={YELLOW}>
               {typeof item?.max_return_percentage === "number"
                 ? item.max_return_percentage.toFixed(2)
@@ -304,7 +307,7 @@ const Earning = () => {
     return (
       <TouchableOpacity
         key={key}
-        style={styles.allPlansCard}
+        style={[styles.allPlansCard, { backgroundColor: themeColors.themeElevationColor, borderColor: themeColors.border }]}
         activeOpacity={0.8}
         onPress={() => {
           if (isExpanded) {
@@ -321,7 +324,7 @@ const Earning = () => {
               style={styles.allPlansCardIcon}
               resizeMode="contain"
             />
-            <AppText type={FOURTEEN} weight={SEMI_BOLD} color={colors.white}>
+            <AppText type={FOURTEEN} weight={SEMI_BOLD} color={themeColors.text}>
               {item?.currency}
             </AppText>
           </View>
@@ -330,7 +333,7 @@ const Earning = () => {
               source={Down_Imgs}
               style={[styles.allPlansCardCaretIcon, isExpanded && { transform: [{ rotate: "180deg" }] }]}
               resizeMode="contain"
-              tintColor={colors.secondaryText}
+              tintColor={themeColors.secondaryText}
             />
           </View>
         </View>
@@ -338,14 +341,14 @@ const Earning = () => {
           <Animated.View style={[styles.allPlansCardDetailsWrap, { maxHeight: detailsMaxHeight, overflow: "hidden" }]}>
             <View style={styles.allPlansCardDetails}>
               <View style={styles.allPlansCardDetailItem}>
-                <AppText type={TEN} color={colors.descText}>APR</AppText>
-                <AppText type={FOURTEEN} weight={SEMI_BOLD} color={colors.white}>
+                <AppText type={TEN} color={themeColors.secondaryText}>APR</AppText>
+                <AppText type={FOURTEEN} weight={SEMI_BOLD} color={themeColors.text}>
                   {displayApr}
                 </AppText>
               </View>
               <View style={[styles.allPlansCardDetailItem, styles.allPlansCardDetailItemRight]}>
-                <AppText type={TEN} color={colors.descText}>Duration</AppText>
-                <AppText type={FOURTEEN} weight={SEMI_BOLD} color={colors.white}>
+                <AppText type={TEN} color={themeColors.secondaryText}>Duration</AppText>
+                <AppText type={FOURTEEN} weight={SEMI_BOLD} color={themeColors.text}>
                   {displayDuration}
                 </AppText>
               </View>
@@ -357,12 +360,12 @@ const Earning = () => {
   };
 
   return (
-    <AppSafeAreaView style={styles.safeArea}>
+    <AppSafeAreaView style={[styles.safeArea, { backgroundColor: themeColors.background }]}>
       <KeyBoardAware style={styles.keyboardAware} containerStyle={styles.keyboardAwareContent}>
         <View style={styles.earningContentWrap}>
           {/* Top bar: title + Portfolio & History icons (like web) */}
           <View style={styles.topBar}>
-            <AppText type={FIFTEEN} weight={SEMI_BOLD} color={colors.white} style={styles.topBarTitle}>
+            <AppText type={FIFTEEN} weight={SEMI_BOLD} color={themeColors.text} style={styles.topBarTitle}>
               Staking
             </AppText>
             <View style={styles.topBarIcons}>
@@ -392,7 +395,7 @@ const Earning = () => {
           </View>
 
           {/* Tabs: Earning | Earning Dashboard */}
-          <View style={[styles.tabRow, { borderBottomColor: colors.dividerColor }]}>
+          <View style={[styles.tabRow, { borderBottomColor: themeColors.border }]}>
             <TouchableOpacity
               style={[styles.tab, activeTab === 0 && styles.tabActive]}
               onPress={() => setActiveTab(0)}
@@ -402,7 +405,7 @@ const Earning = () => {
                 type={FOURTEEN}
                 weight={SEMI_BOLD}
                 style={{
-                  color: activeTab === 0 ? colors.white : colors.descText,
+                  color: activeTab === 0 ? colors.buttonBg : themeColors.secondaryText,
                 }}
               >
                 Earning
@@ -417,7 +420,7 @@ const Earning = () => {
                 type={FOURTEEN}
                 weight={SEMI_BOLD}
                 style={{
-                  color: activeTab === 1 ? colors.white : colors.descText,
+                  color: activeTab === 1 ? colors.buttonBg : themeColors.secondaryText,
                 }}
               >
                 Earning Dashboard
@@ -432,7 +435,7 @@ const Earning = () => {
                 type={FOURTEEN}
                 weight={SEMI_BOLD}
                 style={{
-                  color: activeTab === 2 ? colors.white : colors.descText,
+                  color: activeTab === 2 ? colors.buttonBg : themeColors.secondaryText,
                 }}
               >
                 Recent Plans
@@ -450,7 +453,7 @@ const Earning = () => {
                   <AppText
                     type={FOURTEEN}
                     weight={SEMI_BOLD}
-                    style={[styles.planTabLabel, { color: planTab === "Active" ? colors.white : colors.descText }]}
+                    style={[styles.planTabLabel, { color: planTab === "Active" ? colors.buttonBg : themeColors.secondaryText }]}
                   >
                     Active
                   </AppText>
@@ -462,7 +465,7 @@ const Earning = () => {
                   <AppText
                     type={FOURTEEN}
                     weight={SEMI_BOLD}
-                    style={[styles.planTabLabel, { color: planTab === "Completed" ? colors.white : colors.descText }]}
+                    style={[styles.planTabLabel, { color: planTab === "Completed" ? colors.buttonBg : themeColors.secondaryText }]}
                   >
                     Completed
                   </AppText>
@@ -475,13 +478,13 @@ const Earning = () => {
                   showsVerticalScrollIndicator={false}
                 >
                   {(planTab === "Active" ? subscribedActivePackages : subscribedCompletePackages).map((item, index) => (
-                    <View key={item?._id || index} style={styles.planCard}>
+                    <View key={item?._id || index} style={[styles.planCard, { backgroundColor: themeColors.themeElevationColor }]}>
                       <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={colors.secondaryText}>Currency</AppText>
-                        <AppText type={ELEVEN} weight={SEMI_BOLD} color={colors.white}>{item?.currency}</AppText>
+                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Currency</AppText>
+                        <AppText type={ELEVEN} weight={SEMI_BOLD} color={themeColors.text}>{item?.currency}</AppText>
                       </View>
                       <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={colors.secondaryText}>
+                        <AppText type={ELEVEN} color={themeColors.secondaryText}>
                           {planTab === "Active" ? "Deducted From" : "Received In"}
                         </AppText>
                         <AppText type={ELEVEN} style={{ color: colors.buttonBg }}>
@@ -492,29 +495,29 @@ const Earning = () => {
                         </AppText>
                       </View>
                       <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={colors.secondaryText}>Duration</AppText>
-                        <AppText type={ELEVEN} color={colors.white}>{item?.duration_days} days</AppText>
+                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Duration</AppText>
+                        <AppText type={ELEVEN} color={themeColors.text}>{item?.duration_days} days</AppText>
                       </View>
                       <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={colors.secondaryText}>Start Date</AppText>
-                        <AppText type={ELEVEN} color={colors.white}>
+                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Start Date</AppText>
+                        <AppText type={ELEVEN} color={themeColors.text}>
                           {moment(item?.start_date).format("YYYY-MM-DD")}
                         </AppText>
                       </View>
                       <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={colors.secondaryText}>Mature Date</AppText>
-                        <AppText type={ELEVEN} color={colors.white}>
+                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Mature Date</AppText>
+                        <AppText type={ELEVEN} color={themeColors.text}>
                           {moment(item?.end_date).format("YYYY-MM-DD")}
                         </AppText>
                       </View>
                       <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={colors.secondaryText}>Subscription Amount</AppText>
-                        <AppText type={ELEVEN} color={colors.white}>
+                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Subscription Amount</AppText>
+                        <AppText type={ELEVEN} color={themeColors.text}>
                           {toFixedFive(Number(item?.invested_amount?.$numberDecimal || 0))} {item?.currency}
                         </AppText>
                       </View>
                       <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={colors.secondaryText}>Bonus Amount</AppText>
+                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Bonus Amount</AppText>
                         <AppText type={ELEVEN} color={YELLOW}>
                           +{toFixedFive(
                             Number(
@@ -525,15 +528,15 @@ const Earning = () => {
                         </AppText>
                       </View>
                       <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={colors.secondaryText}>
+                        <AppText type={ELEVEN} color={themeColors.secondaryText}>
                           {planTab === "Active" ? "Receivable Amount" : "Received Amount"}
                         </AppText>
-                        <AppText type={ELEVEN} color={colors.white}>
+                        <AppText type={ELEVEN} color={themeColors.text}>
                           {toFixedFive(Number(item?.expected_return?.$numberDecimal || 0))} {item?.currency}
                         </AppText>
                       </View>
                       <View style={[styles.planCardRow, styles.planCardRowLast]}>
-                        <AppText type={ELEVEN} color={colors.secondaryText}>Status</AppText>
+                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Status</AppText>
                         <AppText type={ELEVEN} style={{ color: colors.buttonBg }}>
                           {item?.status}
                         </AppText>
@@ -560,8 +563,8 @@ const Earning = () => {
               {(() => {
                 const isDark = theme === "Dark";
                 const textColor = isDark ? colors.white : colors.black;
-                const secondaryColor = isDark ? colors.descText : "#666";
-                const cardBg = colors.themeElevationColor;
+                const secondaryColor = isDark ? themeColors.secondaryText : "#666";
+                const cardBg = themeColors.themeElevationColor;
                 const cardBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
                 const summary = {
                   totalInvested: earningPortfolioSummary?.total_invested ?? earningPortfolioSummary?.totalInvested ?? 0,
@@ -604,11 +607,11 @@ const Earning = () => {
               {/* Earning tab header banner - above linear gradient card */}
               <View style={styles.earningHeaderBanner}>
                 <View style={styles.earningHeaderBannerLeft}>
-                  <AppText type={SIXTEEN} weight={SEMI_BOLD} style={{ color: colors.white, marginBottom: 6 }}>
+                  <AppText type={SIXTEEN} weight={SEMI_BOLD} style={{ color: themeColors.text, marginBottom: 6 }}>
                     Zillion Exchange Earning
                   </AppText>
                   <View style={styles.earningHeaderBannerSubrow}>
-                    <AppText type={TEN} style={{ color: colors.descText }}>
+                    <AppText type={TEN} style={{ color: themeColors.secondaryText }}>
                       New user exclusive: Up to{" "}
                     </AppText>
                     <AppText type={TEN} weight={SEMI_BOLD} style={{ color: colors.buttonBg }}>
@@ -739,7 +742,7 @@ const Earning = () => {
 
               {/* All Plans - cards with collapse; card press = Subscribe (BuyPackage) */}
               <View style={styles.allPlansBlock}>
-                <AppText type={FOURTEEN} weight={SEMI_BOLD} color={colors.white} style={styles.allPlansHeading}>
+                <AppText type={FOURTEEN} weight={SEMI_BOLD} color={themeColors.text} style={styles.allPlansHeading}>
                   All Plans
                 </AppText>
                 {list?.length > 0 ? (
@@ -818,7 +821,6 @@ const styles = StyleSheet.create({
   planScroll: { flex: 1 },
   planScrollContent: { paddingBottom: 24 },
   planCard: {
-    backgroundColor: colors.themeElevationColor || "#282f3b",
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1009,16 +1011,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     opacity: 0.95,
   },
-  searchRow: {
-    marginBottom: 14,
-    backgroundColor: colors.themeElevationColor,
-    height: 40,
-    borderRadius: 50,
-    alignItems: "center",
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    gap: 12,
-  },
+
   searchIcon: {
     width: 14,
     height: 14,
@@ -1031,7 +1024,6 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   carouselCard: {
-    backgroundColor: colors.themeElevationColor,
     width: "100%",
     marginTop: 6,
     marginBottom: 2,
@@ -1085,7 +1077,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   allPlansCard: {
-    backgroundColor: colors.themeElevationColor,
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
@@ -1148,7 +1139,7 @@ const styles = StyleSheet.create({
   allPlansRow: {
     flexDirection: "row",
     alignItems: "center",
-    // backgroundColor: colors.themeElevationColor,
+    // backgroundColor: themeColors.themeElevationColor,
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 12,
