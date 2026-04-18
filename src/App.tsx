@@ -11,8 +11,11 @@ import { ChartProvider } from "./ChartProvider";
 import FutureSocketContextProvider from "./screens/Futures/FutureSocket";
 import { OptionsContextProvider } from "./screens/Options/OptionsContext";
 import { colors } from "./theme/colors";
+import { useTheme } from "./hooks/useTheme";
 
-function App(): JSX.Element {
+const MainApp = () => {
+  const { colors: themeColors, isDark } = useTheme();
+
   useEffect(() => {
     onAppStart(store);
     SplashScreen.hide();
@@ -20,19 +23,29 @@ function App(): JSX.Element {
 
   return (
     <SafeAreaProvider>
-      <StatusBar backgroundColor={colors.newThemeColor} barStyle="light-content" />
-      <Provider store={store}>
-        <SocketProvider>
-          <FutureSocketContextProvider>
-            <OptionsContextProvider>
-              <ChartProvider>
-                <Navigator />
-              </ChartProvider>
-            </OptionsContextProvider>
-          </FutureSocketContextProvider>
-        </SocketProvider>
-      </Provider>
+      <StatusBar
+        backgroundColor={themeColors.background}
+        barStyle={isDark ? "light-content" : "dark-content"}
+        translucent={false}
+      />
+      <SocketProvider>
+        <FutureSocketContextProvider>
+          <OptionsContextProvider>
+            <ChartProvider>
+              <Navigator />
+            </ChartProvider>
+          </OptionsContextProvider>
+        </FutureSocketContextProvider>
+      </SocketProvider>
     </SafeAreaProvider>
+  );
+};
+
+function App(): JSX.Element {
+  return (
+    <Provider store={store}>
+      <MainApp />
+    </Provider>
   );
 }
 

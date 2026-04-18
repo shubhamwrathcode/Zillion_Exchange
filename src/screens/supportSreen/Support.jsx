@@ -5,6 +5,7 @@ import {
   FlatList,
   ScrollView,
   Dimensions,
+  Platform,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import {
@@ -35,7 +36,6 @@ import NavigationService from "../../navigation/NavigationService";
 import FastImage from "react-native-fast-image";
 import { useDispatch } from "react-redux";
 import { getUserTickets, submitTicket, getTicketCategories } from "../../actions/accountActions";
-import { validateEmail } from "../../helper/utility";
 import { showError } from "../../helper/logger";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import { borderWidth } from "../../theme/dimens";
@@ -43,43 +43,46 @@ import ImageCropPicker from "react-native-image-crop-picker";
 import SupportSkeleton from "./SupportSkeleton";
 import CustomDropdown from "../../shared/components/CustomDropdown";
 import moment from "moment";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const H_PADDING = Math.max(14, SCREEN_WIDTH * 0.04);
 const CONTENT_WIDTH = SCREEN_WIDTH - H_PADDING * 2;
 
-const TicketCard = ({ theme, item, onSupportChat }) => {
-  const textColor = theme === "Dark" ? colors.white : colors.black;
-  const mutedColor = theme === "Dark" ? colors.secondaryText : "#626262";
+const TicketCard = ({ item, onSupportChat }) => {
+  const { colors: themeColors, isDark } = useTheme();
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'open': return colors.buyButtonColor;
       case 'closed': return colors.sellButtonColor;
       case 'resolved': return colors.green;
-      default: return colors.buttonBg;
+      default: return themeColors.button;
     }
   };
 
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      // onPress={() => onSupportChat(item)}
+      onPress={() => onSupportChat(item)}
       style={[
         styles.ticketCard,
-        { backgroundColor: theme === "Dark" ? colors.themeElevationColor : colors.white }
+        {
+          backgroundColor: themeColors.card,
+          borderColor: themeColors.border,
+        }
       ]}
     >
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
-          <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: textColor }}>
+          <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: themeColors.text }}>
             {item.subject}
           </AppText>
-          <AppText type={TEN} style={{ color: mutedColor, marginTop: 4 }}>
+          <AppText type={TEN} style={{ color: themeColors.secondaryText, marginTop: 4 }}>
             Ticket ID: #{item.ticketId}
           </AppText>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '15' }]}>
+        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '15', borderColor: getStatusColor(item.status) + '30' }]}>
           <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
           <AppText weight={SEMI_BOLD} type={TEN} style={{ color: getStatusColor(item.status) }}>
             {item.status}
@@ -87,20 +90,20 @@ const TicketCard = ({ theme, item, onSupportChat }) => {
         </View>
       </View>
 
-      <View style={styles.cardDivider} />
+      <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
 
       <View style={styles.cardBody}>
         <View style={styles.infoGrid}>
           <View style={styles.infoItem}>
-            <AppText type={TEN} style={{ color: mutedColor }}>Category</AppText>
-            <AppText weight={SEMI_BOLD} type={ELEVEN} style={{ color: textColor, marginTop: 2, textTransform: 'capitalize' }}>
+            <AppText type={TEN} style={{ color: themeColors.secondaryText }}>Category</AppText>
+            <AppText weight={SEMI_BOLD} type={ELEVEN} style={{ color: themeColors.text, marginTop: 2, textTransform: 'capitalize' }}>
               {item.category?.replace(/_/g, ' ') || "General"}
             </AppText>
           </View>
           <View style={[styles.infoItem, { alignItems: 'flex-end' }]}>
-            <AppText type={TEN} style={{ color: mutedColor, textAlign: "right" }}>Priority</AppText>
-            <View style={[styles.priorityBadge, { backgroundColor: colors.buttonBg + '20' }]}>
-              <AppText weight={SEMI_BOLD} type={TEN} style={{ color: colors.buttonBg, textTransform: 'capitalize' }}>
+            <AppText type={TEN} style={{ color: themeColors.secondaryText, textAlign: "right" }}>Priority</AppText>
+            <View style={[styles.priorityBadge, { backgroundColor: themeColors.button + '20' }]}>
+              <AppText weight={SEMI_BOLD} type={TEN} style={{ color: themeColors.button, textTransform: 'capitalize' }}>
                 {item.priority || "Medium"}
               </AppText>
             </View>
@@ -109,13 +112,13 @@ const TicketCard = ({ theme, item, onSupportChat }) => {
 
         <View style={styles.infoGrid}>
           <View style={styles.infoItem}>
-            <AppText type={TEN} style={{ color: mutedColor }}>Created on</AppText>
-            <AppText type={ELEVEN} style={{ color: textColor, marginTop: 2 }}>
+            <AppText type={TEN} style={{ color: themeColors.secondaryText }}>Created on</AppText>
+            <AppText type={ELEVEN} style={{ color: themeColors.text, marginTop: 2 }}>
               {moment(item.createdAt).format("DD MMM, YYYY")} at {moment(item.createdAt).format("hh:mm A")}
             </AppText>
           </View>
           <TouchableOpacity onPress={() => onSupportChat(item)}>
-            <AppText weight={SEMI_BOLD} type={ELEVEN} style={{ color: colors.buttonBg }}>
+            <AppText weight={SEMI_BOLD} type={ELEVEN} style={{ color: themeColors.button }}>
               View Details {'>'}
             </AppText>
           </TouchableOpacity>
@@ -125,22 +128,23 @@ const TicketCard = ({ theme, item, onSupportChat }) => {
   );
 };
 
-const TicketList = ({ theme, userTickets, onSupportChat }) => {
+const TicketList = ({ userTickets, onSupportChat }) => {
+  const { isDark } = useTheme();
   const renderEmpty = () => (
     <View style={styles.noDataRow}>
       <FastImage
         source={NO_NOTIFICATION_ICON}
         resizeMode="contain"
-        style={{ width: 100, height: 100 }}
+        style={{ width: 120, height: 120, opacity: isDark ? 0.6 : 1 }}
       />
-      <AppText style={styles.noDataText}>No support tickets found</AppText>
+      <AppText type={FOURTEEN} style={{ color: colors.secondaryText, marginTop: 16 }}>No support tickets found</AppText>
     </View>
   );
 
   return (
     <FlatList
       data={userTickets}
-      renderItem={({ item }) => <TicketCard theme={theme} item={item} onSupportChat={onSupportChat} />}
+      renderItem={({ item }) => <TicketCard item={item} onSupportChat={onSupportChat} />}
       keyExtractor={(item) => item?._id?.toString() || Math.random().toString()}
       ListEmptyComponent={renderEmpty}
       contentContainerStyle={{ paddingBottom: 20 }}
@@ -151,8 +155,9 @@ const TicketList = ({ theme, userTickets, onSupportChat }) => {
 
 const Support = () => {
   const dispatch = useDispatch();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark, theme } = useTheme();
   const userTickets = useAppSelector((state) => state.home.userTickets);
+  const isLoading = useAppSelector((state) => state.auth.isLoading);
   const [activeTab, setActiveTab] = useState("issue");
   const [subject, setSubject] = useState("");
   const [desc, setDesc] = useState("");
@@ -237,7 +242,6 @@ const Support = () => {
           return;
         }
       })
-
       .catch((error) => {
         console.log(error);
       });
@@ -276,12 +280,7 @@ const Support = () => {
   };
 
   const renderSubmitTicketForm = () => (
-    <View
-      style={[
-        styles.formCard,
-        { backgroundColor: colors.themeElevationColor },
-      ]}
-    >
+    <View style={[styles.formCard, { backgroundColor: themeColors.card, borderColor: themeColors.border, borderWidth: 1 }]}>
       <Input
         title={"Subject*"}
         placeholder={"Enter subject"}
@@ -289,10 +288,12 @@ const Support = () => {
         onChangeText={(text) => setSubject(text)}
         autoCapitalize="none"
         returnKeyType="next"
-        containerStyle={{ backgroundColor: colors.overlayColor }}
+        containerStyle={{ backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)", borderColor: themeColors.border }}
+        inputStyle={{ color: themeColors.text }}
+        placeholderTextColor={themeColors.secondaryText}
       />
       <View style={{ marginBottom: 16 }}>
-        <AppText type={TEN} weight={SEMI_BOLD} style={{ color: theme === "Dark" ? colors.white : colors.black, marginBottom: 8 }}>
+        <AppText type={TEN} weight={SEMI_BOLD} style={{ color: themeColors.text, marginBottom: 8 }}>
           Category*
         </AppText>
         <CustomDropdown
@@ -306,7 +307,7 @@ const Support = () => {
         />
       </View>
       <View style={{ marginBottom: 16 }}>
-        <AppText type={TEN} weight={SEMI_BOLD} style={{ color: theme === "Dark" ? colors.white : colors.black, marginBottom: 8 }}>
+        <AppText type={TEN} weight={SEMI_BOLD} style={{ color: themeColors.text, marginBottom: 8 }}>
           Priority*
         </AppText>
         <CustomDropdown
@@ -327,31 +328,37 @@ const Support = () => {
         autoCapitalize="none"
         returnKeyType="next"
         multiline={true}
-        containerStyle={{ backgroundColor: colors.overlayColor }}
+        containerStyle={{
+          backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)",
+          borderColor: themeColors.border,
+          height: 90,
+          alignItems: 'flex-start',
+          paddingTop: 8
+        }}
+        inputStyle={{ color: themeColors.text, textAlignVertical: 'top' }}
+        placeholderTextColor={themeColors.secondaryText}
       />
       <TouchableOpacityView
         onPress={() => setIsVisible(true)}
-        style={styles.fileContainer}
+        style={[styles.fileContainer, { borderColor: themeColors.button, backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.01)" }]}
       >
         <FastImage
           source={issuePic ? doneIcon : uploadIcon}
           style={styles.uploadIcon}
           resizeMode="contain"
         />
-        <AppText color={BLACK}>
+        <AppText style={{ color: themeColors.text, marginTop: 8, fontSize: 13 }}>
           {issuePic ? "File uploaded" : "Upload Supporting image (Optional)"}
         </AppText>
       </TouchableOpacityView>
 
       <Button
         children="Submit"
-        containerStyle={{ marginTop: 20 }}
+        containerStyle={{ marginTop: 20, backgroundColor: themeColors.button }}
         disabled={!subject || !category || !desc}
         onPress={handleSubmit}
+        loading={isLoading}
       />
-      {/* <TouchableOpacity style={styles.submitBtn}>
-        <Text style={styles.submitBtnText}>Submit</Text>
-      </TouchableOpacity> */}
     </View>
   );
 
@@ -359,25 +366,22 @@ const Support = () => {
     NavigationService.navigate('Ticket_Screen', { data: chat });
   };
 
-  const tabTextColor = (tab) =>
-    activeTab === tab ? WHITE : (theme === "Dark" ? colors.white : colors.black);
-
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor, flex: 1 }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background, flex: 1 }}>
       <KeyBoardAware style={{ flex: 1 }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => NavigationService.goBack()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
             <FastImage
               source={back_ic}
               resizeMode="contain"
-              style={{ width: 20, height: 20 }}
-              tintColor={theme !== "Dark" ? colors.black : colors.white}
+              style={{ width: 22, height: 22 }}
+              tintColor={themeColors.text}
             />
           </TouchableOpacity>
-          <AppText weight={SEMI_BOLD} type={SIXTEEN} style={{ color: theme === "Dark" ? colors.white : colors.black }}>
+          <AppText weight={SEMI_BOLD} type={SIXTEEN} style={{ color: themeColors.text }}>
             Help Center
           </AppText>
-          <View style={{ width: 20 }} />
+          <View style={{ width: 22 }} />
         </View>
         <View style={[styles.container, { paddingHorizontal: H_PADDING }]}>
           {contentLoading ? (
@@ -389,13 +393,15 @@ const Support = () => {
                   style={[
                     styles.tabView,
                     {
-                      backgroundColor: activeTab === "issue" ? colors.buttonBg : colors.themeElevationColor,
+                      backgroundColor: activeTab === "issue" ? themeColors.button : themeColors.card,
+                      borderColor: themeColors.border,
+                      borderWidth: activeTab === "issue" ? 0 : 1,
                     },
                   ]}
                   onPress={() => setActiveTab("issue")}
                   activeOpacity={0.8}
                 >
-                  <AppText color={tabTextColor("issue")} weight={SEMI_BOLD} type={ELEVEN}>
+                  <AppText style={{ color: activeTab === "issue" ? themeColors.buttonText : themeColors.text }} weight={SEMI_BOLD} type={ELEVEN}>
                     Issue List
                   </AppText>
                 </TouchableOpacity>
@@ -403,20 +409,22 @@ const Support = () => {
                   style={[
                     styles.tabView,
                     {
-                      backgroundColor: activeTab !== "issue" ? colors.buttonBg : colors.themeElevationColor,
+                      backgroundColor: activeTab !== "issue" ? themeColors.button : themeColors.card,
+                      borderColor: themeColors.border,
+                      borderWidth: activeTab !== "issue" ? 0 : 1,
                     },
                   ]}
                   onPress={() => setActiveTab("ticket")}
                   activeOpacity={0.8}
                 >
-                  <AppText color={tabTextColor("ticket")} weight={SEMI_BOLD} type={ELEVEN}>
+                  <AppText style={{ color: activeTab !== "issue" ? themeColors.buttonText : themeColors.text }} weight={SEMI_BOLD} type={ELEVEN}>
                     Submit Ticket
                   </AppText>
                 </TouchableOpacity>
               </View>
 
               {activeTab === "issue" ? (
-                <TicketList theme={theme} userTickets={userTickets} onSupportChat={handleSupportChat} />
+                <TicketList userTickets={userTickets} onSupportChat={handleSupportChat} />
               ) : (
                 renderSubmitTicketForm()
               )}
@@ -427,12 +435,8 @@ const Support = () => {
       <PictureModal
         isVisible={isVisible}
         onBackButtonPress={() => setIsVisible(false)}
-        onPressGallery={() => {
-          onPressGallery();
-        }}
-        onPressCamera={() => {
-          onPressCamera();
-        }}
+        onPressGallery={onPressGallery}
+        onPressCamera={onPressCamera}
       />
     </AppSafeAreaView>
   );
@@ -455,14 +459,13 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: "row",
-    gap: 10,
-    marginBottom: 14,
+    gap: 12,
+    marginBottom: 16,
   },
   tabView: {
     flex: 1,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    borderRadius: 12,
+    paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -471,11 +474,10 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: colors.dividerColor,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8 },
+      android: { elevation: 1.5 },
+    }),
   },
   cardHeader: {
     flexDirection: "row",
@@ -487,93 +489,44 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: 8,
     gap: 6,
     borderWidth: 0.5,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 6, height: 6, borderRadius: 3,
   },
   cardDivider: {
-    height: 1,
-    backgroundColor: colors.dividerColor,
-    width: '100%',
-    marginBottom: 12,
+    height: 1, width: '100%', marginBottom: 12,
   },
   cardBody: {
     gap: 16,
   },
   infoGrid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
   infoItem: {
     flex: 1,
   },
   priorityBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginTop: 4,
+    paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginTop: 4,
   },
   fileContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    height: 120,
-    borderWidth: borderWidth,
-    borderColor: colors.buttonBg,
-    borderStyle: "dashed",
-    borderRadius: 10,
-    marginTop: 16,
+    alignItems: "center", justifyContent: "center", paddingVertical: 18,
+    borderWidth: 1.5, borderStyle: "dashed", borderRadius: 12, marginTop: 12,
   },
   uploadIcon: {
-    height: 44,
-    width: 44,
-  },
-  viewBtn: {
-    backgroundColor: colors.buttonBg,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  viewText: {
-    fontSize: 11,
-    color: colors.black,
+    height: 36, width: 36,
   },
   formCard: {
-    borderRadius: 12,
-    padding: 12,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
+    borderRadius: 16, padding: 18, marginBottom: 16,
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8 },
+      android: { elevation: 1.5 },
+    }),
   },
-  tabBtn: {},
-  activeTab: {},
-  tabText: {},
-  activeTabText: {},
-  tableRowHeader: {},
-  tableRow: {},
-  label: {},
-  input: {},
-  submitBtn: {},
-  submitBtnText: {},
   noDataRow: {
-    width: CONTENT_WIDTH,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 48,
-  },
-  noDataText: {
-    color: "#888",
-    fontStyle: "italic",
-    marginTop: 12,
-    fontSize: 12,
+    width: "100%", justifyContent: "center", alignItems: "center", paddingVertical: 60,
   },
 });

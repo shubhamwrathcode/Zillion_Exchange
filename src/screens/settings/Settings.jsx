@@ -5,7 +5,6 @@ import {
   ScrollView,
   Clipboard,
   Dimensions,
-  Switch,
 } from "react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
@@ -14,7 +13,6 @@ import {
   editIcon,
   editImageIcon,
   copyIcon,
-  eye_open_icon,
   eye_close,
   right_ic,
   kyc_ic,
@@ -59,80 +57,82 @@ import { showSuccess } from "../../helper/utility";
 import { logout } from "../../actions/authActions";
 import { ANTI_PHISHING_CODE_SCREEN, CHANGE_PASSWORD_SCREEN } from "../../navigation/routes";
 import { useTheme } from "../../hooks/useTheme";
-import { setTheme } from "../../slices/authSlice";
 
 const SETTINGS_PAD = 16;
 const SETTINGS_INNER_W = Dimensions.get("window").width - SETTINGS_PAD * 2;
 
-const SettingsScreenSkeleton = () => (
-  <ScrollView
-    contentContainerStyle={styles.scrollContent}
-    showsVerticalScrollIndicator={false}
-  >
-    <View style={styles.webStyleCard}>
-      <ShimmerBone width={120} height={18} borderRadius={6} style={{ marginBottom: 10 }} />
-      <ShimmerBone width={SETTINGS_INNER_W - 32} height={12} borderRadius={4} style={{ marginBottom: 16 }} />
-      <View style={[styles.profileInnerContent, { borderColor: "rgba(255,255,255,0.08)" }]}>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <ShimmerBone width={18} height={18} borderRadius={4} />
-          <ShimmerBone width={140} height={15} borderRadius={5} style={{ marginLeft: 10 }} />
-        </View>
-        <ShimmerBone width="92%" height={11} borderRadius={4} style={{ marginTop: 14 }} />
-        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16 }}>
-          <ShimmerBone width={32} height={32} borderRadius={16} />
-          <View style={{ marginLeft: 12, flex: 1 }}>
-            <ShimmerBone width="55%" height={15} borderRadius={5} style={{ marginBottom: 6 }} />
-            <ShimmerBone width="35%" height={11} borderRadius={4} />
+const SettingsScreenSkeleton = () => {
+  const { colors: themeColors } = useTheme();
+  return (
+    <ScrollView
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={[styles.webStyleCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+        <ShimmerBone width={120} height={18} borderRadius={6} style={{ marginBottom: 10 }} />
+        <ShimmerBone width={SETTINGS_INNER_W - 32} height={12} borderRadius={4} style={{ marginBottom: 16 }} />
+        <View style={[styles.profileInnerContent, { borderColor: themeColors.border }]}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <ShimmerBone width={18} height={18} borderRadius={4} />
+            <ShimmerBone width={140} height={15} borderRadius={5} style={{ marginLeft: 10 }} />
           </View>
+          <ShimmerBone width="92%" height={11} borderRadius={4} style={{ marginTop: 14 }} />
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16 }}>
+            <ShimmerBone width={32} height={32} borderRadius={16} />
+            <View style={{ marginLeft: 12, flex: 1 }}>
+              <ShimmerBone width="55%" height={15} borderRadius={5} style={{ marginBottom: 6 }} />
+              <ShimmerBone width="35%" height={11} borderRadius={4} />
+            </View>
+          </View>
+          <ShimmerBone width="100%" height={44} borderRadius={22} style={{ marginTop: 20 }} />
+        </View>
+      </View>
+
+      <View style={[styles.webStyleCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+        <ShimmerBone width={180} height={18} borderRadius={6} style={{ marginBottom: 10 }} />
+        <ShimmerBone width="88%" height={12} borderRadius={4} style={{ marginBottom: 16 }} />
+        <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 10 }}>
+          {[1, 2, 3].map((k) => (
+            <View key={k} style={{ flex: 1, aspectRatio: 1, justifyContent: "center", alignItems: "center" }}>
+              <ShimmerBone width={28} height={28} borderRadius={8} style={{ marginBottom: 10 }} />
+              <ShimmerBone width="80%" height={10} borderRadius={4} />
+            </View>
+          ))}
         </View>
         <ShimmerBone width="100%" height={44} borderRadius={22} style={{ marginTop: 20 }} />
       </View>
-    </View>
 
-    <View style={styles.webStyleCard}>
-      <ShimmerBone width={180} height={18} borderRadius={6} style={{ marginBottom: 10 }} />
-      <ShimmerBone width="88%" height={12} borderRadius={4} style={{ marginBottom: 16 }} />
-      <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 10 }}>
-        {[1, 2, 3].map((k) => (
-          <View key={k} style={{ flex: 1, aspectRatio: 1, justifyContent: "center", alignItems: "center" }}>
-            <ShimmerBone width={28} height={28} borderRadius={8} style={{ marginBottom: 10 }} />
-            <ShimmerBone width="80%" height={10} borderRadius={4} />
+      <View style={[styles.webStyleCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+        <ShimmerBone width={160} height={18} borderRadius={6} style={{ marginBottom: 10 }} />
+        <ShimmerBone width="90%" height={12} borderRadius={4} style={{ marginBottom: 18 }} />
+        {[1, 2].map((k) => (
+          <View
+            key={k}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: k === 1 ? 18 : 0,
+              paddingBottom: k === 1 ? 15 : 0,
+              borderBottomWidth: k === 1 ? 1 : 0,
+              borderBottomColor: themeColors.border,
+            }}
+          >
+            <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
+              <ShimmerBone width={18} height={18} borderRadius={4} />
+              <View style={{ marginLeft: 15, flex: 1 }}>
+                <ShimmerBone width="50%" height={14} borderRadius={5} style={{ marginBottom: 8 }} />
+                <ShimmerBone width="92%" height={10} borderRadius={4} style={{ marginBottom: 4 }} />
+                <ShimmerBone width="75%" height={10} borderRadius={4} />
+              </View>
+            </View>
+            <ShimmerBone width={72} height={28} borderRadius={14} />
           </View>
         ))}
       </View>
-      <ShimmerBone width="100%" height={44} borderRadius={22} style={{ marginTop: 20 }} />
-    </View>
-
-    <View style={styles.webStyleCard}>
-      <ShimmerBone width={160} height={18} borderRadius={6} style={{ marginBottom: 10 }} />
-      <ShimmerBone width="90%" height={12} borderRadius={4} style={{ marginBottom: 18 }} />
-      {[1, 2].map((k) => (
-        <View
-          key={k}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: k === 1 ? 18 : 0,
-            paddingBottom: k === 1 ? 15 : 0,
-            borderBottomWidth: k === 1 ? 1 : 0,
-            borderBottomColor: "rgba(255,255,255,0.05)",
-          }}
-        >
-          <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-            <ShimmerBone width={18} height={18} borderRadius={4} />
-            <View style={{ marginLeft: 15, flex: 1 }}>
-              <ShimmerBone width="50%" height={14} borderRadius={5} style={{ marginBottom: 8 }} />
-              <ShimmerBone width="92%" height={10} borderRadius={4} style={{ marginBottom: 4 }} />
-              <ShimmerBone width="75%" height={10} borderRadius={4} />
-            </View>
-          </View>
-          <ShimmerBone width={72} height={28} borderRadius={14} />
-        </View>
-      ))}
-    </View>
-  </ScrollView>
-);
+    </ScrollView>
+  );
+};
 
 const SettingsScreen = () => {
   const dispatch = useDispatch();
@@ -287,28 +287,6 @@ const SettingsScreen = () => {
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* Theme Section */}
-          <View style={[styles.webStyleCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-            <SectionHeader title="Appearance" desc="Customize your theme settings" />
-            <View style={styles.webStyleRow}>
-              <View style={styles.rowLeft}>
-                <FastImage source={eye_open_icon} style={styles.rowIcon} tintColor={themeColors.text} />
-                <View style={{ flex: 1, marginLeft: 15 }}>
-                  <AppText weight={SEMI_BOLD} type={FOURTEEN} color={themeColors.text}>Dark Theme</AppText>
-                  <AppText type={TEN} style={{ color: themeColors.secondaryText, marginTop: 2 }}>
-                    Switch between Light and Dark mode
-                  </AppText>
-                </View>
-              </View>
-              <Switch
-                value={isDark}
-                onValueChange={(val) => dispatch(setTheme(val ? "Dark" : "Light"))}
-                trackColor={{ true: themeColors.button, false: "#767577" }}
-                thumbColor={isDark ? "#FFFFFF" : "#f4f3f4"}
-              />
-            </View>
-          </View>
-
           {/* Profile Section */}
           <View style={[styles.webStyleCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
             <SectionHeader title="Profile" desc="To protect your account, we recommend that you enable at least one 2FA" />

@@ -6,13 +6,13 @@
         <!-- React Native default -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
 
-        <!-- ADD THESE 👇 -->
-        <item name="colorPrimary">#F3BB2B</item>
-        <item name="colorPrimaryDark">#F3BB2B</item>
-        <item name="colorAccent">#F3BB2B</item>
+        <item name="colorPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#FFFFFF</item>
+        <item name="colorAccent">#1e56f5</item>
 
-        <!-- Optional but recommended -->
-        <item name="android:colorAccent">#F3BB2B</item>
+        <item name="android:statusBarColor">#FFFFFF</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:colorAccent">#1e56f5</item>
 
     </style>
 

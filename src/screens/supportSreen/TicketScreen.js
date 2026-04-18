@@ -2,7 +2,6 @@ import { useRoute } from "@react-navigation/native";
 import React, { useState, useEffect } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
@@ -13,33 +12,28 @@ import {
 import FastImage from "react-native-fast-image";
 import {
   AppText,
-  Button,
-  Input,
   SEMI_BOLD,
-  SIXTEEN,
   AppSafeAreaView,
-  Toolbar,
   FOURTEEN,
   TEN,
   ELEVEN,
-  WHITE,
-  BLACK,
-  TWELVE,
-  FIFTEEN
+  FIFTEEN,
+  Input
 } from "../../shared";
 import NavigationService from "../../navigation/NavigationService";
 import { colors } from "../../theme/colors";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { ticketMessages } from "../../actions/accountActions";
 import moment from "moment";
-import { back_ic, BACK_ICON, folder, Send_Img, copyIcon } from "../../helper/ImageAssets";
+import { back_ic, Send_Img, copyIcon } from "../../helper/ImageAssets";
 import { showSuccess } from "../../helper/logger";
+import { useTheme } from "../../hooks/useTheme";
 
 const TicketScreen = () => {
   const route = useRoute();
   const dispatch = useAppDispatch();
   const flatListRef = React.useRef(null);
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   const userTickets = useAppSelector((state) => state.home.userTickets);
   const userData = useAppSelector((state) => state.auth.userData);
   const chatData = route?.params?.data;
@@ -80,28 +74,32 @@ const TicketScreen = () => {
     return (
       <View style={[styles.messageRow, isUser ? styles.userRow : styles.supportRow]}>
         {!isUser && (
-          <View style={[styles.avatar, { backgroundColor: colors.overlayColor }]}>
-            <AppText weight={SEMI_BOLD} type={TEN} style={{ color: colors.buttonBg }}>{item?.name ? item.name.charAt(0).toUpperCase() : "T"}</AppText>
+          <View style={[styles.avatar, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }]}>
+            <AppText weight={SEMI_BOLD} type={TEN} style={{ color: themeColors.button }}>{item?.name ? item.name.charAt(0).toUpperCase() : "T"}</AppText>
           </View>
         )}
         <View style={[
           styles.messageBubble,
           isUser ? styles.userBubble : styles.supportBubble,
-          { backgroundColor: isUser ? colors.overlayColor : colors.overlayColor }
+          {
+            backgroundColor: isUser ? themeColors.button : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"),
+            borderColor: isUser ? 'transparent' : themeColors.border,
+            borderWidth: isUser ? 0 : 0.5
+          }
         ]}>
-          <AppText style={{ color: isUser ? colors.white : colors.white }} type={ELEVEN}>
+          <AppText style={{ color: isUser ? themeColors.buttonText : themeColors.text }} type={ELEVEN}>
             {item.query}
           </AppText>
           <AppText
-            style={[styles.timestamp, { color: isUser ? colors.white : colors.white }]}
+            style={[styles.timestamp, { color: isUser ? themeColors.buttonText + 'CC' : themeColors.secondaryText }]}
             type={TEN}
           >
             {moment(item.createdAt).format("hh:mm A")}
           </AppText>
         </View>
         {isUser && (
-          <View style={[styles.avatar, { backgroundColor: colors.overlayColor }]}>
-            <AppText weight={SEMI_BOLD} type={TEN} style={{ color: colors.buttonBg }}>{userInitial}</AppText>
+          <View style={[styles.avatar, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }]}>
+            <AppText weight={SEMI_BOLD} type={TEN} style={{ color: themeColors.button }}>{userInitial}</AppText>
           </View>
         )}
       </View>
@@ -115,7 +113,6 @@ const TicketScreen = () => {
       query: message.trim(),
       ticket_id: chat?._id,
     }
-    console.log("Sending Ticket Message Payload:", data);
     dispatch(ticketMessages(data, () => setMessage("")))
   }
 
@@ -125,53 +122,51 @@ const TicketScreen = () => {
   };
 
   return (
-    <AppSafeAreaView style={styles.container}>
-      {/* <Toolbar isLogo={false} title={`TICKET #${chat?.ticketId}`} isSecond /> */}
-      <View style={{ width: '100%', flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 15, marginTop: 10, alignItems: 'center' }}>
-        <TouchableOpacity onPress={() => NavigationService.goBack()}>
-          <FastImage source={back_ic} style={{ width: 18, height: 18 }} resizeMode="contain" tintColor={colors.white} />
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background, flex: 1 }}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => NavigationService.goBack()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <FastImage source={back_ic} style={{ width: 22, height: 22 }} resizeMode="contain" tintColor={themeColors.text} />
         </TouchableOpacity>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <TouchableOpacity onPress={() => copyToClipboard(chat?.ticketId)}>
-            <FastImage source={copyIcon} style={{ width: 14, height: 14 }} resizeMode="contain" tintColor={colors.secondaryText} />
+          <TouchableOpacity onPress={() => copyToClipboard(chat?.ticketId)} style={styles.copyBtn}>
+            <FastImage source={copyIcon} style={{ width: 14, height: 14 }} resizeMode="contain" tintColor={themeColors.secondaryText} />
           </TouchableOpacity>
-          <AppText weight={SEMI_BOLD} type={FIFTEEN} style={{ color: colors.white }}>{chat?.ticketId}</AppText>
-
+          <AppText weight={SEMI_BOLD} type={FIFTEEN} style={{ color: themeColors.text }}>#{chat?.ticketId}</AppText>
         </View>
-
-        <View style={{ width: 20 }} />
+        <View style={{ width: 22 }} />
       </View>
+
       <View style={styles.content}>
         {/* Ticket Details summary card */}
-        <View style={[styles.detailCard, { backgroundColor: colors.themeElevationColor }]}>
+        <View style={[styles.detailCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
           <View style={styles.detailRow}>
             <View style={styles.detailCol}>
-              <AppText type={TEN} color={colors.secondaryText}>Created On</AppText>
-              <AppText weight={SEMI_BOLD} type={ELEVEN} style={{ marginTop: 2, color: colors.white }}>
-                {moment(chat?.createdAt).format('DD/MM/YYYY')}
+              <AppText type={TEN} style={{ color: themeColors.secondaryText }}>Created On</AppText>
+              <AppText weight={SEMI_BOLD} type={ELEVEN} style={{ marginTop: 2, color: themeColors.text }}>
+                {moment(chat?.createdAt).format('DD MMM, YYYY')}
               </AppText>
             </View>
             <View style={[styles.detailCol, { alignItems: 'flex-end' }]}>
-              <AppText type={TEN} color={colors.secondaryText}>Priority</AppText>
-              <View style={[styles.priorityBadge, { backgroundColor: colors.buttonBg + '20' }]}>
-                <AppText weight={SEMI_BOLD} type={TEN} style={{ color: colors.buttonBg, textTransform: 'capitalize' }}>
+              <AppText type={TEN} style={{ color: themeColors.secondaryText }}>Priority</AppText>
+              <View style={[styles.priorityBadge, { backgroundColor: themeColors.button + '20' }]}>
+                <AppText weight={SEMI_BOLD} type={TEN} style={{ color: themeColors.button, textTransform: 'capitalize' }}>
                   {chat?.priority || "Medium"}
                 </AppText>
               </View>
             </View>
           </View>
 
-          <View style={styles.cardDivider} />
+          <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
 
           <View style={styles.detailRow}>
             <View style={styles.detailCol}>
-              <AppText type={TEN} color={colors.secondaryText}>Subject</AppText>
-              <AppText weight={SEMI_BOLD} type={ELEVEN} style={{ marginTop: 2, color: colors.white }}>{chat?.subject}</AppText>
+              <AppText type={TEN} style={{ color: themeColors.secondaryText }}>Subject</AppText>
+              <AppText weight={SEMI_BOLD} type={ELEVEN} style={{ marginTop: 2, color: themeColors.text }} numberOfLines={1}>{chat?.subject}</AppText>
             </View>
             <View style={[styles.detailCol, { alignItems: 'flex-end' }]}>
-              <AppText type={TEN} color={colors.secondaryText}>Category</AppText>
-              <AppText weight={SEMI_BOLD} type={ELEVEN} style={{ marginTop: 2, color: colors.white, textTransform: 'capitalize' }}>
+              <AppText type={TEN} style={{ color: themeColors.secondaryText }}>Category</AppText>
+              <AppText weight={SEMI_BOLD} type={ELEVEN} style={{ marginTop: 2, color: themeColors.text, textTransform: 'capitalize' }}>
                 {chat?.category?.replace(/_/g, ' ')}
               </AppText>
             </View>
@@ -184,36 +179,35 @@ const TicketScreen = () => {
           data={messages}
           keyExtractor={(item, index) => item?._id || index.toString()}
           renderItem={renderMessage}
-          contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16 }}
+          contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 16 }}
           showsVerticalScrollIndicator={false}
-
         />
       </View>
 
       {/* Footer */}
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
         {chat?.status?.toLowerCase() === "open" ? (
-          <View style={[styles.inputContainer, { backgroundColor: colors.themeElevationColor }]}>
+          <View style={[styles.inputContainer, { backgroundColor: themeColors.card, borderTopColor: themeColors.border }]}>
             <Input
               placeholder="Type your message..."
               multiline
-              numberOfLines={3}
-              mainContainer={{ flex: 1, backgroundColor: 'transparent' }}
+              mainContainer={{ flex: 1, marginBottom: 0 }}
               value={message}
-              onChangeText={(val) => setMessage(val)}
-              containerStyle={{ borderWidth: 0 }}
+              onChangeText={setMessage}
+              containerStyle={{ borderWidth: 0, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)" }}
+              inputStyle={{ color: themeColors.text, height: 44, textAlignVertical: 'top', paddingTop: 8 }}
             />
             <TouchableOpacity
-              style={[styles.sendBtn, { opacity: message.trim() ? 1 : 0.5 }]}
+              style={[styles.sendBtn, { backgroundColor: themeColors.button, opacity: message.trim() ? 1 : 0.6 }]}
               disabled={!message.trim()}
               onPress={handleTicketMessages}
             >
-              <FastImage source={Send_Img} style={{ width: 22, height: 22 }} resizeMode="contain" />
+              <FastImage source={Send_Img} style={{ width: 22, height: 22 }} resizeMode="contain" tintColor={themeColors.buttonText} />
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={styles.closedFooter}>
-            <AppText color={colors.secondaryText} type={ELEVEN}>This ticket is {chat?.status}.</AppText>
+          <View style={[styles.closedFooter, { backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)" }]}>
+            <AppText style={{ color: themeColors.secondaryText }} type={ELEVEN}>This ticket is {chat?.status}.</AppText>
           </View>
         )}
       </KeyboardAvoidingView>
@@ -224,9 +218,16 @@ const TicketScreen = () => {
 export default TicketScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.newThemeColor,
+  header: {
+    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  copyBtn: {
+    padding: 4,
   },
   content: {
     flex: 1,
@@ -236,7 +237,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.dividerColor,
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8 },
+      android: { elevation: 1.5 },
+    }),
   },
   detailRow: {
     flexDirection: "row",
@@ -248,7 +252,6 @@ const styles = StyleSheet.create({
   },
   cardDivider: {
     height: 1,
-    backgroundColor: colors.dividerColor,
     marginVertical: 12,
   },
   priorityBadge: {
@@ -260,7 +263,7 @@ const styles = StyleSheet.create({
   messageRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    marginBottom: 20,
+    marginBottom: 16,
     gap: 8,
   },
   userRow: {
@@ -270,9 +273,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   avatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -290,39 +293,25 @@ const styles = StyleSheet.create({
   timestamp: {
     marginTop: 4,
     alignSelf: 'flex-end',
-    fontSize: 8,
+    fontSize: 9,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 12,
     borderTopWidth: 1,
-    borderTopColor: colors.dividerColor,
     gap: 10,
   },
   sendBtn: {
-    backgroundColor: colors.buttonBg,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 10,
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 24,
   },
   closedFooter: {
-    padding: 20,
+    padding: 24,
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  noDataRow: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 60,
-  },
-  noDataText: {
-    color: colors.secondaryText,
-    fontStyle: "italic",
-    marginTop: 10,
-    textAlign: "center",
-    paddingHorizontal: 40,
   },
 });

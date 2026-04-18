@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, View, Dimensions } from "react-native";
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const SHIMMER_STRIP = 72;
 
@@ -8,6 +8,7 @@ const SHIMMER_STRIP = 72;
  * Animated placeholder bar (shimmer). `width` may be a number or a percentage string e.g. "70%".
  */
 const ShimmerBone = ({ width, height, borderRadius = 6, style = {} }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const screenW = Dimensions.get("window").width;
   const wNum =
     typeof width === "number"
@@ -45,7 +46,7 @@ const ShimmerBone = ({ width, height, borderRadius = 6, style = {} }) => {
           height,
           borderRadius,
           overflow: "hidden",
-          backgroundColor: colors.themeElevationColor,
+          backgroundColor: themeColors.themeElevationColor,
         },
         style,
       ]}
@@ -58,7 +59,7 @@ const ShimmerBone = ({ width, height, borderRadius = 6, style = {} }) => {
           bottom: 0,
           width: SHIMMER_STRIP,
           transform: [{ translateX: shimmerX }],
-          backgroundColor: "rgba(255,255,255,0.08)",
+          backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
         }}
       />
     </View>

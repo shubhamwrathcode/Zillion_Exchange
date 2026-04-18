@@ -21,8 +21,7 @@ import { kycStepStyles } from "./kycStepStyles";
 import FastImage from "react-native-fast-image";
 import { appBg } from "../../helper/ImageAssets";
 import KycStepHeader from "./KycStepHeader";
-
-const accentColor = colors.white || "#F3BB2B";
+import { useTheme } from "../../hooks/useTheme";
 
 const KycStepOne = ({ route }) => {
   const dispatch = useDispatch();
@@ -43,8 +42,12 @@ const KycStepOne = ({ route }) => {
     setDocumentsToResubmit,
     setNeedsResubmission,
   } = useKycForm();
-  console.log(modalCountry, '  transform: [{ rotate: "180deg" }]');
 
+  const { colors: themeColors, isDark } = useTheme();
+  const accentColor = isDark ? colors.white : (colors.buttonBg || "#F3BB2B");
+  const cardBg = themeColors.card;
+  const borderClr = themeColors.border;
+  const textClr = themeColors.text;
 
   useEffect(() => {
     if (route.params?.resetForm) {
@@ -77,11 +80,7 @@ const KycStepOne = ({ route }) => {
         });
       }
     }
-  }, [route.params?.resetForm, route.params?.isResubmit, dispatch, setInitialFromResubmit, setDocumentsToResubmit, setNeedsResubmission]);
-
-  const cardBg = colors.themeElevationColor;
-  const borderClr = colors.themeBorderColor;
-  const textClr = theme === "Dark" ? colors.white : colors.black;
+  }, [route.params?.resetForm, route.params?.isResubmit, dispatch, setInitialFromResubmit, setDocumentsToResubmit, setNeedsResubmission, resetForm]);
 
   const onNext = () => {
     if (!validateStep0()) return;
@@ -89,11 +88,11 @@ const KycStepOne = ({ route }) => {
   };
 
   return (
-    <AppSafeAreaView source={theme !== "Dark" && appBg} style={[styles.container, { backgroundColor: colors.newThemeColor }]}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background, flex: 1 }}>
       <KeyBoardAware style={{ flex: 1 }}>
         <KycStepHeader title="Select Country and ID Type" theme={theme} />
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <View style={[styles.stepBadge, { backgroundColor: theme === "Dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" }]}>
+          <View style={[styles.stepBadge, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }]}>
             <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: accentColor }}>Step 1 of 6</AppText>
           </View>
           <AppText type={FOURTEEN} weight={SEMI_BOLD} style={[kycStepStyles.modalLabel, { color: textClr }]}>Country/Region <AppText color={RED}>*</AppText></AppText>
@@ -114,18 +113,18 @@ const KycStepOne = ({ route }) => {
                     <TouchableOpacity
                       style={[
                         kycStepStyles.idTypeCard,
-                        { backgroundColor: cardBg, borderColor: isSelected ? colors.buttonBg : colors.newThemeColor },
+                        { backgroundColor: cardBg, borderColor: isSelected ? colors.buttonBg : themeColors.border },
                         isSelected && kycStepStyles.idTypeCardSelected,
                       ]}
                       onPress={() => setModalIdType(doc.code)}
                       activeOpacity={0.7}
                     >
                       <View style={[kycStepStyles.idTypeRadioOuter, {
-                        borderColor: isSelected ? (colors.buttonBg || "#F3BB2B") : colors.lightGrey,
+                        borderColor: isSelected ? (colors.buttonBg || "#F3BB2B") : themeColors.border,
                       }]}>
                         {isSelected && <View style={[kycStepStyles.idTypeRadioInner, { backgroundColor: colors.buttonBg, }]} />}
                       </View>
-                      <AppText type={TWELVE} weight={isSelected ? SEMI_BOLD : "normal"} style={[kycStepStyles.idTypeLabel, { color: isSelected ? textClr : (theme === "Dark" ? "#888" : "#666") }]} numberOfLines={1}>{doc.label || getDocTypeName(doc.code)}</AppText>
+                      <AppText type={TWELVE} weight={isSelected ? SEMI_BOLD : "normal"} style={[kycStepStyles.idTypeLabel, { color: isSelected ? textClr : themeColors.secondaryText }]} numberOfLines={1}>{doc.label || getDocTypeName(doc.code)}</AppText>
                     </TouchableOpacity>
                   );
                 }}
@@ -137,7 +136,7 @@ const KycStepOne = ({ route }) => {
           {resubmitLoading ? (
             <AppText type={FOURTEEN} style={{ color: textClr, textAlign: "center", marginBottom: 12 }}>Loading your details...</AppText>
           ) : null}
-          <Button children="Next" onPress={onNext} disabled={resubmitLoading} containerStyle={kycStepStyles.modalBtnPrimary} />
+          <Button children="Next" onPress={onNext} disabled={resubmitLoading} containerStyle={[kycStepStyles.modalBtnPrimary, { backgroundColor: themeColors.button }]} />
         </View>
       </KeyBoardAware>
     </AppSafeAreaView>

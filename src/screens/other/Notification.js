@@ -40,26 +40,26 @@ import {
 import { useDispatch } from "react-redux";
 import { getNotificationList, markAsRead } from "../../actions/homeActions";
 import FastImage from "react-native-fast-image";
+import { useTheme } from "../../hooks/useTheme";
 import NotificationSkeleton from "./NotificationSkeleton";
 
 const ListEmptyComponent = () => {
+  const { colors: themeColors, isDark } = useTheme();
   return (
     <View style={commonStyles.center}>
       <FastImage
         source={NO_NOTIFICATION_ICON}
         resizeMode="contain"
         style={{ width: 80, height: 80 }}
+        tintColor={isDark ? themeColors.text : undefined}
       />
-      {/* <AppText color={BLACK} weight={SEMI_BOLD}>
-        {"No New Notifications"}
-      </AppText> */}
     </View>
   );
 };
 
 const Notification = () => {
   const dispatch = useDispatch();
-  const theme = useAppSelector((state) => state.auth.theme);
+  const { colors: themeColors, isDark } = useTheme();
   const notificationList = useAppSelector(
     (state) => state.home.notificationList
   );
@@ -85,22 +85,21 @@ const Notification = () => {
       })
     );
   };
-  // console.log(notificationList[0]?.link, "notificationList");
+
   const renderItem = ({ item }) => {
     return (
       <View
         style={[
           styles.renderContainer,
           {
-            backgroundColor:colors.themeElevationColor,
+            backgroundColor: themeColors.card,
+            borderColor: themeColors.border,
           },
         ]}
       >
         <View style={styles.renderContainerSecond}>
           <View style={styles.renderContainerThird}>
-            {/* <View style={{flexDirection: "row", gap: 10}}> */}
-
-            <AppText weight={SEMI_BOLD} type={THIRTEEN}>
+            <AppText weight={SEMI_BOLD} type={THIRTEEN} color={themeColors.text}>
               <View
                 style={{
                   backgroundColor: item?.isSeen ? colors.grey : colors.green,
@@ -111,15 +110,9 @@ const Notification = () => {
               ></View>{" "}
               {item.title}
             </AppText>
-            {/* </View> */}
 
-            {/* {item?.message?.length > 0 &&
-              item?.message?.map(e => {
-                return <AppText type={TWELVE}>{e?.description}</AppText>;
-              })} */}
+            <AppText type={TWELVE} color={themeColors.secondaryText}>{item?.message}</AppText>
 
-            <AppText type={TWELVE}>{item?.message}</AppText>
-            {/* {!item?.isSeen &&  <AppText type={TWELVE} color={YELLOW}>Mark as read</AppText>} */}
             <View style={{ gap: 10, marginTop: 5 }}>
               {item?.link && (
                 <TouchableOpacity
@@ -128,14 +121,14 @@ const Notification = () => {
                     Linking.openURL(item?.link);
                   }}
                 >
-                  <AppText type={TWELVE} color={YELLOW}>
+                  <AppText type={TWELVE} color={themeColors.button}>
                     Learn more
                   </AppText>
                   <FastImage
                     source={externalLinkIcon}
                     resizeMode="contain"
                     style={{ width: 10, height: 10 }}
-                    tintColor={colors.buttonBg}
+                    tintColor={themeColors.button}
                   />
                 </TouchableOpacity>
               )}
@@ -143,27 +136,16 @@ const Notification = () => {
               {!item?.isSeen && (
                 <Button
                   children={"Mark as read"}
-                  titleStyle={{ color: colors.white, fontSize: 10 }}
-                  containerStyle={{ width: "35%", height: 30 }}
+                  titleStyle={{ color: themeColors.buttonText, fontSize: 10 }}
+                  containerStyle={{ width: "35%", height: 30, backgroundColor: themeColors.button }}
                   onPress={() => handleMarkAsRead(item?._id)}
                 />
               )}
 
-              <AppText color={BLACK} type={TWELVE} weight={SEMI_BOLD}>
+              <AppText color={themeColors.secondaryText} type={TWELVE} weight={SEMI_BOLD}>
                 {moment(item.createdAt).fromNow()}
               </AppText>
             </View>
-
-            {/* <View style={{flexDirection: 'row'}}>
-                    <Button
-                      children={'Learn more'}
-                      titleStyle={{color: colors.white, fontSize: 10}}
-                      containerStyle={{width: '30%', height: 30}}
-                      onPress={() => {
-                        Linking.openURL(item?.Link);
-                      }}
-                    />
-                  </View> */}
           </View>
         </View>
       </View>
@@ -171,7 +153,7 @@ const Notification = () => {
   };
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       <Toolbar
         isSecond
         title={checkValue(languages?.notification_one)}
@@ -201,10 +183,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     paddingVertical: universalPaddingHorizontal,
     marginVertical: universalPaddingHorizontal,
-    borderWidth: 0.4,
+    borderWidth: 1,
     borderRadius: 20,
-    borderColor: "#00000033",
-    // backgroundColor: colors.offWhite,
   },
   icon: {
     height: 50,
@@ -217,6 +197,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   renderContainerThird: {
-    // flex: 1,
+    flex: 1,
   },
 });

@@ -16,10 +16,12 @@ import NavigationService from "../../navigation/NavigationService";
 import { KYC_VERIFICATION_SCREEN } from "../../navigation/routes";
 import { appBg, DEMO_USER } from "../../helper/ImageAssets";
 import KycStepHeader from "./KycStepHeader";
-
-const accentColor = colors.buttonBg || "#F3BB2B";
+import { useTheme } from "../../hooks/useTheme";
 
 const KycStepReview = () => {
+  const { colors: themeColors, isDark } = useTheme();
+  const accentColor = isDark ? colors.white : (colors.buttonBg || "#F3BB2B");
+
   const {
     theme,
     userData,
@@ -34,11 +36,12 @@ const KycStepReview = () => {
     getIdDocConfig,
     getTaxDocConfig,
   } = useKycForm();
-  const cardBg = colors.themeElevationColor
-  const innerBg =colors.overlayColor
-  const borderClr = theme === "Dark" ? "#3A3A3E" : "#E0E0E0";
-  const textClr = theme === "Dark" ? colors.white : colors.black;
-  const mutedClr = theme === "Dark" ? "#888" : "#666";
+
+  const cardBg = themeColors.card;
+  const innerBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)";
+  const borderClr = themeColors.border;
+  const textClr = themeColors.text;
+  const mutedClr = themeColors.secondaryText;
   const docLast4 = (aadhar && aadhar.length >= 4) ? aadhar.slice(-4) : "****";
   const taxLast4 = (panCard && panCard.length >= 4) ? panCard.slice(-4) : "****";
   const fullName = `${(firstName || userData?.firstName) || ""} ${(lastName || userData?.lastName) || ""}`.trim() || "—";
@@ -63,19 +66,19 @@ const KycStepReview = () => {
   );
 
   return (
-    <AppSafeAreaView source={theme !== "Dark" && appBg} style={[styles.container, { backgroundColor: colors.newThemeColor}]}>
+    <AppSafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <KeyBoardAware style={{ flex: 1 }}>
         <KycStepHeader title="Review Your Information" theme={theme} />
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <View style={[styles.stepBadge, { backgroundColor: theme === "Dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" }]}>
-            <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: colors.white }}>Step 6 of 6</AppText>
+          <View style={[styles.stepBadge, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }]}>
+            <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: accentColor }}>Step 6 of 6</AppText>
           </View>
 
           {/* Profile & Personal Info */}
-          <View style={[styles.sectionCard, { backgroundColor: cardBg }]}>
+          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: borderClr, borderWidth: 1 }]}>
             <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.sectionTitle, { color: mutedClr }]}>Personal details</AppText>
             <View style={styles.profileRow}>
-              <View style={[styles.avatarWrap, { borderColor: colors.white }]}>
+              <View style={[styles.avatarWrap, { borderColor: borderClr }]}>
                 <FastImage source={selfieImage ? { uri: selfieImage.uri } : DEMO_USER} style={styles.avatarImg} resizeMode="cover" />
               </View>
               <View style={styles.profileInfo}>
@@ -93,7 +96,7 @@ const KycStepReview = () => {
           </View>
 
           {/* ID Documents */}
-          <View style={[styles.sectionCard, { backgroundColor: cardBg }]}>
+          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: borderClr, borderWidth: 1 }]}>
             <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.sectionTitle, { color: mutedClr }]}>{getIdDocConfig()?.label || "ID"} document</AppText>
             <View style={[styles.idNumberRow, { backgroundColor: innerBg }]}>
               <AppText type={TWELVE} style={{ color: mutedClr }}>{getIdDocConfig()?.label || "ID"} Number:</AppText>
@@ -106,7 +109,7 @@ const KycStepReview = () => {
           </View>
 
           {/* Tax & Selfie */}
-          <View style={[styles.sectionCard, { backgroundColor: cardBg }]}>
+          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: borderClr, borderWidth: 1 }]}>
             <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.sectionTitle, { color: mutedClr }]}>{getTaxDocConfig()?.label || "Tax"} & selfie</AppText>
             <View style={[styles.idNumberRow, { backgroundColor: innerBg }]}>
               <AppText type={TWELVE} style={{ color: mutedClr }}>{getTaxDocConfig()?.label || "Tax ID"}:</AppText>
@@ -119,14 +122,16 @@ const KycStepReview = () => {
           </View>
         </ScrollView>
         <View style={styles.footer}>
-          <TouchableOpacity onPress={onSubmitPress} style={styles.submitBtn} activeOpacity={0.85}>
-            <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: "#FFF" }}>Submit KYC</AppText>
+          <TouchableOpacity onPress={onSubmitPress} style={[styles.submitBtn, { backgroundColor: themeColors.button }]} activeOpacity={0.85}>
+            <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: isDark ? colors.black : colors.white }}>Submit KYC</AppText>
           </TouchableOpacity>
         </View>
       </KeyBoardAware>
     </AppSafeAreaView>
   );
 };
+
+export default KycStepReview;
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -137,8 +142,8 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 16,
     ...Platform.select({
-      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8 },
-      android: { elevation: 3 },
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8 },
+      android: { elevation: 1.5 },
     }),
   },
   sectionTitle: { marginBottom: 14, textTransform: "uppercase", letterSpacing: 0.8 },
@@ -162,15 +167,13 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   submitBtn: {
-    backgroundColor: accentColor,
+    backgroundColor: colors.buttonBg,
     borderRadius: 28,
     paddingVertical: 16,
     alignItems: "center",
     ...Platform.select({
-      ios: { shadowColor: accentColor, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 8 },
+      ios: { shadowColor: colors.buttonBg, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 8 },
       android: { elevation: 4 },
     }),
   },
 });
-
-export default KycStepReview;

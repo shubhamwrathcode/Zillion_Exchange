@@ -146,6 +146,8 @@ export const IDENTITY_CARD = require('../../assets/images/identityCard.png');
 export const DEMO_USER = require('../../assets/images/demoUser.png');
 export const passkey_login = require('../../assets/images/passkey_login.png');
 export const Reminder = require('../../assets/images/Reminder.png');
+export const DISPLAY_PIC = require('../../assets/images/display.png');
+
 
 
 

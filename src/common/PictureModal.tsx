@@ -15,6 +15,7 @@ import {
 import {showError} from '../helper/logger';
 import {errorText} from '../helper/Constants';
 import {useAppSelector} from '../store/hooks';
+import { useTheme } from '../hooks/useTheme';
 
 const PictureModal = ({
   isVisible,
@@ -23,17 +24,24 @@ const PictureModal = ({
   onPressGallery,
   isFront = false,
 }) => {
+  const { colors: themeColors, isDark } = useTheme();
+  
   const languages = useAppSelector(state => {
     return state.account.languages;
   });
+
   return (
     <Modal
       isVisible={isVisible}
-      backdropOpacity={0.9}
-      style={{justifyContent: "flex-end"}}
+      backdropOpacity={isDark ? 0.7 : 0.5}
+      style={{justifyContent: "flex-end", margin: 0}}
       onBackdropPress={onBackButtonPress}
-      onBackButtonPress={onBackButtonPress}>
-      <View style={[styles.container]}>
+      onBackButtonPress={onBackButtonPress}
+      animationIn="slideInUp"
+      animationOut="slideOutDown"
+    >
+      <View style={[styles.container, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+        <View style={[styles.dragHandle, { backgroundColor: themeColors.border }]} />
         <TouchableOpacityView
           onPress={() => {
             onBackButtonPress();
@@ -45,15 +53,10 @@ const PictureModal = ({
                   showError(errorText.cameraPermission);
                 }
               });
-            }, 1500);
+            }, 500);
           }}
-          style={styles.singleContainer}>
-          {/* <FastImage
-            source={camera_ic_big}
-            resizeMode="contain"
-            style={styles.icon}
-          /> */}
-          <AppText>{checkValue(languages?.camera)}</AppText>
+          style={[styles.singleContainer, { borderColor: themeColors.border, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)" }]}>
+          <AppText style={{ color: themeColors.text }}>{checkValue(languages?.camera) || "Take a Photo"}</AppText>
         </TouchableOpacityView>
         {!isFront && (
           <TouchableOpacityView
@@ -67,17 +70,17 @@ const PictureModal = ({
                     showError(errorText.galleryPermission);
                   }
                 });
-              }, 1500);
+              }, 500);
             }}
-            style={styles.singleContainer}>
-            {/* <FastImage
-              source={gallery_ic}
-              resizeMode="contain"
-              style={styles.icon}
-            /> */}
-            <AppText>{checkValue(languages?.gallery)}</AppText>
+            style={[styles.singleContainer, { borderColor: themeColors.border, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)" }]}>
+            <AppText style={{ color: themeColors.text }}>{checkValue(languages?.gallery) || "Choose from Gallery"}</AppText>
           </TouchableOpacityView>
         )}
+        <TouchableOpacityView
+          onPress={onBackButtonPress}
+          style={[styles.cancelBtn, { marginTop: 10 }]}>
+          <AppText style={{ color: colors.red }}>Cancel</AppText>
+        </TouchableOpacityView>
       </View>
     </Modal>
   );
@@ -87,26 +90,33 @@ export {PictureModal};
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.white_fifteen,
-   
-    borderRadius: 10,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     width: "100%",
-    // flexDirection: 'row',
-    // justifyContent: 'space-between',
-    gap: 20,
-    padding: 30,
+    padding: 24,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    borderWidth: 1,
+    borderBottomWidth: 0,
   },
-  icon: {
-    height: 50,
-    width: 50,
-    marginBottom: 10,
+  dragHandle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginBottom: 20,
+    opacity: 0.5,
   },
   singleContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-     borderWidth: borderWidth,
-    borderColor: colors.inputBorder,
-    paddingVertical: 10,
-    borderRadius: 15
+    borderWidth: 1,
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginBottom: 12,
   },
+  cancelBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+  }
 });

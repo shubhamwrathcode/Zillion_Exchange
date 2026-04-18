@@ -33,7 +33,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { getUserProfile } from "../../actions/accountActions";
 import { kyc_completed } from "../../helper/ImageAssets";
 
-const accentColor = colors.buttonBg || "#F3BB2B";
+import { useTheme } from "../../hooks/useTheme";
 
 const getMethodIcon = (type) => {
   switch (type) {
@@ -55,13 +55,13 @@ const getMethodDescription = (type) => {
 
 const KycVerificationScreen = () => {
   const dispatch = useAppDispatch();
+  const { colors: themeColors, isDark } = useTheme();
   const isSubmittingKyc = useAppSelector((state) => state.auth.isLoading);
   const optionsSheetRef = useRef(null);
   const { height: winHeight } = useWindowDimensions();
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const {
-    theme,
     userData,
     selectedAuthMethod,
     setSelectedAuthMethod,
@@ -73,11 +73,10 @@ const KycVerificationScreen = () => {
     handleKycSubmit,
   } = useKycForm();
 
-  const isDark = theme === "Dark";
-  const bgClr = colors.newThemeColor
-  const cardBg = isDark ? "#1F1F23" : "#F5F5F5";
-  const textClr = isDark ? colors.white : colors.black;
-  const mutedClr = isDark ? "#888" : "#666";
+  const accentColor = themeColors.button;
+  const bgClr = themeColors.background;
+  const textClr = themeColors.text;
+  const mutedClr = themeColors.secondaryText;
 
   const alternativeMethods = (availableVerifyMethods || []).filter((m) => m.type !== selectedAuthMethod);
   const hasAlternative = alternativeMethods.length > 0;
@@ -124,7 +123,7 @@ const KycVerificationScreen = () => {
     container: {
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
-      backgroundColor: isDark ? "#1F1F23" : "#FFF",
+      backgroundColor: themeColors.card,
     },
     wrapper: { backgroundColor: "rgba(0,0,0,0.5)" },
     draggableIcon: { backgroundColor: "transparent" },
@@ -132,7 +131,7 @@ const KycVerificationScreen = () => {
 
   if (submitSuccess) {
     return (
-      <AppSafeAreaView source={!isDark && appBg} style={[styles.container, { backgroundColor: bgClr }]}>
+      <AppSafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
         <ScrollView contentContainerStyle={styles.successScroll} showsVerticalScrollIndicator={false}>
           <FastImage source={kyc_completed} resizeMode="contain" style={styles.successIcon} />
           <AppText type={SIXTEEN} weight={SEMI_BOLD} style={[styles.successTitle, { color: textClr }]}>Verification submitted</AppText>
@@ -140,7 +139,7 @@ const KycVerificationScreen = () => {
             Your review will be completed within 48 hours. We'll notify you once verification is complete.
           </AppText>
           <TouchableOpacity style={[styles.doneBtn, { backgroundColor: accentColor }]} onPress={onDone} activeOpacity={0.85}>
-            <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: "#FFF" }}>Done</AppText>
+            <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: themeColors.buttonText }}>Done</AppText>
           </TouchableOpacity>
         </ScrollView>
       </AppSafeAreaView>
@@ -148,7 +147,7 @@ const KycVerificationScreen = () => {
   }
 
   return (
-    <AppSafeAreaView source={!isDark && appBg} style={[styles.container, { backgroundColor: bgClr }]}>
+    <AppSafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.navRow}>
@@ -171,11 +170,11 @@ const KycVerificationScreen = () => {
             <View style={styles.resendRow}>
               {modalOtpTimer > 0 ? (
                 <View style={{ alignItems: "flex-end", width: "100%" }}>
-                  <AppText type={THIRTEEN} style={{ color: '#888' }}>Resend ({modalOtpTimer}s)</AppText>
+                  <AppText type={THIRTEEN} style={{ color: mutedClr }}>Resend ({modalOtpTimer}s)</AppText>
                 </View>
               ) : (
                 <TouchableOpacityView onPress={handleGetOtp} style={{ alignItems: "flex-end", width: "100%" }}>
-                  <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: colors.white }}>Get OTP</AppText>
+                  <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: accentColor }}>Get OTP</AppText>
                 </TouchableOpacityView>
               )}
             </View>
@@ -191,9 +190,8 @@ const KycVerificationScreen = () => {
 
           {hasAlternative && (
             <TouchableOpacityView onPress={() => optionsSheetRef.current?.open()} style={styles.linkRow}>
-              <AppText type={FOURTEEN} style={{ color: accentColor,  }}>Switch to Another Verification Method{' '}</AppText>
+              <AppText type={FOURTEEN} style={{ color: accentColor }}>Switch to Another Verification Method{' '}</AppText>
               <FastImage source={SHARE_NEW_ICON} style={{ width: 15, height: 15 }} tintColor={accentColor} resizeMode="contain" />
-          
             </TouchableOpacityView>
           )}
         </ScrollView>
@@ -201,13 +199,13 @@ const KycVerificationScreen = () => {
 
       <SpinnerSecond />
       <RBSheet ref={optionsSheetRef} height={optionsSheetHeight} closeOnDragDown={false} closeOnPressMask={false} customStyles={sheetCustomStyles}>
-        <View style={[styles.sheetWrap, { backgroundColor: colors.themeElevationColor }]}>
+        <View style={[styles.sheetWrap, { backgroundColor: themeColors.card }]}>
           <View style={styles.sheetHeader}>
             <View>
-              <AppText weight={SEMI_BOLD} type={SIXTEEN} style={{ color: textClr ,}}>Select a Verification Option</AppText>
+              <AppText weight={SEMI_BOLD} type={SIXTEEN} style={{ color: textClr }}>Select a Verification Option</AppText>
               <AppText type={THIRTEEN} style={{ marginTop: 4, color: mutedClr }}>Choose how you want to verify your identity</AppText>
             </View>
-            <TouchableOpacity onPress={() => optionsSheetRef.current?.close()} style={[styles.sheetCloseBtn, { borderColor: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.2)" }]}>
+            <TouchableOpacity onPress={() => optionsSheetRef.current?.close()} style={[styles.sheetCloseBtn, { borderColor: themeColors.border }]}>
               <FastImage source={closeIcon} resizeMode="contain" tintColor={textClr} style={{ width: 14, height: 14 }} />
             </TouchableOpacity>
           </View>
@@ -220,14 +218,14 @@ const KycVerificationScreen = () => {
                   setemailOtp("");
                   optionsSheetRef.current?.close();
                 }}
-                style={[styles.sheetOptionRow, { borderBottomColor: isDark ? "#3A3A3E" : "#E0E0E0" }]}
+                style={[styles.sheetOptionRow, { borderBottomColor: themeColors.border }]}
               >
                 <View style={styles.sheetOptionLeft}>
                   <FastImage
                     source={getMethodIcon(m.type)}
                     style={{ width: 20, height: 20 }}
                     resizeMode="contain"
-                    tintColor={isDark ? colors.white : colors.black}
+                    tintColor={textClr}
                   />
                   <View style={{ marginLeft: 10 }}>
                     <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: textClr }}>
@@ -258,16 +256,14 @@ const styles = StyleSheet.create({
   description: { marginBottom: 24 },
   resendRow: { marginTop: 12, marginBottom: 4 },
   submitBtn: { marginTop: 16, marginBottom: 24 },
-  linkRow: { marginBottom: 12, alignSelf: "flex-start" ,flexDirection:"row",alignItems:"center"},
+  linkRow: { marginBottom: 12, alignSelf: "flex-start", flexDirection: "row", alignItems: "center" },
   successScroll: { flex: 1, paddingHorizontal: 24, paddingTop: 60, alignItems: "center" },
   successIcon: { width: 80, height: 80, alignSelf: "center" },
   successTitle: { marginTop: 24, textAlign: "center" },
   successSubtitle: { textAlign: "center", marginTop: 12, lineHeight: 22 },
   doneBtn: { borderRadius: 28, paddingVertical: 16, paddingHorizontal: 48, marginTop: 32 },
   sheetWrap: { flex: 1, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24 },
-  sheetHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10,
-    marginVertical:10
-   },
+  sheetHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, marginVertical: 10 },
   sheetCloseBtn: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   sheetScroll: { flex: 1 },
   sheetOptionRow: { paddingVertical: 14, borderBottomWidth: 1 },

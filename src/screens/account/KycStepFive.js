@@ -9,46 +9,49 @@ import NavigationService from "../../navigation/NavigationService";
 import { KYC_STEP_SIX_SCREEN } from "../../navigation/routes";
 import { appBg, DEMO_USER, checkIc } from "../../helper/ImageAssets";
 import KycStepHeader from "./KycStepHeader";
-
-const accentColor = colors.buttonBg || "#F3BB2B";
+import { useTheme } from "../../hooks/useTheme";
 
 const KycStepFive = () => {
-  const { theme, selfieImage } = useKycForm();
+  const { colors: themeColors, isDark, theme } = useTheme();
+  const { selfieImage } = useKycForm();
+  const accentColor = isDark ? colors.white : (colors.buttonBg || "#F3BB2B");
 
   const onNext = () => {
     NavigationService.navigate(KYC_STEP_SIX_SCREEN);
   };
 
-  const cardBg = colors.themeElevationColor;
+  const cardBg = themeColors.card;
+  const textClr = themeColors.text;
+  const borderClr = themeColors.border;
 
   return (
-    <AppSafeAreaView source={theme !== "Dark" && appBg} style={[styles.container, { backgroundColor: colors.newThemeColor }]}>
+    <AppSafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <KeyBoardAware style={{ flex: 1 }}>
         <KycStepHeader title="Face Verification" theme={theme} />
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <View style={[styles.stepBadge, { backgroundColor: theme === "Dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" }]}>
-            <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: colors.white }}>Step 5 of 6</AppText>
+          <View style={[styles.stepBadge, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }]}>
+            <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: accentColor }}>Step 5 of 6</AppText>
           </View>
 
-          <View style={[styles.successCard, { backgroundColor: cardBg }]}>
+          <View style={[styles.successCard, { backgroundColor: cardBg, borderColor: borderClr, borderWidth: 1 }]}>
             <View style={styles.faceWrap}>
               <View style={[styles.faceCircle, { borderColor: accentColor }]}>
                 <FastImage source={selfieImage ? { uri: selfieImage.uri } : DEMO_USER} resizeMode="cover" style={styles.faceImg} />
               </View>
-              <View style={[styles.successBadge, { backgroundColor: accentColor, borderColor:  colors.white }]}>
-                <FastImage source={checkIc} resizeMode="contain" style={styles.successBadgeIcon} tintColor={colors.white} />
+              <View style={[styles.successBadge, { backgroundColor: accentColor, borderColor: colors.white }]}>
+                <FastImage source={checkIc} resizeMode="contain" style={styles.successBadgeIcon} tintColor={isDark ? colors.blueThemeColor : colors.white} />
               </View>
             </View>
-            <AppText type={SIXTEEN} weight={SEMI_BOLD} style={[styles.successTitle, { color: theme === "Dark" ? colors.white : colors.black }]}>
+            <AppText type={SIXTEEN} weight={SEMI_BOLD} style={[styles.successTitle, { color: textClr }]}>
               Face captured successfully
             </AppText>
-            <AppText type={TWELVE} style={[styles.successSubtitle, { color: theme === "Dark" ? "#888" : "#666" }]}>
+            <AppText type={TWELVE} style={[styles.successSubtitle, { color: themeColors.secondaryText }]}>
               Your selfie has been verified. Tap Next to review your submission.
             </AppText>
           </View>
         </ScrollView>
         <View style={styles.footer}>
-          <Button children="Next" onPress={onNext} containerStyle={styles.nextBtn} />
+          <Button children="Next" onPress={onNext} containerStyle={[styles.nextBtn, { backgroundColor: themeColors.button }]} />
         </View>
       </KeyBoardAware>
     </AppSafeAreaView>
@@ -67,8 +70,8 @@ const styles = StyleSheet.create({
     padding: 28,
     alignItems: "center",
     ...Platform.select({
-      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12 },
-      android: { elevation: 4 },
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12 },
+      android: { elevation: 1.5 },
     }),
   },
   faceWrap: { position: "relative", marginBottom: 20 },
@@ -90,7 +93,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "#FAFAFA",
   },
   successBadgeIcon: { width: 20, height: 20 },
   successTitle: { textAlign: "center", marginBottom: 8 },
@@ -101,12 +103,5 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === "ios" ? 34 : 20,
     backgroundColor: "transparent",
   },
-  nextBtn: {
-    backgroundColor: accentColor,
-    borderRadius: 28,
-    ...Platform.select({
-      ios: { shadowColor: accentColor, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 8 },
-      android: { elevation: 4 },
-    }),
-  },
+  nextBtn: { borderRadius: 28 },
 });

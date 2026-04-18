@@ -15,10 +15,13 @@ import FastImage from "react-native-fast-image";
 import NavigationService from "../../navigation/NavigationService";
 import { LOGIN_SCREEN, NAVIGATION_AUTH_STACK } from "../../navigation/routes";
 import { colors } from "../../theme/colors";
+import { useTheme } from "../../hooks/useTheme";
 
 const AccountActivated = () => {
+  const { colors: themeColors } = useTheme();
+
   return (
-    <AppSafeAreaView style={styles.container}>
+    <AppSafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <View style={styles.content}>
         <View style={styles.tigerWrapper}>
           <FastImage
@@ -30,7 +33,7 @@ const AccountActivated = () => {
         <AppText
           type={EIGHTEEN}
           weight={BOLD}
-          color={colors.buttonBg}
+          color={themeColors.button}
           style={styles.welcomeTitle}
         >
           Welcome to Zillion
@@ -38,7 +41,7 @@ const AccountActivated = () => {
         <AppText
           type={FOURTEEN}
           weight={NORMAL}
-          color={colors.white}
+          color={themeColors.text}
           style={styles.bodyText}
         >
           Thank you for choosing us !
@@ -46,23 +49,15 @@ const AccountActivated = () => {
         <AppText
           type={FOURTEEN}
           weight={NORMAL}
-          color={colors.white}
+          color={themeColors.text}
           style={styles.bodyText}
         >
-         {` Your account has been successfully activated.\n  Please login with your credentials to access your account.`}
+          {`Your account has been successfully activated.\nPlease login with your credentials to access your account.`}
         </AppText>
-        {/* <AppText
-          type={FOURTEEN}
-          weight={NORMAL}
-          color={colors.white}
-          style={styles.bodyText}
-        >
-         
-        </AppText> */}
         <AppText
           type={FOURTEEN}
           weight={SEMI_BOLD}
-          style={styles.happyTrading}
+          style={[styles.happyTrading, { color: themeColors.button }]}
         >
           Happy Trading !!!
         </AppText>
@@ -73,7 +68,7 @@ const AccountActivated = () => {
               screen: LOGIN_SCREEN,
             })
           }
-          containerStyle={styles.loginButton}
+          containerStyle={[styles.loginButton, { backgroundColor: themeColors.button }]}
         />
       </View>
     </AppSafeAreaView>
@@ -85,7 +80,6 @@ export default AccountActivated;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-   backgroundColor: colors.newThemeColor
   },
   content: {
     flex: 1,
@@ -99,7 +93,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     alignItems: "center",
     justifyContent: "center",
-    // backgroundColor:"red"
   },
   tigerImage: {
     width: 350,
@@ -120,7 +113,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 12,
     fontSize: 16,
-    color:colors.buttonBg,
   },
   loginButton: {
     width: "100%",

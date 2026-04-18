@@ -60,9 +60,10 @@ import {
   walletIcon,
   walletTransferIcon,
   withdrawImage,
-  defaultPic,
   copyIcon,
   INFERNAL_TRANSFER,
+  DISPLAY_PIC,
+  defaultPic,
 } from "../../helper/ImageAssets";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import { AppText, BLACK, DISCLAIMTEXT, ELEVEN, THIRTEEN, TWELVE, YELLOW } from "../../shared";
@@ -226,6 +227,7 @@ const STAGGER_DELAY = 45;
 const ENTRANCE_DURATION = 380;
 
 const AnimatedIconBox = ({ theme, children }) => {
+  const { colors: themeColors } = useTheme();
   return (
     <View
       style={{
@@ -243,6 +245,7 @@ const AnimatedIconBox = ({ theme, children }) => {
 };
 
 const IconAndLabel = ({ theme, iconSource, title, textStyle = {} }) => {
+  const { colors: themeColors } = useTheme();
   return (
     <>
       <View
@@ -358,6 +361,7 @@ const AnimatedMenuItem = ({ index, onPress, style, theme, children }) => {
 
 
 const AnimatedCard = ({ onPress, theme, delay, children }) => {
+  const { colors: themeColors } = useTheme();
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
   const translateY = useRef(new Animated.Value(20)).current;
@@ -497,7 +501,24 @@ const ProfileDrawer = () => {
               style={{ width: 20, height: 20 }}
             />
           </TouchableOpacity>
-          <View style={{ flexDirection: "row", gap: 8 }}>
+          <View style={{ flexDirection: "row", gap: 10, alignItems: 'center' }}>
+            <TouchableOpacity
+              onPress={() => {
+                const nextTheme = theme === "Dark" ? "Light" : "Dark";
+                dispatch(setTheme(nextTheme));
+                AsyncStorage.setItem('theme', nextTheme);
+              }}
+            >
+              <FastImage
+                source={DISPLAY_PIC}
+                resizeMode="contain"
+                style={{
+                  width: 35,
+                  height: 35,
+                }}
+                tintColor={themeColors.text}
+              />
+            </TouchableOpacity>
             <TouchableOpacity
               style={{ marginRight: 10 }}
               onPress={openLogoutModal}

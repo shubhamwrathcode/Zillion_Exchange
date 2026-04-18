@@ -8,13 +8,15 @@ import {
   Dimensions,
 } from 'react-native';
 import { colors } from '../theme/colors';
-import { AppText, ELEVEN, FOURTEEN, SEMI_BOLD, TEN, THIRD, THIRTEEN, TWELVE, WHITE } from './AppText';
+import { AppText, ELEVEN, SEMI_BOLD, THIRTEEN } from './AppText';
 import FastImage from 'react-native-fast-image';
 import { DOWN_ARROW, tick } from '../helper/ImageAssets';
+import { useTheme } from '../hooks/useTheme';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const CustomDropdown = ({ data = [], onSelect, selected, theme }) => {
+const CustomDropdown = ({ data = [], onSelect, selected }) => {
+  const { colors: themeColors, isDark } = useTheme();
   const [visible, setVisible] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const buttonRef = useRef(null);
@@ -27,7 +29,7 @@ const CustomDropdown = ({ data = [], onSelect, selected, theme }) => {
   const openDropdown = () => {
     buttonRef.current?.measureInWindow((x, y, width, height) => {
       setDropdownPos({
-        top: y + height + 5,
+        top: y + height + 2,
         left: x,
         width: width,
       });
@@ -35,14 +37,20 @@ const CustomDropdown = ({ data = [], onSelect, selected, theme }) => {
     });
   };
 
-  // Logic to determine if we should show the placeholder style
   const isPlaceholder = !selected || selected.toLowerCase().includes("select");
 
   return (
     <View>
       <TouchableOpacity
         ref={buttonRef}
-        style={styles.dropdownTrigger}
+        style={[
+          styles.dropdownTrigger, 
+          { 
+            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)",
+            borderColor: themeColors.border,
+            borderWidth: 1 
+          }
+        ]}
         onPress={openDropdown}
         activeOpacity={0.8}
       >
@@ -50,7 +58,7 @@ const CustomDropdown = ({ data = [], onSelect, selected, theme }) => {
           type={THIRTEEN}
           style={{
             flex: 1,
-            color: isPlaceholder ? colors.disabledText : colors.white
+            color: isPlaceholder ? themeColors.secondaryText : themeColors.text
           }}
         >
           {selected || 'Select option'}
@@ -58,7 +66,7 @@ const CustomDropdown = ({ data = [], onSelect, selected, theme }) => {
         <FastImage
           source={DOWN_ARROW}
           style={[styles.arrow, { transform: [{ rotate: visible ? '180deg' : '0deg' }] }]}
-          tintColor={colors.white}
+          tintColor={themeColors.text}
           resizeMode='contain'
         />
       </TouchableOpacity>
@@ -73,7 +81,9 @@ const CustomDropdown = ({ data = [], onSelect, selected, theme }) => {
             style={[
               styles.modalContent,
               {
-                backgroundColor: theme === "Dark" ? colors.overlayColor : colors.white,
+                backgroundColor: themeColors.card,
+                borderColor: themeColors.border,
+                borderWidth: 1,
                 top: dropdownPos.top,
                 left: dropdownPos.left,
                 width: dropdownPos.width,
@@ -89,18 +99,18 @@ const CustomDropdown = ({ data = [], onSelect, selected, theme }) => {
                   onPress={() => handleSelect(item)}
                   style={[
                     styles.option,
-                    { borderBottomColor: theme === "Dark" ? 'rgba(255,255,255,0.05)' : '#f0f0f0' }
+                    { borderBottomColor: themeColors.border }
                   ]}
                 >
                   <AppText
                     type={ELEVEN}
-                    style={{ color: theme === "Dark" ? colors.white : colors.black }}
+                    style={{ color: themeColors.text }}
                     weight={selected === item ? SEMI_BOLD : undefined}
                   >
                     {item}
                   </AppText>
                   {selected === item && (
-                    <FastImage source={tick} style={{ width: 12, height: 12 }} resizeMode="contain" tintColor={colors.buttonBg} />
+                    <FastImage source={tick} style={{ width: 12, height: 12 }} resizeMode="contain" tintColor={themeColors.button} />
                   )}
                 </TouchableOpacity>
               )}
@@ -119,13 +129,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    height: 50,
+    height: 48,
     borderRadius: 8,
-    backgroundColor: colors.overlayColor,
   },
   arrow: {
-    width: 11,
-    height: 11,
+    width: 10,
+    height: 10,
   },
   modalOverlay: {
     flex: 1,
@@ -133,19 +142,17 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     position: 'absolute',
-    borderRadius: 16,
-    paddingVertical: 8,
+    borderRadius: 12,
+    paddingVertical: 4,
     maxHeight: 250,
     shadowColor: "#000",
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.1,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 10,
-    borderWidth: 0.5,
-    borderColor: 'rgba(128, 128, 128, 0.2)',
+    elevation: 5,
   },
   option: {
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
