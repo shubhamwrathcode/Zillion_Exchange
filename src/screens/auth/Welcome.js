@@ -21,6 +21,9 @@ import {
   introImage1,
   introImage2,
   introImage3,
+  introImageBlack1,
+  introImageBlack2,
+  introImageBlack3,
   Logo,
 } from "../../helper/ImageAssets";
 import {
@@ -55,19 +58,19 @@ const Welcome = () => {
   const bannerList = [
     {
       index: 0,
-      banner_path: theme !== "Dark" ? banner1 : introImage1,
+      banner_path: theme == "Dark" ?  introImage1:introImageBlack1,
       desc: "Exciting Welcome Rewards Waiting for You!",
       style: { height: "81%", width: "100%" },
     },
     {
       index: 1,
-      banner_path: theme !== "Dark" ? banner1 : introImage2,
+      banner_path: theme == "Dark" ?  introImage2:introImageBlack2,
       desc: "Fast, secure, and reliable crypto trading platform supporting spot and futures markets.",
       style: { height: "78%", width: "100%" },
     },
     {
       index: 2,
-      banner_path: theme !== "Dark" ? banner1 : introImage3,
+      banner_path: theme == "Dark" ?  introImage3 : introImageBlack3,
       desc: "The exchange where futures, security, speed, and opportunity meet for everyone.",
       style: { height: "75%", width: "100%" },
     },

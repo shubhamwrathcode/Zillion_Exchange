@@ -12,9 +12,13 @@ import { Screen } from "../../theme/dimens";
 import {
   BACK_ICON,
   homeImage1,
+  homeImage1Dark,
   homeImage2,
+  homeImage2Dark,
   homeImage3,
+  homeImage3Dark,
   homeImage4,
+  homeImage4Dark,
 } from "../../helper/ImageAssets";
 import FastImage from "react-native-fast-image";
 import { AppText, TWELVE } from "../../shared";
@@ -34,7 +38,7 @@ const baseOptions = {
 };
 
 const HomeSlider = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, theme } = useTheme();
   const [activeIndex, setActiveIndex] = useState(0);
   const userData = useAppSelector((state) => state.auth.userData);
   const kycVerified = userData?.kycVerified != null ? Number(userData.kycVerified) : 0;
@@ -42,26 +46,26 @@ const HomeSlider = () => {
   const banners = [
     {
       index: 0,
-      banner_path: homeImage1,
+      banner_path: theme == "Dark" ? homeImage1 : homeImage1Dark,
       title: `Complete your KYC verification to unlock all account features and ensure a seamless trading experience.`,
       onPress: () => NavigationService.navigate(KYC_STEP_ONE_SCREEN),
       isKyc: true,
     },
     {
       index: 1,
-      banner_path: homeImage2,
+      banner_path: theme == "Dark" ? homeImage2 : homeImage2Dark,
       title: `Start trading directly—buy and sell with full market access, real-time prices, and a smooth trading experience.`,
       onPress: () => NavigationService.navigate(WALLET_SCREEN),
     },
     {
       index: 2,
-      banner_path: homeImage3,
+      banner_path: theme == "Dark" ? homeImage3 : homeImage3Dark,
       title: `Add funds to your wallet quickly and securely to begin trading without any delays.`,
       onPress: () => NavigationService.navigate(DEPOSIT_COIN_SCREEN),
     },
     {
       index: 3,
-      banner_path: homeImage4,
+      banner_path: theme == "Dark" ? homeImage4 : homeImage4Dark,
       title: `Have a question or need help? Get quick assistance from our support team for any queries or concerns.`,
       onPress: () => NavigationService.navigate('Support'),
     },

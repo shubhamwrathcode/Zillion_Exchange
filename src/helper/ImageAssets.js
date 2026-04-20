@@ -44,7 +44,9 @@ export const downIcon = require('../../assets/images/down_ic.png');
 export const depositIcon = require('../../assets/images/deposit_ic.png');
 export const withdrawIcon = require('../../assets/images/widthdraw_ic.png');
 export const referralIcon = require('../../assets/images/refferal_ic.png');
-export const convertIcon = require('../../assets/images/convert_ic.png');
+export const convertIcon = require('../../assets/images/convertIcon.png');
+export const convertIconDark = require('../../assets/images/convertIconDark.png');
+
 export const upDownIc = require('../../assets/images/up_down_ic.png');
 export const searchIcon = require('../../assets/images/search_ic.png');
 export const HomeBg = require('../../assets/images/BlackBg.png');
@@ -126,7 +128,6 @@ export const googleIcon = require('../../assets/images/googleIcon.png');
 export const homeIcon = require('../../assets/images/homeIcon.png');
 export const marketIcon = require('../../assets/images/marketIcon.png');
 export const spotIcon = require('../../assets/images/spotIcon.png');
-export const spotDarkIcon = require('../../assets/images/spotDarkIcon.png');
 export const earningIcon = require('../../assets/images/earningIcon.png');
 export const walletIcon = require('../../assets/images/walletIcon.png');
 export const newWalletIcon = require('../../assets/images/newWalletIcon.png');
@@ -148,7 +149,10 @@ export const passkey_login = require('../../assets/images/passkey_login.png');
 export const Reminder = require('../../assets/images/Reminder.png');
 export const DISPLAY_PIC = require('../../assets/images/display.png');
 
-
+export const homeImage1Dark = require('../../assets/images/homeImageDark1.png');
+export const homeImage2Dark = require('../../assets/images/homeImageDark2.png');
+export const homeImage3Dark = require('../../assets/images/homeImageDark3.png');
+export const homeImage4Dark = require('../../assets/images/homeImageDark4.png');
 
 
 
@@ -156,12 +160,15 @@ export const DISPLAY_PIC = require('../../assets/images/display.png');
 export const bannerDark1 = require('../../assets/images/bannerDark1.png');
 export const coinBg = require('../../assets/images/coinBg.png');
 export const memexIcon = require('../../assets/images/memexIcon.png');
-export const memexDarkIcon = require('../../assets/images/memexDarkIcon.png');
+export const memexDarkIcon = require('../../assets/images/memexDark.png');
+
+// export const memexDarkIcon = require('../../assets/images/memexDarkIcon.png');
 export const earningMenuIcon = require('../../assets/images/earningMenuIcon.png');
 export const earningMenuDarkIcon = require('../../assets/images/earningMenuDarkIcon.png');
 export const arbitary = require('../../assets/images/arbitary.png');
 export const swap = require('../../assets/images/swap.png');
 export const rewardHubIcon = require('../../assets/images/rewardHubIcon.png');
+export const rewardHubDarkIcon = require('../../assets/images/rewardHubIconDark.png');
 export const rectangleIcon = require('../../assets/images/rectangleIcon.png');
 export const spotTabIcon = require('../../assets/images/spotTabIcon.png');
 export const gainerIcon = require('../../assets/images/gainerIcon.png');
@@ -207,7 +214,8 @@ export const StarFillIcon = require('../../assets/images/StarFillIcon.png');
 export const moonIcon = require('../../assets/images/moonIcon.png');
 export const Send_Img = require('../../assets/images/send.png');
 
-
+export const depositImageDark = require('../../assets/images/depositImageDark.png');
+export const withdrawImageDark = require('../../assets/images/withdrawImageDark.png');
 
 
 export const subscribe = require('../../assets/images/subscribe.png');
@@ -327,8 +335,16 @@ export const cancelcheck = require('../../assets/images/cancelcheck.png');
 export const successcheck = require('../../assets/images/successcheck.png');
 export const pendingCheck = require('../../assets/images/pendingcheck.png');
 export const candle = require('../../assets/images/candle.png');
+export const introImageBlack3 = require('../../assets/images/introImageBlack3.png');
+export const introImageBlack2 = require('../../assets/images/introImageBlack2.png');
+export const introImageBlack1 = require('../../assets/images/introImageBlack1.png');   
 
-
+export const memeXProfile = require('../../assets/images/memeXProfile.png');
+export const memeXProfileDark = require('../../assets/images/memeXProfileDark.png');
+export const stakingDrawerDark = require('../../assets/images/stakingDrawerDark.png');
+export const stakingDrawer = require('../../assets/images/stakingDrawer.png');
+export const walletDrawerDark = require('../../assets/images/walletIconDark.png');
+export const settingsDark = require('../../assets/images/settingsDark.png');
 
 
 

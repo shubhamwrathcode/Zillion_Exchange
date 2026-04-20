@@ -14,11 +14,13 @@ import { useTheme } from "../../hooks/useTheme";
 const Width = Dimensions.get("window").width;
 import {
   convertIcon,
+  convertIconDark,
   earningMenuDarkIcon,
   earningMenuIcon,
   memexDarkIcon,
   memexIcon,
   moreOption,
+  rewardHubDarkIcon,
   rewardHubIcon,
 } from "../../helper/ImageAssets";
 import NavigationService from "../../navigation/NavigationService";
@@ -88,7 +90,7 @@ const HomeMenuBar = () => {
     {
       id: "1",
       title: checkValue(languages?.memex),
-      icon: theme === "Dark" ? memexDarkIcon : memexIcon,
+      icon: theme !== "Dark" ? memexDarkIcon : memexIcon,
       onPress: () =>
         NavigationService.navigate(MARKET_SCREEN, {
           from: "home",
@@ -98,14 +100,14 @@ const HomeMenuBar = () => {
     {
       id: "2",
       title: "Staking",
-      icon: theme === "Dark" ? earningMenuDarkIcon : earningMenuIcon,
+      icon: theme !== "Dark" ? earningMenuDarkIcon : earningMenuIcon,
       onPress: () =>
         NavigationService.navigate(ACCOUNT_SCREEN, { from: "home" }),
     },
     {
       id: "4",
       title: checkValue("Swap"),
-      icon: convertIcon,
+      icon: theme !== "Dark" ? convertIconDark : convertIcon,
       onPress: () => {
         NavigationService.navigate(CONVERT_SCREEN);
       },
@@ -113,7 +115,7 @@ const HomeMenuBar = () => {
     {
       id: "5",
       title: checkValue(languages?.reward),
-      icon: rewardHubIcon,
+      icon: theme !== "Dark" ? rewardHubDarkIcon : rewardHubIcon,
       onPress: () => NavigationService.navigate(INVITE_AND_EARN_SCREEN),
     },
     {

@@ -64,6 +64,14 @@ import {
   INFERNAL_TRANSFER,
   DISPLAY_PIC,
   defaultPic,
+  withdrawImageDark,
+  depositImageDark,
+  memeXProfile,
+  memeXProfileDark,
+  stakingDrawer,
+  stakingDrawerDark,
+  walletDrawerDark,
+  settingsDark,
 } from "../../helper/ImageAssets";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import { AppText, BLACK, DISCLAIMTEXT, ELEVEN, THIRTEEN, TWELVE, YELLOW } from "../../shared";
@@ -91,7 +99,7 @@ import {
   WITHDRAW_Coin_SCREEN,
 } from "../../navigation/routes";
 import { useAppSelector } from "../../store/hooks";
-import { colors } from "../../theme/colors";
+import { colors, darkTheme } from "../../theme/colors";
 import { useTheme } from "../../hooks/useTheme";
 import { useDispatch } from "react-redux";
 import { getUserProfile } from "../../actions/accountActions";
@@ -102,11 +110,11 @@ import { IMAGE_BASE_URL } from "../../helper/Constants";
 
 const Width = Dimensions.get("window").width;
 
-const Data = [
+const getGeneralFeaturesData = (theme) => [
   {
     id: "1",
     title: checkValue(languages?.memex),
-    icon: memexIcon,
+    icon: theme !== "Dark" ? memeXProfile : memeXProfileDark,
     onPress: () =>
       NavigationService.navigate(MARKET_SCREEN, { from: "home", tab: "MemeX" }),
   },
@@ -120,19 +128,19 @@ const Data = [
   {
     id: "4",
     title: "Staking",
-    icon: earning,
+    icon: theme !== "Dark" ? stakingDrawer : stakingDrawerDark,
     onPress: () => NavigationService.navigate(ACCOUNT_SCREEN),
   },
   {
     id: "5",
     title: "Wallet",
-    icon: walletIcon,
+    icon: theme !== "Dark" ? walletDrawerDark : walletIcon,
     onPress: () => NavigationService.navigate(EARING_SCREEN),
   },
   {
     id: "6",
     title: "Settings",
-    icon: settings,
+    icon: theme !== "Dark" ? settings : settingsDark,
     onPress: () => {
       NavigationService.navigate(SETTING_SCREEN_New);
     },
@@ -226,8 +234,7 @@ const Data3 = [
 const STAGGER_DELAY = 45;
 const ENTRANCE_DURATION = 380;
 
-const AnimatedIconBox = ({ theme, children }) => {
-  const { colors: themeColors } = useTheme();
+const AnimatedIconBox = ({ theme, children, themeColors }) => {
   return (
     <View
       style={{
@@ -235,7 +242,7 @@ const AnimatedIconBox = ({ theme, children }) => {
         height: 40,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: theme !== "Dark" ? themeColors.themeElevationColor : "#25262B",
+        backgroundColor: theme !== "Dark" ? themeColors.themeElevationColor : themeColors.themeSelection,
         borderRadius: 5,
       }}
     >
@@ -244,8 +251,7 @@ const AnimatedIconBox = ({ theme, children }) => {
   );
 };
 
-const IconAndLabel = ({ theme, iconSource, title, textStyle = {} }) => {
-  const { colors: themeColors } = useTheme();
+const IconAndLabel = ({ theme, themeColors, iconSource, title, textStyle = {} }) => {
   return (
     <>
       <View
@@ -254,7 +260,7 @@ const IconAndLabel = ({ theme, iconSource, title, textStyle = {} }) => {
           height: 40,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: themeColors.themeElevationColor,
+          backgroundColor: theme !== "Dark" ? themeColors.themeElevationColor : themeColors.themeSelection,
           borderRadius: 5,
         }}
       >
@@ -266,8 +272,10 @@ const IconAndLabel = ({ theme, iconSource, title, textStyle = {} }) => {
       </View>
       <View style={{ alignItems: "center" }}>
         <AppText
-          color={BLACK}
-          style={[{ fontWeight: "700", fontSize: 10, textAlign: "center" }, textStyle]}
+          style={[
+            { fontWeight: "700", fontSize: 10, textAlign: "center", color: themeColors.text },
+            textStyle,
+          ]}
           type={THIRTEEN}
         >
           {title}
@@ -291,7 +299,7 @@ const DepositWithdrawCard = ({ theme, bigImage, smallIcon, label }) => {
           style={{ height: 24, width: 24, marginBottom: 6 }}
           resizeMode="contain"
         />
-        <AppText style={{ fontWeight: "500" }}>{label}</AppText>
+        <AppText style={{ fontWeight: "500" ,color:theme=="Dark" ? colors.white : colors.black}}>{label}</AppText>
       </View>
     </>
   );
@@ -413,7 +421,7 @@ const AnimatedCard = ({ onPress, theme, delay, children }) => {
           padding: 10,
           alignItems: "center",
           justifyContent: "space-between",
-          backgroundColor: themeColors.themeElevationColor,
+          // backgroundColor: themeColors.themeElevationColor,
         }}
       >
         {children}
@@ -425,7 +433,10 @@ const AnimatedCard = ({ onPress, theme, delay, children }) => {
 const ProfileDrawer = () => {
   const dispatch = useDispatch();
   const { colors: themeColors, theme, isDark } = useTheme();
+  const drawerColors = isDark ? themeColors : darkTheme;
+  const effectiveTheme = isDark ? theme : "Dark";
   const userData = useAppSelector((state) => state.auth.userData);
+  const Data = getGeneralFeaturesData(effectiveTheme);
   const [refresh, setRefresh] = useState(true);
   const emailTextOpacity = useRef(new Animated.Value(0)).current;
   const emailTextTranslateY = useRef(new Animated.Value(10)).current;
@@ -627,7 +638,7 @@ const ProfileDrawer = () => {
       <View
         style={{
           flex: 1,
-          backgroundColor: themeColors.background,
+          backgroundColor: isDark ? themeColors.themeElevationColor : drawerColors.background,
           borderTopLeftRadius: 50,
           borderTopRightRadius: 50,
           overflow: "hidden",
@@ -651,30 +662,30 @@ const ProfileDrawer = () => {
             }}
           >
             <AnimatedCard
-              theme={theme}
+              theme={effectiveTheme}
               delay={0}
               onPress={() => NavigationService.navigate(DEPOSIT_COIN_SCREEN)}
             >
               <DepositWithdrawCard
-                theme={theme}
-                bigImage={depositImage}
+                theme={effectiveTheme}
+                bigImage={ effectiveTheme !== "Dark" ? depositImage : depositImageDark}
                 smallIcon={
-                  theme !== "Dark" ? newDepositIcon : newDepositDarkIcon
+                  effectiveTheme !== "Dark" ? newDepositIcon : newDepositDarkIcon
                 }
                 label="Deposit"
               />
             </AnimatedCard>
 
             <AnimatedCard
-              theme={theme}
+              theme={effectiveTheme}
               delay={80}
               onPress={() => NavigationService.navigate(WALLET_WITHDRAW_SCREEN)}
             >
               <DepositWithdrawCard
-                theme={theme}
-                bigImage={withdrawImage}
+                theme={effectiveTheme}
+                bigImage={ effectiveTheme !== "Dark" ? withdrawImage : withdrawImageDark}
                 smallIcon={
-                  theme !== "Dark" ? newWidthrawIcon : newWidthrawDarkIcon
+                  effectiveTheme !== "Dark" ? newWidthrawIcon : newWidthrawDarkIcon
                 }
                 label="Withdrawal"
               />
@@ -686,6 +697,7 @@ const ProfileDrawer = () => {
               fontWeight: "700",
               marginHorizontal: 20,
               marginTop: 10,
+              color: drawerColors.text,
             }}
           >
             General Features
@@ -695,12 +707,13 @@ const ProfileDrawer = () => {
               <AnimatedMenuItem
                 key={item.id}
                 index={index}
-                theme={theme}
+                theme={effectiveTheme}
                 onPress={item?.onPress}
                 style={styles.singleItem}
               >
                 <IconAndLabel
-                  theme={theme}
+                  theme={effectiveTheme}
+                  themeColors={drawerColors}
                   iconSource={item.icon}
                   title={item.title}
                 />
@@ -714,6 +727,7 @@ const ProfileDrawer = () => {
               fontWeight: "700",
               marginHorizontal: 20,
               marginTop: 10,
+              color: drawerColors.text,
             }}
           >
             Support Tools
@@ -723,12 +737,13 @@ const ProfileDrawer = () => {
               <AnimatedMenuItem
                 key={item.id}
                 index={index}
-                theme={theme}
+                theme={effectiveTheme}
                 onPress={item.onPress}
                 style={styles.singleItem}
               >
                 <IconAndLabel
-                  theme={theme}
+                  theme={effectiveTheme}
+                  themeColors={drawerColors}
                   iconSource={item.icon}
                   title={item.title}
                 />
@@ -741,6 +756,7 @@ const ProfileDrawer = () => {
               fontWeight: "700",
               marginHorizontal: 20,
               marginTop: 10,
+              color: drawerColors.text,
             }}
           >
             History
@@ -750,12 +766,13 @@ const ProfileDrawer = () => {
               <AnimatedMenuItem
                 key={item.id}
                 index={index}
-                theme={theme}
+                theme={effectiveTheme}
                 onPress={item.onPress}
                 style={styles.singleItem}
               >
                 <IconAndLabel
-                  theme={theme}
+                  theme={effectiveTheme}
+                  themeColors={drawerColors}
                   iconSource={item.icon}
                   title={item.title}
                   textStyle={{ width: 60 }}
@@ -822,18 +839,22 @@ const ProfileDrawer = () => {
               />
             </View>
 
-            <AppText style={[styles.logoutTitle, { color: themeColors.text }]}>Confirm Logout</AppText>
-            <AppText style={[styles.logoutDesc, { color: themeColors.secondaryText }]}>
+            <AppText style={[styles.logoutTitle, { color: drawerColors.text }]}>Confirm Logout</AppText>
+            <AppText style={[styles.logoutDesc, { color: drawerColors.secondaryText }]}>
               Are you sure you want to log out of your account?
             </AppText>
 
             <View style={styles.logoutActionsRow}>
               <TouchableOpacity
                 activeOpacity={0.85}
-                style={[styles.logoutBtn, styles.logoutBtnSecondary, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)" }]}
+                style={[
+                  styles.logoutBtn,
+                  styles.logoutBtnSecondary,
+                  { backgroundColor: effectiveTheme === "Dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)" },
+                ]}
                 onPress={() => closeLogoutModal()}
               >
-                <AppText style={[styles.logoutBtnSecondaryText, { color: themeColors.text }]}>Cancel</AppText>
+                <AppText style={[styles.logoutBtnSecondaryText, { color: drawerColors.text }]}>Cancel</AppText>
               </TouchableOpacity>
 
               <TouchableOpacity

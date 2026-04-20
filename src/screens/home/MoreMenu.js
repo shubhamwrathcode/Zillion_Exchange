@@ -138,7 +138,6 @@ const MoreMenu = () => {
                 source={newWalletIcon}
                 resizeMode="contain"
                 style={{ width: 34, height: 34 }}
-                //tintColor={colors.buttonBg}
               />
               <AppText color={BLACK} style={{ marginTop: 5 }} type={ELEVEN}>
                 Wallet

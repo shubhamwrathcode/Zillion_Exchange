@@ -27,7 +27,6 @@ import {
   homeIcon,
   marketIcon,
   spotActiveIcon,
-  spotDarkIcon,
   spotIcon,
   trade_ic,
   wallet_ic,
@@ -537,10 +536,12 @@ function BottomNavigation() {
                 <FastImage
                   source={homeIcon}
                   style={{ width: 20, height: 20 }}
+                  resizeMode="contain"
+                  tintColor={focused ? themeColors.button : themeColors.inactiveTab}
                 />
                 <AppText
                   style={[
-                    { top: 5, color: focused ? themeColors.button : themeColors.text }
+                    { top: 5, color: focused ? themeColors.button : themeColors.inactiveTab }
                   ]}
                   weight={MEDIUM}
                   type={TEN}
@@ -562,11 +563,12 @@ function BottomNavigation() {
                   source={marketIcon}
                   style={{ width: 20, height: 20 }}
                   resizeMode="contain"
+                  tintColor={focused ? themeColors.button : themeColors.inactiveTab}
                 />
                 <AppText
                   weight={MEDIUM}
                   type={TEN}
-                  style={{ top: 5, color: focused ? themeColors.button : themeColors.text }}
+                  style={{ top: 5, color: focused ? themeColors.button : themeColors.inactiveTab }}
                 >
                   Market
                 </AppText>
@@ -586,19 +588,16 @@ function BottomNavigation() {
               <View style={{ alignItems: "center", marginTop: 10 }}>
                 <FastImage
                   source={
-                    focused
-                      ? !isDark
-                        ? spotActiveIcon
-                        : spotDarkIcon
-                      : spotIcon
+                    spotActiveIcon
                   }
-                  style={{ width: 22, height: 22 }}
+                  style={{ width: 22, height: 22, transform: [{ scale: isDark ? 0.78 : 1 }] }}
                   resizeMode="contain"
+                  tintColor={focused ? themeColors.button : themeColors.inactiveTab}
                 />
                 <AppText
                   weight={MEDIUM}
                   type={TEN}
-                  style={{ top: 5, color: focused ? themeColors.button : themeColors.text }}
+                  style={{ top: 5, color: focused ? themeColors.button : themeColors.inactiveTab }}
                 >
                   Spot
                 </AppText>
@@ -626,12 +625,12 @@ function BottomNavigation() {
                   }
                   style={{ width: 22, height: 22 }}
                   resizeMode="contain"
-                  tintColor={themeColors.text}
+                  tintColor={focused ? themeColors.button : themeColors.inactiveTab}
                 />
                 <AppText
                   weight={MEDIUM}
                   type={TEN}
-                  style={{ top: 5, color: focused ? themeColors.button : themeColors.text }}
+                  style={{ top: 5, color: focused ? themeColors.button : themeColors.inactiveTab }}
                 >
                   Futures
                 </AppText>
@@ -650,10 +649,11 @@ function BottomNavigation() {
                   source={earningIcon}
                   style={{ width: 20, height: 20 }}
                   resizeMode="contain"
+                  tintColor={focused ? themeColors.button : themeColors.inactiveTab}
                 />
                 <AppText
                   weight={MEDIUM}
-                  style={{ top: 5, color: focused ? themeColors.button : themeColors.text }}
+                  style={{ top: 5, color: focused ? themeColors.button : themeColors.inactiveTab }}
                   type={TEN}
                 >
                   Staking
@@ -673,11 +673,11 @@ function BottomNavigation() {
                   source={wallet_ic}
                   style={{ width: 20, height: 20 }}
                   resizeMode="contain"
-                  tintColor={themeColors.text}
+                  tintColor={focused ? themeColors.button : themeColors.inactiveTab}
                 />
                 <AppText
                   weight={MEDIUM}
-                  style={{ top: 5, color: focused ? themeColors.button : themeColors.text }}
+                  style={{ top: 5, color: focused ? themeColors.button : themeColors.inactiveTab }}
                   type={TEN}
                 >
                   Wallet
