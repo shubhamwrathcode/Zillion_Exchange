@@ -21,11 +21,10 @@ import Animated, {
   Layout,
 } from "react-native-reanimated";
 import { BASE_URL } from "../helper/Constants";
-import { AppText, BLACK, BOLD, DISCLAIMTEXT, SEMI_BOLD } from "./AppText";
+import { AppText, BLACK, BOLD, DISCLAIMTEXT, FOURTEEN, SEMI_BOLD, TEN } from "./AppText";
 import FastImage from "react-native-fast-image";
 import { toFixedFive } from "../helper/utility";
 import { showError } from "../helper/logger";
-import Ionicons from "react-native-vector-icons/Ionicons";
 import { closeIcon, NO_NOTIFICATION_ICON, searchIcon } from "../helper/ImageAssets";
 import { colors } from "../theme/colors";
 import { useTheme } from "../hooks/useTheme";
@@ -35,7 +34,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedView = Animated.createAnimatedComponent(View);
 
-const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId }) => {
+const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId, selectedCoinId }) => {
   const { colors: themeColors, isDark } = useTheme();
   const [searchText, setSearchText] = useState("");
   const translateY = useSharedValue(SCREEN_HEIGHT);
@@ -107,16 +106,21 @@ const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId }) => 
 
   const renderCoinItem = ({ item, index }) => {
     const isDisabled = item?.currency_id === disabledCoinId;
+    const isSelected = item?.currency_id === selectedCoinId;
     return (
       <AnimatedTouchableOpacity
-        entering={FadeInDown.delay(index * 30).duration(200).springify()}
+        entering={FadeInDown.delay(index * 20).duration(300).springify()}
         layout={Layout.springify()}
-        activeOpacity={0.7}
+        activeOpacity={0.8}
         style={[
           styles.coinItem,
           {
-            backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF",
-            borderColor: isDark ? "#2A2A2A" : "#EEE",
+            backgroundColor: isSelected
+              ? (isDark ? "rgba(30, 86, 245, 0.12)" : "rgba(30, 86, 245, 0.08)")
+              : (isDark ? "rgba(255, 255, 255, 0.03)" : "#FDFDFD"),
+            borderColor: isSelected
+              ? themeColors.button
+              : (isDark ? "rgba(255, 255, 255, 0.05)" : "#F0F0F0"),
             borderWidth: 1,
             opacity: isDisabled ? 0.4 : 1,
           },
@@ -131,43 +135,45 @@ const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId }) => 
         }}
       >
         <View style={styles.coinLeft}>
-          <AnimatedView
-            entering={FadeIn.delay(index * 50 + 100).duration(300)}
-            style={[
-              styles.coinIconContainer,
-              {
-                borderColor: isDark 
-                  ? "rgba(255,255,255,0.1)" 
-                  : "#EEE",
-              },
-            ]}
-          >
+          <View style={[
+            styles.coinIconWrapper,
+            {
+              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#F5F7F9",
+              borderColor: isSelected ? themeColors.button : (isDark ? "rgba(255,255,255,0.1)" : "#EEE")
+            }
+          ]}>
             <FastImage
               source={{ uri: BASE_URL + item?.icon_path }}
               style={styles.coinIcon}
-              resizeMode="cover"
+              resizeMode="contain"
             />
-          </AnimatedView>
+          </View>
           <View style={styles.coinInfo}>
             <AppText
-              color={themeColors.text}
+              color={isSelected ? themeColors.button : themeColors.text}
               style={styles.coinShortName}
-              weight={SEMI_BOLD}
+              weight={BOLD}
             >
               {item?.short_name}
             </AppText>
-            <AppText color={DISCLAIMTEXT} style={styles.coinCurrency}>
+            <AppText
+              color={themeColors.secondaryText}
+              style={styles.coinCurrency}
+              type={TEN}
+            >
               {item?.currency}
             </AppText>
           </View>
         </View>
+
         <View style={styles.coinRight}>
           <AppText 
-            color={BLACK} 
             style={[
               styles.coinBalance,
-              { color: themeColors.text }
+              { color: isSelected ? themeColors.button : themeColors.text }
             ]}
+            weight={isSelected ? BOLD : SEMI_BOLD}
+            type={FOURTEEN}
           >
             {toFixedFive(item?.balance)}
           </AppText>
@@ -186,7 +192,7 @@ const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId }) => 
     >
       <TouchableWithoutFeedback onPress={handleClose}>
         <AnimatedView style={[styles.overlay, backdropStyle]}>
-          <TouchableWithoutFeedback onPress={() => {}}>
+          <TouchableWithoutFeedback onPress={() => { }}>
             <AnimatedView
               style={[
                 styles.modalContent,
@@ -197,13 +203,13 @@ const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId }) => 
               ]}
             >
               <View style={styles.header}>
-                <AppText 
+                <AppText
                   style={[
                     styles.title,
                     { color: themeColors.text }
-                  ]} 
+                  ]}
                   weight={BOLD}
-                > 
+                >
                   Select Currency
                 </AppText>
                 <TouchableOpacity
@@ -216,7 +222,7 @@ const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId }) => 
                   ]}
                   activeOpacity={0.7}
                 >
-                   <FastImage source={closeIcon} resizeMode="contain" style={{width: 15, height: 15}} tintColor={themeColors.text}/>
+                  <FastImage source={closeIcon} resizeMode="contain" style={{ width: 15, height: 15 }} tintColor={themeColors.text} />
                 </TouchableOpacity>
               </View>
 
@@ -225,18 +231,18 @@ const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId }) => 
                 style={[
                   styles.searchContainer,
                   {
-                    backgroundColor: isDark ? "#1A1A1A" : "#F5F5F5",
-                    borderColor: isDark ? "#2A2A2A" : "#EEE",
+                    backgroundColor: isDark ? "rgba(255, 255, 255, 0.05)" : "#F2F4F7",
+                    borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "transparent",
                     borderWidth: 1
                   },
                 ]}
               >
-                 <FastImage source={searchIcon} resizeMode="contain" 
-                 style={{width: 20, height: 20}} 
-                 tintColor={"#666"}/>
+                <FastImage source={searchIcon} resizeMode="contain"
+                  style={{ width: 18, height: 18, marginRight: 8 }}
+                  tintColor={isDark ? "rgba(255,255,255,0.4)" : "#98A2B3"} />
                 <TextInput
                   placeholder="Search currency..."
-                  placeholderTextColor={themeColors.secondaryText}
+                  placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "#98A2B3"}
                   value={searchText}
                   onChangeText={setSearchText}
                   style={[
@@ -251,10 +257,10 @@ const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId }) => 
                     onPress={() => setSearchText("")}
                     style={styles.clearButton}
                   >
-                   <FastImage source={closeIcon} 
-                   resizeMode="contain" 
-                   style={{width: 15, height: 15}} 
-                   tintColor={"#666"}/>
+                    <FastImage source={closeIcon}
+                      resizeMode="contain"
+                      style={{ width: 14, height: 14 }}
+                      tintColor={isDark ? "rgba(255,255,255,0.4)" : "#98A2B3"} />
                   </TouchableOpacity>
                 )}
               </Animated.View>
@@ -265,8 +271,9 @@ const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId }) => 
                   entering={FadeIn.delay(200).duration(300)}
                   style={styles.noResultContainer}
                 >
-                <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={{width: 80, height: 80}} 
-                tintColor={isDark ? colors.white : "#CCC"}/>
+                  <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={{ width: 60, height: 60, marginBottom: 16 }}
+                    tintColor={isDark ? "rgba(255,255,255,0.1)" : "#EEE"} />
+                  <AppText color={themeColors.secondaryText}>No currency found</AppText>
                 </Animated.View>
               ) : (
                 <FlatList
@@ -288,117 +295,111 @@ const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId }) => 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "flex-end",
   },
   modalContent: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     paddingTop: 24,
     paddingHorizontal: 20,
     paddingBottom: 32,
-    maxHeight: SCREEN_HEIGHT * 0.65,
+    maxHeight: SCREEN_HEIGHT * 0.75,
     width: "100%",
-    shadowOffset: {
-      width: 0,
-      height: -4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 0,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     letterSpacing: -0.5,
   },
   closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 16,
+    borderRadius: 20,
     paddingHorizontal: 16,
-    marginBottom: 16,
-    minHeight: 52,
-  },
-  searchIcon: {
-    marginRight: 12,
+    marginBottom: 20,
+    height: 48,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     paddingVertical: 0,
-    paddingHorizontal: 5,
+    fontWeight: '500',
   },
   clearButton: {
     padding: 4,
-    marginLeft: 8,
   },
   listContent: {
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
   coinItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 15,
-    marginBottom: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    marginBottom: 10,
   },
   coinLeft: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
   },
-  coinIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 25,
-    overflow: "hidden",
-    marginRight: 12,
-    borderWidth: 1.5,
+  coinIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+    borderWidth: 1,
   },
   coinIcon: {
-    width: "100%",
-    height: "100%",
+    width: 28,
+    height: 28,
   },
   coinInfo: {
     flex: 1,
   },
   coinShortName: {
-    fontSize: 13,
-    fontWeight: "600",
-    marginBottom: 2,
-    letterSpacing: -0.2,
+    fontSize: 15,
+    marginBottom: 1,
+    letterSpacing: -0.3,
   },
   coinCurrency: {
-    fontSize: 12,
-    opacity: 0.6,
+    opacity: 0.8,
   },
   coinRight: {
     alignItems: "flex-end",
+    gap: 4
   },
   coinBalance: {
-    fontSize: 13,
-    fontWeight: "600",
     letterSpacing: -0.2,
+  },
+  selectedCheck: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   noResultContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 60,
+    paddingVertical: 80,
   },
   noResultText: {
     marginTop: 16,

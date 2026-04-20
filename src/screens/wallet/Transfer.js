@@ -39,6 +39,8 @@ const Transfer = () => {
   const [type, setType] = useState('');
   const [amount, setAmount] = useState('');
 
+  const loading = useAppSelector(state => state.auth.isLoading);
+
   useFocusEffect(
     useCallback(() => {
       if (isFirstMount.current) {
@@ -129,7 +131,12 @@ const Transfer = () => {
           <TransferSkeleton contentOnly />
         ) : (
           <>
-            <View style={[styles.fromToCard, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1, marginTop: -25 }]}>
+            <View style={[styles.fromToCard, {
+              backgroundColor: isDark ? colors.themeElevationColor : "#FFFFFF",
+              borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "#EEE",
+              borderWidth: 1,
+              marginTop: 0
+            }]}>
               <FastImage source={sideIcon} resizeMode="contain" style={{ width: 50, height: 80 }} />
               <View style={{ gap: 20 }}>
                 <TouchableOpacity style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "90%" }} onPress={() => openModal('from')}>
@@ -200,8 +207,13 @@ const Transfer = () => {
             <View style={{ marginHorizontal: 20 }}>
               <AppText color={themeColors.text} weight={SEMI_BOLD} type={SIXTEEN} style={{ marginVertical: 10 }}>Transfer Amount</AppText>
             </View>
-            <View style={[styles.inputContainer, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1 }]}>
-              <TextInput placeholder="Enter the amount" placeholderTextColor={themeColors.secondaryText} style={{ marginLeft: 20, width: '55%', color: themeColors.text }} value={amount} onChangeText={(value) => setAmount(value)} keyboardType="numeric" />
+            <View style={[styles.inputContainer, {
+              backgroundColor: isDark ? "transparent" : "#FFFFFF",
+              borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "#EEE",
+              borderWidth: 1
+            }]}>
+              <TextInput placeholder="Enter the amount" placeholderTextColor={themeColors.secondaryText}
+                style={{ marginLeft: 20, width: '55%', color: themeColors.text }} value={amount} onChangeText={(value) => setAmount(value)} keyboardType="numeric" />
               <View style={{ flexDirection: "row", gap: 25, alignItems: "center", paddingHorizontal: 20 }}>
                 <AppText style={{ color: themeColors.secondaryText }} type={FOURTEEN}>{coin?.short_name}</AppText>
                 <AppText style={{ color: colors.buttonBg }} type={FOURTEEN} onPress={() => setAmount(String(particularCoinBalance?.fromWallet?.balance) || 0)}>MAX</AppText>
@@ -212,27 +224,26 @@ const Transfer = () => {
               <AppText color={DISCLAIMTEXT}> Available Balance</AppText>
               <AppText color={DISCLAIMTEXT} > {particularCoinBalance?.fromWallet?.balance} {coin?.short_name}</AppText>
             </View>
-            {/* <TouchableOpacity style={styles.disView} onPress={() => NavigationService.navigate(DEPOSIT_WALLET_SCREEN)}>
-            <AppText style={{color: theme !== "Dark" ? "#5E6272" : colors.disclaimDarText,width:"85%",fontSize:11}} >You do not have any BTC in your Spot Wallet, Please
-            deposit first</AppText>
-            <FastImage
-              source={back_ic}
-              resizeMode="contain"
-              style={{
-                  width: 15,
-                  height: 15,
-                transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
-              }}
-              tintColor={"#5E6272"} />
-          </TouchableOpacity> */}
+
           </>
         )}
       </KeyBoardAware>
 
-      {/* Static button - no skeleton */}
-      <Button children="Confirm" containerStyle={{ margin: 20 }} disabled={!fromWallet || !toWallet || !amount || !coin} onPress={handleTransfer} />
-      <WalletTypeModal visible={modalVisible} onClose={() => setModalVisible(false)} data={WalletTypes} onSelect={handleSelect} />
-      <CoinListModal visible={coinModal} onClose={() => setCoinModal(false)} data={userWallet} onSelect={handleSelectCoin} />
+      <Button children="Confirm" containerStyle={{ margin: 20 }} disabled={!fromWallet || !toWallet || !amount || !coin} onPress={handleTransfer} loading={loading} />
+      <WalletTypeModal 
+        visible={modalVisible} 
+        onClose={() => setModalVisible(false)} 
+        data={WalletTypes?.filter(item => item?.toLowerCase() !== (type === "from" ? toWallet?.toLowerCase() : fromWallet?.toLowerCase()))} 
+        onSelect={handleSelect} 
+        selectedItem={type === "from" ? fromWallet : toWallet}
+      />
+      <CoinListModal 
+        visible={coinModal} 
+        onClose={() => setCoinModal(false)} 
+        data={userWallet} 
+        onSelect={handleSelectCoin} 
+        selectedCoinId={coin?.currency_id}
+      />
       <TransferModal visible={visible} handleVisiblity={handlePopup} type={'transfer'} />
     </AppSafeAreaView>
   );

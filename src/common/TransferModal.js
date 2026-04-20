@@ -64,34 +64,14 @@ const TransferModal = ({visible, handleVisiblity, type}) => {
                   style={styles.icon}
                 />
               </View>
-              <AppText type={SIXTEEN} style={[styles.titletext1, { color: themeColors.text }]}>
+              <AppText type={SIXTEEN} style={[styles.titletext1, { color: themeColors.text }]} weight={SEMI_BOLD}>
                 {type === "transfer" ? 'Transfer Successfully' : type === "swap" ? "Currency Swapped Successfully" : "You have successfully purchased the earning package"}
               </AppText>
-              {/* <View style={styles.itemsContainer}>
-                <AppText style={styles.item}>Quantity</AppText>
-                <AppText style={styles.item}>{quantity}</AppText>
-              </View>
-              <View style={styles.itemsContainer}>
-                <AppText style={styles.item}>TDS</AppText>
-                <AppText style={styles.item}>{tds}</AppText>
-              </View>
-              <View style={styles.itemsContainer}>
-                <AppText style={styles.item}>FEE</AppText>
-                <AppText style={styles.item}>{totalFee}</AppText>
-              </View>
-              <View style={styles.itemsContainer}>
-                <AppText style={styles.item}>Total</AppText>
-                <AppText style={styles.item}>{total}</AppText>
-              </View>
-              <AppText type={TEN} style={styles.titletext2}>
-                Fee: Maker: 0.2% l Taker: 0.2% l TDS: 1.0% l Incl. of all
-                applicable taxes
-              </AppText> */}
               <View style={styles.btnContainer}>
                 <TouchableOpacityView
                   onPress={handelPress}
                   style={[styles.actionBtn, {height: type === "earning" && 30}]}>
-                  <AppText type={THIRTEEN} weight={SEMI_BOLD} color={isDark ? colors.black : colors.white}>
+                  <AppText type={THIRTEEN} weight={SEMI_BOLD} color={colors.white}>
                     {type === "earning" ? 'View Portfolio' : 'OK'}
                   </AppText>
                 </TouchableOpacityView>

@@ -25,7 +25,7 @@ import { closeIcon } from '../helper/ImageAssets';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const AnimatedView = Animated.createAnimatedComponent(View);
 
-const WalletTypeModal = ({ visible, data, onSelect, onClose }) => {
+const WalletTypeModal = ({ visible, data, onSelect, onClose, selectedItem }) => {
   const { colors: themeColors, isDark } = useTheme();
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const opacity = useSharedValue(0);
@@ -82,7 +82,7 @@ const WalletTypeModal = ({ visible, data, onSelect, onClose }) => {
     >
       <TouchableWithoutFeedback onPress={handleClose}>
         <AnimatedView style={[styles.overlay, backdropStyle]}>
-          <TouchableWithoutFeedback onPress={() => {}}>
+          <TouchableWithoutFeedback onPress={() => { }}>
             <AnimatedView
               style={[
                 styles.modalContent,
@@ -106,8 +106,8 @@ const WalletTypeModal = ({ visible, data, onSelect, onClose }) => {
                     styles.closeButton,
                     {
                       backgroundColor: isDark
-                          ? 'rgba(255,255,255,0.1)'
-                          : 'rgba(0,0,0,0.05)',
+                        ? 'rgba(255,255,255,0.1)'
+                        : 'rgba(0,0,0,0.05)',
                     },
                   ]}
                   activeOpacity={0.7}
@@ -124,26 +124,35 @@ const WalletTypeModal = ({ visible, data, onSelect, onClose }) => {
               <FlatList
                 data={data || []}
                 keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.item,
-                      { backgroundColor: isDark ? "#1A1A1A" : "#F5F5F5", borderColor: isDark ? "#2A2A2A" : "#EEE", borderWidth: 1 },
-                    ]}
-                    onPress={() => handleSelectItem(item)}
-                    activeOpacity={0.7}
-                  >
-                    <AppText
+                renderItem={({ item }) => {
+                  const isSelected = selectedItem?.toLowerCase() === item?.toLowerCase();
+                  return (
+                    <TouchableOpacity
                       style={[
-                        styles.itemText,
-                        { color: themeColors.text },
+                        styles.item,
+                        {
+                          backgroundColor: isSelected
+                            ? (isDark ? "rgba(255,255,255,0.05)" : "#F5F7F9")
+                            : (isDark ? "rgba(255,255,255,0.05)" : "#F8F9FA"),
+                          borderColor: isSelected ? themeColors.button : (isDark ? "rgba(255,255,255,0.05)" : "#EEE"),
+                          borderWidth: 1
+                        },
                       ]}
-                      weight={SEMI_BOLD}
+                      onPress={() => handleSelectItem(item)}
+                      activeOpacity={0.7}
                     >
-                      {item?.toUpperCase()}
-                    </AppText>
-                  </TouchableOpacity>
-                )}
+                      <AppText
+                        style={[
+                          styles.itemText,
+                          { color: isDark ? colors.white : colors.black },
+                        ]}
+                        weight={isSelected ? BOLD : SEMI_BOLD}
+                      >
+                        {item?.toUpperCase()}
+                      </AppText>
+                    </TouchableOpacity>
+                  );
+                }}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
               />
@@ -202,11 +211,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 15,
     marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   itemText: {
     fontSize: 13,
     letterSpacing: -0.2,
   },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  }
 });
 
 export default WalletTypeModal;
