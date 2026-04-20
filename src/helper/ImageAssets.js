@@ -337,7 +337,7 @@ export const pendingCheck = require('../../assets/images/pendingcheck.png');
 export const candle = require('../../assets/images/candle.png');
 export const introImageBlack3 = require('../../assets/images/introImageBlack3.png');
 export const introImageBlack2 = require('../../assets/images/introImageBlack2.png');
-export const introImageBlack1 = require('../../assets/images/introImageBlack1.png');   
+export const introImageBlack1 = require('../../assets/images/introImageBlack1.png');
 
 export const memeXProfile = require('../../assets/images/memeXProfile.png');
 export const memeXProfileDark = require('../../assets/images/memeXProfileDark.png');
@@ -345,6 +345,9 @@ export const stakingDrawerDark = require('../../assets/images/stakingDrawerDark.
 export const stakingDrawer = require('../../assets/images/stakingDrawer.png');
 export const walletDrawerDark = require('../../assets/images/walletIconDark.png');
 export const settingsDark = require('../../assets/images/settingsDark.png');
+export const launchpad_hero_img = require('../../assets/images/launchpad_hero_img.png');
+
+
 
 
 

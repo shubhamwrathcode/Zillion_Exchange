@@ -11,9 +11,7 @@ import {
   AppSafeAreaView,
   AppText,
   ELEVEN,
-  FIFTEEN,
   FOURTEEN,
-  MEDIUM,
   NORMAL,
   SEMI_BOLD,
   SIXTEEN,
@@ -27,21 +25,51 @@ import {
   BLACK,
   Button,
   BOLD,
-  EIGHT,
-  THIRD,
 } from "../../shared";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import { colors } from "../../theme/colors";
-import { folder, add, launchpadImage } from "../../helper/ImageAssets";
+import { launchpad_hero_img, tetherIcon, peopleIcon, defaultPic } from "../../helper/ImageAssets";
 import FastImage from "react-native-fast-image";
 import moment from "moment";
 import { IMAGE_BASE_URL } from "../../helper/Constants";
 import NavigationService from "../../navigation/NavigationService";
-import Carousel from "react-native-reanimated-carousel";
+import { appOperation } from "../../appOperation";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width } = Dimensions.get("window");
 
+const getTokenIcon = (item) => {
+  if (!item) return null;
+  let path = "";
+  if (item?.logo) {
+    path = item.logo;
+  } else if (item?.base_currency_id?.icon_path) {
+    path = item.base_currency_id.icon_path;
+  } else if (item?.tokenIcon || item?.token_icon) {
+    path = item.tokenIcon || item.token_icon;
+  }
+
+  if (!path) return "https://zillion-exchange.s3.ap-south-1.amazonaws.com/uploads/1690454652-USDT.png";
+  if (path.startsWith("http")) return path;
+  const cleanBase = IMAGE_BASE_URL.endsWith("/") ? IMAGE_BASE_URL.slice(0, -1) : IMAGE_BASE_URL;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
+
+const getTokenName = (item) =>
+  item?.tokenName || item?.base_currency_id?.name || item?.base_currency_id?.short_name || "Token";
+
+const getTokenSymbol = (item) =>
+  item?.tokenSymbol || item?.base_currency_id?.short_name || "N/A";
+
+const getQuoteSymbol = (item) => item?.acceptedCurrency || item?.quote_currency_id?.short_name || "USDT";
+
+const getTokensForSale = (item) => item?.availableTokens ?? item?.tokensForSale ?? 0;
+
+const getParticipants = (item) => item?.totalParticipants ?? item?.participantsCount ?? 0;
+
 const Launchpad = () => {
+  const { colors: themeColors, isDark } = useTheme();
   const [timestamp, setTimestamp] = useState(Date.now());
   const [categorizedProjects, setCategorizedProjects] = useState({
     ongoing: [],
@@ -50,9 +78,12 @@ const Launchpad = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [upcomingActiveIndex, setUpcomingActiveIndex] = useState(0);
-  const [ongoingActiveIndex, setOngoingActiveIndex] = useState(0);
-  const [endedActiveIndex, setEndedActiveIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState("live");
+  const [heroStats, setHeroStats] = useState({
+    totalRaised: 0,
+    totalParticipants: 0,
+    listedProjects: 0,
+  });
 
   useEffect(() => {
     const interval = setInterval(() => setTimestamp(Date.now()), 1000);
@@ -64,1706 +95,400 @@ const Launchpad = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        "http://159.195.23.93:5001/v1/user/user-launchpad-listing",
-        {
-          signal,
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
-      const payload = await response.json();
-      if (!response.ok || !payload?.success) {
-        throw new Error(
-          payload?.message || "Unable to fetch launchpad listings."
-        );
+      const result = await appOperation.get('launchpad/get-launchpads', undefined, undefined, 'GUEST');
+      if (!result?.success) {
+        throw new Error(result?.message || "Unable to fetch launchpad listings.");
       }
-      const categorized = categorizeProjects(payload?.data || []);
-      if (!signal || !signal.aborted) {
-        setCategorizedProjects(categorized);
-      }
+      const raw = result?.data;
+      const data = Array.isArray(raw) ? raw : [];
+      setCategorizedProjects(categorizeProjects(data));
+      setHeroStats({
+        totalRaised: data.reduce((a, i) => a + (parseFloat(i.totalRaised) || 0), 0),
+        totalParticipants: data.reduce((a, i) => a + (parseFloat(i.totalParticipants) || 0), 0),
+        listedProjects: data.length,
+      });
     } catch (fetchError) {
-      if (fetchError?.name !== "AbortError") {
-        setError(fetchError?.message || "Something went wrong.");
-      }
+      if (fetchError?.name !== "AbortError") setError(fetchError?.message || "Something went wrong.");
     } finally {
-      if (!signal || !signal.aborted) {
-        setLoading(false);
-      }
+      if (!signal || !signal.aborted) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     const controller = new AbortController();
     fetchLaunchpads({ signal: controller.signal });
-
     return () => controller.abort();
   }, [fetchLaunchpads]);
 
-  const ongoingProject = categorizedProjects.ongoing;
-  const upcomingProject = categorizedProjects.upcoming;
-  const endedProject = categorizedProjects.ended;
+  const filteredProjects = useMemo(() => {
+    return categorizedProjects[activeTab === 'live' ? 'ongoing' : activeTab] || [];
+  }, [categorizedProjects, activeTab]);
 
-  // console.log("upcomingProject", upcomingProject);
+  const renderProjectCard = (project) => {
+    if (!project) return null;
 
-  const heroProject = ongoingProject || upcomingProject || endedProject;
-  const heroTitle = heroProject
-    ? `${heroProject.tokenName ?? ""} (${heroProject.tokenSymbol ?? ""})`
-    : "All Launchpad Crypto Platforms Rated By CoinLaunch Score";
-  const heroSubtitle =
-    heroProject?.description ||
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
-  const heroImageSource = useMemo(() => {
-    if (heroProject?.bannerImage) {
-      return {
-        uri: `${IMAGE_BASE_URL}${heroProject.bannerImage}`,
-        priority: FastImage.priority.high,
-      };
-    }
-    return launchpadImage;
-  }, [heroProject]);
+    const status = String(project?.status || "N/A").toUpperCase();
+    const isLive = status === "LIVE";
+    const isUpcoming = status === "UPCOMING";
+    const isEnded = status === "ENDED" || status === "CANCELLED";
 
-  const renderOngoingCard = (project) => {
-    if (!project) {
-      return (
-        <View style={styles.emptyStateCard}>
-          <AppText type={FOURTEEN} color={SECOND}>
-            No ongoing projects available right now.
-          </AppText>
-        </View>
-      );
-    }
+    const endsIn = isLive ? formatLiveEndsIn(project, timestamp) : null;
+    const startsIn = isUpcoming ? formatUpcomingStartsIn(project, timestamp) : null;
+    const tokenIcon = getTokenIcon(project);
 
-    const countdownLabel = getCountdownLabel(project, timestamp);
-    const bannerSource = project?.bannerImage
-      ? {
-          uri: `${IMAGE_BASE_URL}${project.bannerImage}`,
-          priority: FastImage.priority.high,
-        }
-      : null;
-
-    const headline =
-      project?.headline ||
-      project?.description?.split(".")?.[0] ||
-      `${project?.tokenName ?? ""} Launchpad`;
-
-    const subHeadline =
-      project?.subHeadline ||
-      project?.description?.replace(headline, "").trim() ||
-      `Participate with ${
-        project?.tokenSymbol ?? project?.tokenName ?? "token"
-      }`;
-
-    const tokenLogoSource = project?.logoUrl
-      ? {
-          uri: `${IMAGE_BASE_URL}${project.logoUrl}`,
-          priority: FastImage.priority.normal,
-        }
-      : null;
-
-    const totalRaised = formatRaised(project);
-    const totalSale = formatNumber(project?.tokensForSale);
-    const tokenPrice = formatTokenPrice(
-      project?.tokenPrice,
-      project?.tokenSymbol
-    );
+    const textColor = isDark ? themeColors.text : "#000000";
+    const secondaryTextColor = isDark ? themeColors.secondaryText : "#666666";
 
     return (
-      <View style={styles.ongoingCard}>
-        <View style={styles.ongoingTop}>
-          {bannerSource ? (
-            <FastImage
-              source={bannerSource}
-              resizeMode={FastImage.resizeMode.cover}
-              style={styles.ongoingBanner}
-            />
-          ) : null}
-          {countdownLabel ? (
-            <LinearGradient
-              style={styles.ongoingTimer}
-              colors={["#FEBA00", "#F9DC8E", "#FEBA00"]}
-              start={{ x: 1, y: 0 }}
-              end={{ x: 0, y: 1 }}
-            >
-              <AppText
-                type={TWELVE}
-                weight={SEMI_BOLD}
-                style={styles.ongoingTimerText}
-              >
-                {countdownLabel}
-              </AppText>
-            </LinearGradient>
-          ) : null}
-          <View style={styles.ongoingTopContent}>
-            <AppText weight={SEMI_BOLD} style={styles.ongoingHeadline}>
-              {headline}
-            </AppText>
-            <View style={styles.ongoingBadgeContainer}>
+      <View style={[styles.webCard, { backgroundColor: themeColors.card }]}>
+        <View style={styles.webCardTop}>
+          <View style={styles.webCardTopLeft}>
+            <View style={styles.webTokenIconContainer}>
+              {tokenIcon ? (
+                <FastImage source={{ uri: tokenIcon }} style={styles.webTokenLogo} resizeMode="contain" />
+              ) : (
+                <View style={[styles.webTokenPlaceholder, { backgroundColor: themeColors.background }]}>
+                  <AppText type={SIXTEEN} color={textColor}>{getTokenSymbol(project).charAt(0)}</AppText>
+                </View>
+              )}
+            </View>
+            <View style={styles.webTokenMeta}>
+              <View style={styles.webTokenTitleRow}>
+                <AppText type={SIXTEEN} weight={BOLD} color={textColor}>{getTokenSymbol(project)}</AppText>
+                <View style={[styles.webStatusBadge, isLive ? styles.bgLive : isUpcoming ? styles.bgUpcoming : styles.bgEnded]}>
+                  <AppText type={TEN} weight={BOLD} color={WHITE}>{status}</AppText>
+                </View>
+              </View>
+              <AppText type={TWELVE} color={secondaryTextColor}>{getTokenName(project)}</AppText>
+            </View>
+          </View>
+          <View style={styles.webCardTopRight}>
+            <View style={styles.webStatCol}>
+              <AppText type={TEN} style={{ color: secondaryTextColor }}>Total Distribution</AppText>
+              <AppText type={TWELVE} weight={BOLD} color={textColor}>{getTokensForSale(project).toLocaleString()} {getTokenSymbol(project)}</AppText>
+            </View>
+
+            <View style={[styles.statSeparator, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }]} />
+
+            {isLive && (
+              <>
+                <View style={styles.webStatCol}>
+                  <AppText type={TEN} style={{ color: secondaryTextColor }}>End Time</AppText>
+                  <AppText type={TWELVE} weight={BOLD} color={textColor}>{formatFixedDateOnly(project?.endTime)}, {formatFixedClockOnly(project?.endTime)}</AppText>
+                </View>
+                <View style={[styles.statSeparator, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }]} />
+                <View style={[styles.webStatCol, { alignItems: 'flex-end' }]}>
+                  <AppText type={TEN} style={{ color: secondaryTextColor }}>Ends in</AppText>
+                  <AppText type={TWELVE} weight={BOLD} style={{ color: colors.buttonBg }}>{endsIn}</AppText>
+                </View>
+              </>
+            )}
+            {isUpcoming && (
+              <>
+                <View style={styles.webStatCol}>
+                  <AppText type={TEN} style={{ color: secondaryTextColor }}>Start Time</AppText>
+                  <AppText type={TWELVE} weight={BOLD} color={textColor}>{formatFixedDateOnly(project?.startTime)}, {formatFixedClockOnly(project?.startTime)}</AppText>
+                </View>
+                <View style={[styles.statSeparator, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }]} />
+                <View style={[styles.webStatCol, { alignItems: 'flex-end' }]}>
+                  <AppText type={TEN} style={{ color: secondaryTextColor }}>Starts in</AppText>
+                  <AppText type={TWELVE} weight={BOLD} style={{ color: colors.buttonBg }}>{startsIn}</AppText>
+                </View>
+              </>
+            )}
+            {isEnded && (
+              <>
+                <View style={styles.webStatCol}>
+                  <AppText type={TEN} style={{ color: secondaryTextColor }}>Start Time</AppText>
+                  <AppText type={TWELVE} weight={BOLD} color={textColor}>{formatFixedDateOnly(project?.startTime)}, {formatFixedClockOnly(project?.startTime)}</AppText>
+                </View>
+                <View style={[styles.statSeparator, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }]} />
+                <View style={[styles.webStatCol, { alignItems: 'flex-end' }]}>
+                  <AppText type={TEN} style={{ color: secondaryTextColor }}>End Time</AppText>
+                  <AppText type={TWELVE} weight={BOLD} color={textColor}>{formatFixedDateOnly(project?.endTime)}, {formatFixedClockOnly(project?.endTime)}</AppText>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+
+        <View style={[styles.webInnerBox, { backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }]}>
+          <View style={styles.webInnerTop}>
+            <View style={styles.webInnerLft}>
+              <View style={styles.webQuoteIcon}>
+                <FastImage
+                  source={(() => {
+                    const quote = project?.quote_currency_id || project?.quote_currency;
+                    const path = quote?.icon_path || project?.quote_icon || project?.accepted_currency_icon;
+                    if (!path) return tetherIcon;
+                    if (path.startsWith("http")) return { uri: path };
+                    // Fix double slashes and ensure valid URL
+                    const base = IMAGE_BASE_URL.endsWith("/") ? IMAGE_BASE_URL.slice(0, -1) : IMAGE_BASE_URL;
+                    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+                    return { uri: `${base}${cleanPath}` };
+                  })()}
+                  style={{ width: "100%", height: "100%" }}
+                  resizeMode="contain"
+                />
+              </View>
+              <View>
+                <AppText type={FOURTEEN} weight={BOLD} color={textColor}>{getQuoteSymbol(project)}</AppText>
+                <AppText type={TEN} color={secondaryTextColor}>Commit {getQuoteSymbol(project)} to Subscribe {getTokenSymbol(project)}</AppText>
+              </View>
+            </View>
+            <View style={styles.webParticipants}>
               <FastImage
-                source={tokenLogoSource}
-                resizeMode={FastImage.resizeMode.cover}
-                style={styles.ongoingBadgeImage}
+                source={defaultPic}
+                style={{ width: 25, height: 25, tintColor: secondaryTextColor }}
+                resizeMode="contain"
               />
-            </View>
-          </View>
-        </View>
-        <LinearGradient
-          colors={["#FFFFFF00", "#FEBA00", "#FFFFFF00"]}
-          start={{ x: 1, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.ongoingBadgeGlow}
-        />
-        <View style={styles.ongoingBottom}>
-          <View style={styles.ongoingTokenRow}>
-            <View style={styles.ongoingTokenIcon}>
-              {tokenLogoSource ? (
-                <FastImage
-                  source={tokenLogoSource}
-                  resizeMode={FastImage.resizeMode.cover}
-                  style={styles.tokenLogo}
-                />
-              ) : (
-                <AppText type={SIXTEEN} weight={SEMI_BOLD} color={WHITE}>
-                  {(project?.tokenSymbol || project?.tokenName || "?")
-                    ?.toString()
-                    .charAt(0)}
-                </AppText>
-              )}
-            </View>
-            <View style={styles.ongoingTokenMeta}>
-              <AppText type={SIXTEEN} weight={SEMI_BOLD} color={BLACK}>
-                {project?.tokenSymbol}
-              </AppText>
+              <AppText type={TWELVE} color={secondaryTextColor}>{getParticipants(project)}</AppText>
             </View>
           </View>
 
-          <View style={styles.ongoingStats}>
-            <View style={styles.ongoingStatRow}>
-              <AppText type={TEN} color={SECOND}>
-                Total Raised
-              </AppText>
-              <AppText type={TEN} weight={SEMI_BOLD} color={BLACK}>
-                {totalRaised}
-              </AppText>
+          <View style={styles.webInnerList}>
+            <View style={styles.webInnerRow}>
+              <AppText type={TEN} color={secondaryTextColor}>Token Price</AppText>
+              <AppText type={TEN} color={textColor}>1 {getTokenSymbol(project)} = <AppText type={TEN} style={{ color: colors.buttonBg }}>{project?.tokenPrice || 0} {getQuoteSymbol(project)}</AppText></AppText>
             </View>
-            <View style={styles.ongoingStatRow}>
-              <AppText type={TEN} color={SECOND}>
-                Token Price
-              </AppText>
-              <AppText type={TEN} weight={SEMI_BOLD} color={BLACK}>
-                {tokenPrice}
-              </AppText>
+            <View style={styles.webInnerRow}>
+              <AppText type={TEN} color={secondaryTextColor}>Total Allocation</AppText>
+              <AppText type={TEN} color={textColor}>{getTokensForSale(project).toLocaleString()} {getTokenSymbol(project)}</AppText>
             </View>
-            <View style={styles.ongoingStatRow}>
-              <AppText type={TEN} color={SECOND}>
-                Token Sale
-              </AppText>
-              <AppText type={TEN} weight={SEMI_BOLD} color={BLACK}>
-                {totalSale}
-              </AppText>
+            <View style={styles.webInnerRow}>
+              <AppText type={TEN} color={secondaryTextColor}>Total Committed</AppText>
+              <AppText type={TEN} color={textColor}>{(project?.totalRaised || project?.totalInvested || 0).toLocaleString()} {getQuoteSymbol(project)}</AppText>
             </View>
           </View>
 
           <Button
-            children="Trade"
-            containerStyle={styles.ongoingCTA}
-            onPress={() => {}}
+            children="View Details"
+            titleStyle={{ color: textColor, fontWeight: '700' }}
+            containerStyle={[styles.webCTA, {
+              borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.25)',
+              backgroundColor: isDark ? 'transparent' : 'rgba(0,0,0,0.02)'
+            }]}
+            onPress={() => NavigationService.navigate("ProjectDetails", { project })}
           />
         </View>
       </View>
     );
   };
 
-  const renderUpcomingCard = (project) => {
-    if (!project) {
-      return renderEmptyState("upcoming");
-    }
-
-    const bannerSource = project?.bannerImage
-      ? {
-          uri: `${IMAGE_BASE_URL}${project.bannerImage}`,
-          priority: FastImage.priority.high,
-        }
-      : null;
-
-    const listingDate = project?.startTime
-      ? formatListing(project.startTime)
-      : "--";
-
-    const tokenLogoSource = project?.logoUrl
-      ? {
-          uri: `${IMAGE_BASE_URL}${project.logoUrl}`,
-          priority: FastImage.priority.normal,
-        }
-      : null;
-
-    return (
-      <View style={styles.upcomingCard}>
-        <LinearGradient
-          colors={["#FEE28A", "#F4B91E"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.upcomingTop}
-        >
-          {bannerSource ? (
-            <FastImage
-              source={bannerSource}
-              resizeMode={FastImage.resizeMode.stretch}
-              style={styles.upcomingBannerImage}
-            />
-          ) : tokenLogoSource ? (
-            <FastImage
-              source={tokenLogoSource}
-              resizeMode={FastImage.resizeMode.stretch}
-              style={styles.upcomingBannerImage}
-            />
-          ) : (
-            <View style={styles.upcomingBannerPlaceholder} />
-          )}
-        </LinearGradient>
-
-        <View style={styles.upcomingBottom}>
-          <View style={styles.ongoingTokenRow}>
-            <View style={styles.ongoingTokenIcon}>
-              {tokenLogoSource ? (
-                <FastImage
-                  source={tokenLogoSource}
-                  resizeMode={FastImage.resizeMode.cover}
-                  style={styles.tokenLogo}
-                />
-              ) : (
-                <AppText type={SIXTEEN} weight={SEMI_BOLD} color={BLACK}>
-                  {(project?.tokenSymbol || project?.tokenName || "?")
-                    ?.toString()
-                    .charAt(0)}
-                </AppText>
-              )}
-            </View>
-            <View style={styles.ongoingTokenMeta}>
-              <AppText type={SIXTEEN} weight={SEMI_BOLD} color={BLACK}>
-                {project?.tokenSymbol}
-              </AppText>
-            </View>
-          </View>
-
-          <View style={styles.upcomingStatsBox}>
-            <View style={styles.upcomingStatsColumn}>
-              <AppText type={TEN} style={{ color: colors.whiteShadow }}>
-                Total Raised
-              </AppText>
-              <AppText type={TEN} style={{ color: colors.whiteShadow }}>
-                Token Price
-              </AppText>
-              <AppText type={TEN} style={{ color: colors.whiteShadow }}>
-                Token Sale
-              </AppText>
-            </View>
-            <View style={styles.upcomingCenterColumn}>
-              <View style={styles.upcomingStatusBadge}>
-                <AppText type={TWELVE} weight={SEMI_BOLD} color={BLACK}>
-                  Upcoming
-                </AppText>
-              </View>
-              <AppText
-                type={TWELVE}
-                style={{ color: colors.whiteShadow, padding: 2 }}
-              >
-                Start on: {formatUpcoming(project?.startTime)}
-              </AppText>
-            </View>
-            <View style={styles.upcomingStatsColumnRight}>
-              <AppText type={TEN} weight={SEMI_BOLD} color={BLACK}>
-                {formatRaised(project)}
-              </AppText>
-              <AppText type={TEN} weight={SEMI_BOLD} color={BLACK}>
-                {formatTokenPrice(project?.tokenPrice, project?.tokenSymbol)}
-              </AppText>
-              <AppText type={TEN} weight={SEMI_BOLD} color={BLACK}>
-                {project?.tokensForSale}
-              </AppText>
-            </View>
-          </View>
-
-          <Button
-            children="View"
-            containerStyle={styles.ongoingCTA}
-            onPress={() =>
-              NavigationService.navigate("ProjectDetails", { project })
-            }
-          />
-        </View>
-      </View>
-    );
-  };
-
-  const renderEndedCard = (project) => {
-    if (!project) {
-      return renderEmptyState("ended");
-    }
-
-    const bannerSource = project?.bannerImage
-      ? {
-          uri: `${IMAGE_BASE_URL}${project.bannerImage}`,
-          priority: FastImage.priority.high,
-        }
-      : null;
-
-    const tokenLogoSource = project?.logoUrl
-      ? {
-          uri: `${IMAGE_BASE_URL}${project.logoUrl}`,
-          priority: FastImage.priority.normal,
-        }
-      : null;
-
-    return (
-      <View style={styles.upcomingCard}>
-        <LinearGradient
-          colors={["#FEE28A", "#F4B91E"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.upcomingTop}
-        >
-          {bannerSource ? (
-            <FastImage
-              source={bannerSource}
-              resizeMode={FastImage.resizeMode.stretch}
-              style={styles.upcomingBannerImage}
-            />
-          ) : tokenLogoSource ? (
-            <FastImage
-              source={tokenLogoSource}
-              resizeMode={FastImage.resizeMode.stretch}
-              style={styles.upcomingBannerImage}
-            />
-          ) : (
-            <View style={styles.upcomingBannerPlaceholder} />
-          )}
-        </LinearGradient>
-
-        <View style={styles.upcomingBottom}>
-          <View style={styles.ongoingTokenRow}>
-            <View style={styles.ongoingTokenIcon}>
-              {tokenLogoSource ? (
-                <FastImage
-                  source={tokenLogoSource}
-                  resizeMode={FastImage.resizeMode.cover}
-                  style={styles.tokenLogo}
-                />
-              ) : (
-                <AppText type={SIXTEEN} weight={SEMI_BOLD} color={BLACK}>
-                  {(project?.tokenSymbol || project?.tokenName || "?")
-                    ?.toString()
-                    .charAt(0)}
-                </AppText>
-              )}
-            </View>
-            <View style={styles.ongoingTokenMeta}>
-              <AppText type={SIXTEEN} weight={SEMI_BOLD} color={BLACK}>
-                {project?.tokenSymbol}
-              </AppText>
-            </View>
-          </View>
-
-          <View style={styles.upcomingStatsBox}>
-            <View style={styles.upcomingStatsColumn}>
-              <AppText type={TEN} style={{ color: colors.whiteShadow }}>
-                Total Raised
-              </AppText>
-              <AppText type={TEN} style={{ color: colors.whiteShadow }}>
-                Token Price
-              </AppText>
-              <AppText type={TEN} style={{ color: colors.whiteShadow }}>
-                Token Sale
-              </AppText>
-            </View>
-            <View style={styles.endedCenterColumn}>
-              <View style={styles.endedStatusBadge}>
-                <AppText type={TWELVE} weight={SEMI_BOLD} color={BLACK}>
-                  Ended
-                </AppText>
-              </View>
-              {/* <AppText
-                type={TWELVE}
-                style={{ color: colors.whiteShadow, padding: 2 }}
-              >
-                Trading: {formatUpcoming(project?.endTime)}
-              </AppText> */}
-            </View>
-            <View style={styles.upcomingStatsColumnRight}>
-              <AppText type={TEN} weight={SEMI_BOLD} color={BLACK}>
-                {formatRaised(project)}
-              </AppText>
-              <AppText type={TEN} weight={SEMI_BOLD} color={BLACK}>
-                {formatTokenPrice(project?.tokenPrice, project?.tokenSymbol)}
-              </AppText>
-              <AppText type={TEN} weight={SEMI_BOLD} color={BLACK}>
-                {project?.tokensForSale}
-              </AppText>
-            </View>
-          </View>
-
-          <Button
-            children="View"
-            containerStyle={styles.ongoingCTA}
-            onPress={() =>
-              NavigationService.navigate("ProjectDetails", { project })
-            }
-          />
-        </View>
-      </View>
-    );
-  };
-
-  const renderProjectCard = (project, variant) => {
-    if (!project) {
-      return (
-        <View style={styles.emptyStateCard}>
-          <AppText type={FOURTEEN} color={SECOND}>
-            No {variant} projects available right now.
-          </AppText>
-        </View>
-      );
-    }
-
-    if (variant === "ongoing") {
-      return renderOngoingCard(project);
-    }
-    if (variant === "upcoming") {
-      return renderUpcomingCard(project);
-    }
-    if (variant === "ended") {
-      return renderEndedCard(project);
-    }
-
-    const gradientColors = {
-      ongoing: ["#1B1206", "#120B05"],
-      upcoming: ["#2E1F02", "#140E03"],
-      ended: ["#23160B", "#120805"],
-    }[variant];
-
-    const tokenLogoSource = project?.logoUrl
-      ? {
-          uri: `${IMAGE_BASE_URL}${project.logoUrl}`,
-          priority: FastImage.priority.normal,
-        }
-      : null;
-
-    const countdownLabel =
-      variant === "ongoing" ? getCountdownLabel(project, timestamp) : null;
-
-    const statusLabel =
-      project?.status?.toUpperCase?.() ||
-      (variant === "ongoing"
-        ? "LIVE"
-        : variant === "upcoming"
-        ? "UPCOMING"
-        : "ENDED");
-
-    const statusStyle =
-      variant === "ended"
-        ? styles.statusEndedBadge
-        : variant === "upcoming"
-        ? styles.statusUpcomingBadge
-        : styles.statusLiveBadge;
-
-    const metaRows = getMetaRows(project, variant);
-    const bannerSource = project?.bannerImage
-      ? {
-          uri: `${IMAGE_BASE_URL}${project.bannerImage}`,
-          priority: FastImage.priority.normal,
-        }
-      : null;
-    const subtitleText =
-      variant === "upcoming"
-        ? `New Listing • ${formatListing(project?.startTime)}`
-        : variant === "ended"
-        ? `Trading: ${formatTrading(project?.endTime)}`
-        : project?.description || "—";
-    const ctaLabel =
-      variant === "ongoing"
-        ? "Trade"
-        : variant === "upcoming"
-        ? "View"
-        : "View";
-
-    return (
-      <LinearGradient
-        colors={gradientColors}
-        start={{ x: 1, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.projectCard}
-      >
-        {bannerSource ? (
-          <FastImage
-            source={bannerSource}
-            resizeMode={FastImage.resizeMode.cover}
-            style={styles.projectBanner}
-          />
-        ) : null}
-        <View style={styles.projectBody}>
-          {countdownLabel ? (
-            <LinearGradient
-              style={styles.countdownPill}
-              colors={["#FEBA00", "#F9DC8E", "#FEBA00"]}
-              start={{ x: 0, y: 1 }}
-              end={{ x: 0, y: 1 }}
-            >
-              <AppText type={TWELVE} weight={SEMI_BOLD} color={WHITE}>
-                {countdownLabel}
-              </AppText>
-            </LinearGradient>
-          ) : null}
-          <AppText type={TWENTY} weight={SEMI_BOLD} style={styles.projectTitle}>
-            {project?.tokenName}
-          </AppText>
-          <AppText
-            type={FOURTEEN}
-            weight={NORMAL}
-            color={SECOND}
-            style={styles.projectSubtitle}
-            numberOfLines={2}
-          >
-            {subtitleText}
-          </AppText>
-          <View style={styles.tokenRow}>
-            <View style={styles.tokenIcon}>
-              {tokenLogoSource ? (
-                <FastImage
-                  source={tokenLogoSource}
-                  style={styles.tokenLogo}
-                  resizeMode={FastImage.resizeMode.cover}
-                />
-              ) : (
-                <AppText type={FIFTEEN} weight={SEMI_BOLD} color={WHITE}>
-                  {(project?.tokenSymbol || project?.tokenName || "?")
-                    ?.toString()
-                    .charAt(0)}
-                </AppText>
-              )}
-            </View>
-            <View style={styles.tokenMeta}>
-              <AppText type={SIXTEEN} weight={SEMI_BOLD} color={WHITE}>
-                {project?.tokenSymbol}
-              </AppText>
-              <AppText type={TWELVE} weight={NORMAL} color={SECOND}>
-                {project?.network || "Network"}
-              </AppText>
-            </View>
-            <View style={[styles.statusBadgeBase, statusStyle]}>
-              <AppText type={ELEVEN} weight={SEMI_BOLD} color={WHITE}>
-                {statusLabel}
-              </AppText>
-            </View>
-          </View>
-          <View style={styles.detailsSection}>
-            {metaRows.map((row) => (
-              <View style={styles.detailRow} key={row.label}>
-                <AppText type={ELEVEN} color={SECOND}>
-                  {row.label}
-                </AppText>
-                <AppText type={ELEVEN} weight={SEMI_BOLD} color={WHITE}>
-                  {row.value}
-                </AppText>
-              </View>
-            ))}
-          </View>
-          <TouchableOpacityView
-            style={styles.projectPrimaryButton}
-            onPress={() =>
-              NavigationService.navigate("ProjectDetails", { project })
-            }
-          >
-            <AppText type={FOURTEEN} weight={SEMI_BOLD} color={WHITE}>
-              {ctaLabel}
-            </AppText>
-          </TouchableOpacityView>
-        </View>
-      </LinearGradient>
-    );
-  };
-
-  const renderSection = (title, variant, data) => (
-    <>
-      {renderSectionHeader(title, data.length, variant)}
-      {renderProjectCard(data[0], variant)}
-      {renderSliderDots({ total: data.length })}
-    </>
+  const renderEmptyState = (tab) => (
+    <View style={styles.stateWrapper}>
+      <AppText type={FOURTEEN} color={isDark ? themeColors.secondaryText : "#333"} style={styles.stateMessage}>No {tab} projects found.</AppText>
+    </View>
   );
 
-  const renderOngoingSection = (title, data) => {
-    const hasMultipleItems = Array.isArray(data) && data.length > 1;
+  const renderTabSwitcher = () => (
+    <View style={styles.tabContainer}>
+      <AppText type={TWENTY} weight={BOLD} color={isDark ? themeColors.text : "#000"} style={styles.tabHeading}>Projects</AppText>
+      <View style={styles.tabRow}>
+        {['live', 'upcoming', 'ended'].map(tab => (
+          <TouchableOpacityView
+            key={tab}
+            onPress={() => setActiveTab(tab)}
+            style={[styles.tabBtn, activeTab === tab && { backgroundColor: colors.buttonBg, borderColor: colors.buttonBg }]}
+          >
+            <AppText
+              type={FOURTEEN}
+              weight={activeTab === tab ? SEMI_BOLD : NORMAL}
+              color={activeTab === tab ? WHITE : (isDark ? SECOND : "#666")}
+              style={{ textTransform: 'capitalize' }}
+            >{tab}</AppText>
+          </TouchableOpacityView>
+        ))}
+      </View>
+    </View>
+  );
 
-    if (!hasMultipleItems) {
-      // Single item or empty - render normally
-      return renderSection(title, "ongoing", data);
-    }
-
-    // Multiple items - render as slider
-    return (
-      <>
-        {renderSectionHeader(title, data.length, "ongoing")}
-        <View style={styles.upcomingCarouselContainer}>
-          <Carousel
-            width={width}
-            height={400}
-            data={data}
-            renderItem={({ item, index }) => (
-              <View style={styles.upcomingCardWrapper}>
-                {renderOngoingCard(item)}
-              </View>
-            )}
-            onSnapToItem={(index) => {
-              setOngoingActiveIndex(index);
-            }}
-            autoPlay={false}
-            pagingEnabled={true}
-            loop={false}
-            scrollAnimationDuration={300}
-            panGestureHandlerProps={{
-              activeOffsetX: [-10, 10],
-            }}
-          />
-        </View>
-        {renderSliderDots({
-          activeIndex: ongoingActiveIndex,
-          total: data.length,
-        })}
-      </>
-    );
-  };
-
-  const renderUpcomingSection = (title, data) => {
-    const hasMultipleItems = Array.isArray(data) && data.length > 1;
-
-    if (!hasMultipleItems) {
-      // Single item or empty - render normally
-      return renderSection(title, "upcoming", data);
-    }
-
-    // Multiple items - render as slider
-    return (
-      <>
-        {renderSectionHeader(title, data.length, "upcoming")}
-        <View style={styles.upcomingCarouselContainer}>
-          <Carousel
-            width={width}
-            height={400}
-            data={data}
-            renderItem={({ item, index }) => (
-              <View style={styles.upcomingCardWrapper}>
-                {renderUpcomingCard(item)}
-              </View>
-            )}
-            onSnapToItem={(index) => {
-              setUpcomingActiveIndex(index);
-            }}
-            autoPlay={false}
-            pagingEnabled={true}
-            loop={false}
-            scrollAnimationDuration={300}
-            panGestureHandlerProps={{
-              activeOffsetX: [-10, 10],
-            }}
-          />
-        </View>
-        {renderSliderDots({
-          activeIndex: upcomingActiveIndex,
-          total: data.length,
-        })}
-      </>
-    );
-  };
-
-  const renderEndedSection = (title, data) => {
-    const hasMultipleItems = Array.isArray(data) && data.length > 1;
-
-    if (!hasMultipleItems) {
-      // Single item or empty - render normally
-      return renderSection(title, "ended", data);
-    }
-
-    // Multiple items - render as slider
-    return (
-      <>
-        {renderSectionHeader(title, data.length, "ended")}
-        <View style={styles.upcomingCarouselContainer}>
-          <Carousel
-            width={width}
-            height={400}
-            data={data}
-            renderItem={({ item, index }) => (
-              <View style={styles.upcomingCardWrapper}>
-                {renderEndedCard(item)}
-              </View>
-            )}
-            onSnapToItem={(index) => {
-              setEndedActiveIndex(index);
-            }}
-            autoPlay={false}
-            pagingEnabled={true}
-            loop={false}
-            scrollAnimationDuration={300}
-            panGestureHandlerProps={{
-              activeOffsetX: [-10, 10],
-            }}
-          />
-        </View>
-        {renderSliderDots({
-          activeIndex: endedActiveIndex,
-          total: data.length,
-        })}
-      </>
-    );
-  };
+  const heroTextColor = isDark ? themeColors.text : "#000";
+  const heroSecondaryTextColor = isDark ? themeColors.secondaryText : "#555";
 
   return (
-    <AppSafeAreaView style={styles.safeArea}>
-      <ScrollView
-        bounces={false}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
-      >
+    <AppSafeAreaView style={[styles.safeArea, { backgroundColor: themeColors.background }]}>
+      <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentContainer}>
         <View style={styles.heroCard}>
-          <View style={styles.heroGradient}>
-            <View style={styles.heroTextContainer}>
-              <AppText
-                type={SIXTEEN}
-                weight={SEMI_BOLD}
-                style={styles.heroTitle}
-              >
-                Discover and compare the world’s top crypto launchpad platforms.
-              </AppText>
-              <AppText
-                type={TEN}
-                color={SECOND}
-                weight={NORMAL}
-                style={styles.heroSubtitle}
-              >
-                Find the best place to participate in early-stage token sales,
-                evaluate project credibility, and make informed investment
-                decisions. CoinLaunch helps you explore, analyze, and choose the
-                most promising crypto launchpads with transparent insights and
-                data-driven ratings.
-              </AppText>
+          <LinearGradient
+            colors={isDark ? ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.75)"] : ["rgba(255, 255, 255, 0.2)", "rgba(255, 255, 255, 0.5)"]}
+            style={styles.heroGradient}
+          >
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={styles.heroTextContainer}>
+                  <AppText type={TWENTY} weight={SEMI_BOLD} color={heroTextColor} style={styles.heroTitle}>Launchpad</AppText>
+                  <AppText type={TWELVE} weight={NORMAL} style={[styles.heroSubtitle, { color: heroSecondaryTextColor }]}>Your Easiest Way to Top Tokens — Early or at a Discount</AppText>
+                </View>
+                <View style={styles.heroArtContainer}>
+                  <FastImage source={launchpad_hero_img} resizeMode="contain" style={styles.heroImage} />
+                </View>
+              </View>
+
+              <View style={styles.heroStatsRow}>
+                <View style={styles.heroStatItem}>
+                  <AppText type={ELEVEN} style={{ color: heroSecondaryTextColor }}>Total Raised (USDT)</AppText>
+                  <AppText type={FOURTEEN} weight={BOLD} color={heroTextColor}>{heroStats.totalRaised?.toLocaleString(undefined, { maximumFractionDigits: 2 }) || "0"}</AppText>
+                </View>
+                <View style={[styles.statSeparator, { height: 30, backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }]} />
+                <View style={styles.heroStatItem}>
+                  <AppText type={ELEVEN} style={{ color: heroSecondaryTextColor }}>Total Participants</AppText>
+                  <AppText type={FOURTEEN} weight={BOLD} color={heroTextColor}>{heroStats.totalParticipants?.toLocaleString() || "0"}</AppText>
+                </View>
+                <View style={[styles.statSeparator, { height: 30, backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }]} />
+                <View style={styles.heroStatItem}>
+                  <AppText type={ELEVEN} style={{ color: heroSecondaryTextColor }}>Listed Projects</AppText>
+                  <AppText type={FOURTEEN} weight={BOLD} color={heroTextColor}>{heroStats.listedProjects || "0"}</AppText>
+                </View>
+              </View>
             </View>
-            <View style={styles.heroArtContainer}>
-              <FastImage
-                source={launchpadImage}
-                resizeMode="cover"
-                style={{ width: "100%", height: 100 }}
-              />
-            </View>
-          </View>
+          </LinearGradient>
         </View>
 
         {loading ? (
           <View style={styles.stateWrapper}>
             <ActivityIndicator color={colors.buttonBg} />
-            <AppText type={THIRTEEN} color={SECOND} style={styles.stateMessage}>
-              Fetching launchpad listings...
-            </AppText>
+            <AppText type={THIRTEEN} color={isDark ? themeColors.secondaryText : "#333"} style={styles.stateMessage}>Fetching launchpad listings...</AppText>
           </View>
         ) : error ? (
           <View style={styles.stateWrapper}>
-            <AppText type={FOURTEEN} color={SECOND} style={styles.stateMessage}>
-              {error}
-            </AppText>
-            <TouchableOpacityView
-              style={styles.retryButton}
-              onPress={() => {
-                setCategorizedProjects({
-                  ongoing: [],
-                  upcoming: [],
-                  ended: [],
-                });
-                fetchLaunchpads();
-              }}
-            >
-              <AppText type={TWELVE} weight={SEMI_BOLD} color={WHITE}>
-                Retry
-              </AppText>
+            <AppText type={FOURTEEN} color={isDark ? themeColors.secondaryText : "#333"} style={styles.stateMessage}>{error}</AppText>
+            <TouchableOpacityView style={styles.retryButton} onPress={() => fetchLaunchpads()}>
+              <AppText type={TWELVE} weight={SEMI_BOLD} color={WHITE}>Retry</AppText>
             </TouchableOpacityView>
           </View>
         ) : (
           <>
-            {renderOngoingSection(
-              "Ongoing Projects",
-              categorizedProjects.ongoing
-            )}
-
-            {renderUpcomingSection(
-              "Upcoming Projects",
-              categorizedProjects.upcoming
-            )}
-
-            {renderEndedSection("Ended Projects", categorizedProjects.ended)}
+            {renderTabSwitcher()}
+            <View style={styles.projectListContainer}>
+              {filteredProjects.length > 0 ? (
+                filteredProjects.map((item) => (
+                  <View key={item?._id || item?.id} style={{ marginBottom: 20 }}>
+                    {renderProjectCard(item)}
+                  </View>
+                ))
+              ) : (
+                renderEmptyState(activeTab)
+              )}
+            </View>
           </>
         )}
-
-        {/* <View style={styles.faqSection}>
-          <AppText type={TWENTY} weight={SEMI_BOLD} style={styles.sectionTitle}>
-            FAQ&apos;S
-          </AppText>
-          <View style={styles.faqHighlightCard}>
-            <AppText
-              type={FOURTEEN}
-              color={WHITE}
-              weight={MEDIUM}
-              style={styles.faqHighlightTitle}
-            >
-              Lorem ipsum is simply dummy text of the
-            </AppText>
-            <AppText
-              type={TWELVE}
-              color={SECOND}
-              weight={NORMAL}
-              style={styles.faqHighlightSubtitle}
-            >
-              Sales day of service is all online, you will receive an email and
-              calendar invite with login before the event.
-            </AppText>
-            <FastImage
-              source={folder}
-              resizeMode="contain"
-              style={styles.faqHighlightIcon}
-            />
-          </View>
-          <View style={styles.faqList}>
-            {faqItems.map((item, index) => (
-              <View
-                key={item.id}
-                style={[
-                  styles.faqRow,
-                  index === faqItems.length - 1 && styles.faqRowLast,
-                ]}
-              >
-                <AppText
-                  type={FOURTEEN}
-                  weight={NORMAL}
-                  color={BLACK}
-                  style={styles.faqQuestion}
-                  numberOfLines={2}
-                >
-                  {item.question}
-                </AppText>
-                <TouchableOpacityView style={styles.faqToggle}>
-                  <FastImage
-                    source={add}
-                    resizeMode="contain"
-                    style={styles.faqToggleIcon}
-                  />
-                </TouchableOpacityView>
-              </View>
-            ))}
-          </View>
-        </View> */}
       </ScrollView>
     </AppSafeAreaView>
   );
 };
 
-const renderSectionHeader = (title, count, variant) => {
-  const getNavigateScreen = () => {
-    if (variant === "upcoming") return "AllUpcomingProjects";
-    if (variant === "ended") return "AllEndedProjects"; // You can create AllEndedProjects later if needed
-    return "AllLiveProjects";
-  };
-
-  return (
-    <View style={styles.sectionHeader}>
-      <AppText type={SIXTEEN} weight={SEMI_BOLD} style={styles.sectionTitle}>
-        {title}
-      </AppText>
-      {count > 0 ? (
-        <TouchableOpacityView
-          style={styles.viewMore}
-          onPress={() => {
-            NavigationService.navigate(getNavigateScreen());
-          }}
-        >
-          <AppText type={TEN} color={YELLOW} weight={MEDIUM}>
-            View More
-          </AppText>
-          <View style={styles.viewMoreArrow} />
-        </TouchableOpacityView>
-      ) : (
-        <AppText type={TEN} color={SECOND}>
-          No projects
-        </AppText>
-      )}
-    </View>
-  );
-};
-
-const renderSliderDots = ({ activeIndex = 0, total = 0 }) => {
-  if (total <= 1) {
-    return null;
-  }
-  return (
-    <View style={styles.sliderDots}>
-      {Array.from({ length: total }).map((_, index) => (
-        <View
-          key={`dot-${index}`}
-          style={[
-            styles.sliderDot,
-            index === activeIndex && styles.sliderDotActive,
-          ]}
-        />
-      ))}
-    </View>
-  );
-};
-
+// --- Helper Functions ---
 const categorizeProjects = (projects) => {
-  const categorized = {
-    ongoing: [],
-    upcoming: [],
-    ended: [],
-  };
-
-  const now = moment();
-
+  const categorized = { ongoing: [], upcoming: [], ended: [] };
   projects.forEach((project) => {
-    const status = (project?.status || "").toUpperCase();
-    if (status === "ENDED") {
-      categorized.ended.push(project);
-      return;
-    }
-    if (status === "LIVE" || status === "ONGOING") {
-      categorized.ongoing.push(project);
-      return;
-    }
-    if (status === "UPCOMING") {
-      categorized.upcoming.push(project);
-      return;
-    }
-
-    const start = moment(project?.startTime);
-    const end = moment(project?.endTime);
-
-    if (start.isValid() && now.isBefore(start)) {
-      categorized.upcoming.push(project);
-    } else if (end.isValid() && now.isAfter(end)) {
-      categorized.ended.push(project);
-    } else {
-      categorized.ongoing.push(project);
+    const s = String(project?.status || "").toUpperCase();
+    if (s === "LIVE" || s === "ONGOING") categorized.ongoing.push(project);
+    else if (s === "UPCOMING") categorized.upcoming.push(project);
+    else if (s === "ENDED" || s === "CANCELLED") categorized.ended.push(project);
+    else {
+      const now = moment();
+      const start = moment(project?.startTime);
+      const end = moment(project?.endTime);
+      if (start.isValid() && now.isBefore(start)) categorized.upcoming.push(project);
+      else if (end.isValid() && now.isAfter(end)) categorized.ended.push(project);
+      else categorized.ongoing.push(project);
     }
   });
-
   return categorized;
 };
 
-const getCountdownLabel = (project, timestamp) => {
-  if (!project?.endTime) {
-    return null;
-  }
-
-  const now = moment(timestamp);
-  const start = project?.startTime ? moment(project.startTime) : null;
-  const end = moment(project.endTime);
-
-  if (start?.isValid() && now.isBefore(start)) {
-    const diff = moment.duration(start.diff(now));
-    return `Starts in ${formatDuration(diff)}`;
-  }
-
-  if (!end.isValid() || now.isSameOrAfter(end)) {
-    return null;
-  }
-
-  const diff = moment.duration(end.diff(now));
-  return `${pad(Math.floor(diff.asHours()))}h ${pad(diff.minutes())}m ${pad(
-    diff.seconds()
-  )}s`;
+const formatLiveEndsIn = (item, timestamp) => {
+  const t = item?.endTime ? new Date(item.endTime).getTime() : NaN;
+  return formatHmsCountdown(t, "Sale ended", timestamp);
 };
 
-const getMetaRows = (project, variant) => {
-  const rows = [
-    {
-      label: variant === "upcoming" ? "Total Raised" : "Total Raised",
-      value: formatRaised(project),
-    },
-    {
-      label: variant === "upcoming" ? "Highest Increase" : "Highest Increase",
-      value: formatPercent(project?.progressPercent),
-    },
+const formatUpcomingStartsIn = (item, timestamp) => {
+  const t = item?.startTime ? new Date(item.startTime).getTime() : NaN;
+  return formatHmsCountdown(t, "Started", timestamp);
+};
+
+const formatHmsCountdown = (targetMs, pastLabel, timestamp) => {
+  if (!targetMs || Number.isNaN(targetMs)) return "—";
+  let ms = targetMs - timestamp;
+  if (ms <= 0) return pastLabel;
+  const days = Math.floor(ms / 86400000);
+  ms -= days * 86400000;
+  const hours = Math.floor(ms / 3600000);
+  ms -= hours * 3600000;
+  const minutes = Math.floor(ms / 60000);
+  ms -= minutes * 60000;
+  const seconds = Math.floor(ms / 1000);
+  const padNum = (n) => String(n).padStart(2, "0");
+  if (days > 0) return `${days}d ${padNum(hours)}:${padNum(minutes)}:${padNum(seconds)}`;
+  return `${padNum(hours)}:${padNum(minutes)}:${padNum(seconds)}`;
+};
+
+const formatFixedDateOnly = (d) => {
+  if (!d) return "—";
+  const dt = new Date(d);
+  return dt.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
+};
+
+const formatFixedClockOnly = (d) => {
+  if (!d) return "—";
+  const dt = new Date(d);
+  return dt.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+};
+
+const getScheduleTimeRows = (item) => {
+  const start = item?.startTime;
+  const end = item?.endTime;
+  return [
+    { label: "Start Time", value: start ? new Date(start).toLocaleString() : "--" },
+    { label: "End Time", value: end ? new Date(end).toLocaleString() : "--" },
   ];
-
-  if (variant !== "upcoming" && project?.hardCap) {
-    rows.push({
-      label: "Hard Cap",
-      value: formatNumber(project?.hardCap),
-    });
-  }
-
-  return rows;
-};
-
-const formatNumber = (value) => {
-  if (value === null || value === undefined) {
-    return "--";
-  }
-  const numericValue = Number(value);
-  if (Number.isNaN(numericValue)) {
-    return "--";
-  }
-  return numericValue.toLocaleString("en-US");
-};
-
-const formatPercent = (value) => {
-  if (value === null || value === undefined) {
-    return "--";
-  }
-  const numericValue = Number(value);
-  if (Number.isNaN(numericValue)) {
-    return "--";
-  }
-  return `${numericValue.toLocaleString("en-US", {
-    maximumFractionDigits: 2,
-  })}%`;
-};
-
-const formatUpcoming = (value) => {
-  if (!value) {
-    return "--";
-  }
-  const date = moment(value);
-  if (!date.isValid()) {
-    return "--";
-  }
-  return date.utc().format("DD/MM/YYYY");
-};
-
-const formatTrading = (value) => {
-  if (!value) {
-    return "--";
-  }
-  const date = moment(value);
-  if (!date.isValid()) {
-    return "--";
-  }
-  return date.utc().format("HH:mm MMM DD (UTC)");
-};
-
-const formatListing = (value) => {
-  if (!value) {
-    return "--";
-  }
-  const date = moment(value);
-  if (!date.isValid()) {
-    return "--";
-  }
-  return date.utc().format("YYYY.MM.DD HH:mm (UTC)");
-};
-
-const pad = (input) => String(Math.max(0, input)).padStart(2, "0");
-
-const formatDuration = (duration) => {
-  const hours = Math.floor(duration.asHours());
-  const minutes = duration.minutes();
-  const seconds = duration.seconds();
-  return `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
-};
-
-const formatRaised = (project) => {
-  if (!project) {
-    return "--";
-  }
-  const amount = formatNumber(project.totalRaised);
-  if (amount === "--") {
-    return "--";
-  }
-  const symbol = project.raiseCurrency || project.tokenSymbol || "";
-  return `${amount} ${symbol}`.trim();
-};
-
-const formatTokenPrice = (value, symbol) => {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  const numericValue = Number(value);
-  if (Number.isNaN(numericValue)) {
-    return null;
-  }
-  return `${numericValue.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
-  })} ${symbol ?? ""}`.trim();
 };
 
 const styles = StyleSheet.create({
-  ongoingHeadline: {
-    color: "#FFF8D8",
-    letterSpacing: 0.3,
-    width: "60%",
-    textAlign: "left",
-  },
-  ongoingSubHeadline: {
-    lineHeight: 20,
-    color: "#F2E3AA",
-  },
-  ongoingBadgeContainer: {
-    width: "32%",
-    aspectRatio: 1,
-    borderRadius: 18,
-    overflow: "hidden",
-    backgroundColor: "#1A1205",
-    borderWidth: 1,
-    borderColor: "#604210",
-    shadowColor: "#000",
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  ongoingBadgeImage: {
-    width: "100%",
-    height: "100%",
-  },
-  ongoingBadgeGlow: {
-    width: "100%",
-    height: StyleSheet.hairlineWidth,
-  },
-  safeArea: {
-    backgroundColor: colors.newThemeColor,
-  },
-  contentContainer: {
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    gap: 8,
-  },
-  heroCard: {
-    width: "100%",
-    borderRadius: 24,
-    overflow: "hidden",
-    marginBottom: 10,
-  },
-  heroGradient: {
-    width: "100%",
-    borderRadius: 24,
-    // paddingHorizontal: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    // gap: 24,
-  },
-  heroTextContainer: {
-    flex: 1,
-    gap: 12,
-    width: "65%",
-    paddingHorizontal: 10,
-  },
-  heroTitle: {
-    lineHeight: 22,
-  },
-  heroSubtitle: {
-    lineHeight: 15,
-  },
-  heroArtContainer: {
-    width: "30%",
-    // backgroundColor: "red",
-    // aspectRatio: 1,
-    // alignItems: "center",
-    // justifyContent: "center",
-    // position: "relative",
-  },
-  heroImage: {
-    width: "100%",
-    height: 110,
-    borderBottomRightRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  sectionHeader: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 0,
-    paddingHorizontal: 10,
-  },
-  sectionTitle: {
-    color: colors.white,
-  },
-  viewMore: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  viewMoreArrow: {
-    width: 6,
-    height: 6,
-    borderRightWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: colors.buttonBg,
-    transform: [{ rotate: "-45deg" }],
-    marginTop: 2,
-  },
-  projectCard: {
-    width: "100%",
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "#302008",
-    overflow: "hidden",
-  },
-  countdownPill: {
-    alignSelf: "flex-start",
-    backgroundColor: colors.buttonBg,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 50,
-    marginBottom: 12,
-  },
-  projectTitle: {
-    color: colors.white,
-    lineHeight: 28,
-  },
-  projectSubtitle: {
-    color: colors.descText,
-    lineHeight: 20,
-  },
-  projectBody: {
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    gap: 16,
-  },
-  tokenRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  tokenIcon: {
-    height: 40,
-    width: 40,
-    borderRadius: 20,
-    borderColor: colors.buttonBg,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#33220F",
-  },
-  tokenMeta: {
-    flex: 1,
-    gap: 4,
-  },
-  statusBadgeBase: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginLeft: 12,
-  },
-  upcomingCard: {
-    borderRadius: 9,
-    borderWidth: 1,
-    borderColor: "#4F3B10",
-    overflow: "hidden",
-    backgroundColor: colors.themeElevationColor,
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  upcomingTop: {
-    width: "100%",
-    height: 170,
-    overflow: "hidden",
-  },
-  upcomingTopContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  upcomingBannerImage: {
-    width: "100%",
-    height: "100%",
-  },
-  upcomingBannerPlaceholder: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(255, 214, 94, 0.2)",
-  },
-  upcomingTopText: {
-    flex: 1,
-    gap: 8,
-  },
-  upcomingTokenName: {
-    color: "#1B0B01",
-    letterSpacing: 0.4,
-  },
-  upcomingPair: {
-    color: "#1B0B01",
-  },
-  upcomingListingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  upcomingDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: "rgba(0,0,0,0.25)",
-  },
-  upcomingCoinContainer: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    borderWidth: 2,
-    borderColor: "#FFE082",
-    backgroundColor: "rgba(255, 214, 94, 0.35)",
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 16,
-  },
-  upcomingCoinImage: {
-    width: "100%",
-    height: "100%",
-  },
-  upcomingCoinPlaceholder: {
-    width: "70%",
-    height: "70%",
-    borderRadius: 999,
-    borderWidth: 3,
-    borderColor: "#FFE082",
-  },
-  upcomingBottom: {
-    backgroundColor: "#111111",
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    gap: 18,
-  },
-  upcomingBottomRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  upcomingLeftColumn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    flex: 1,
-  },
-  upcomingLogoCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "rgba(23,107,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  upcomingLogoImage: {
-    width: "100%",
-    height: "100%",
-  },
-  upcomingCenterColumn: {
-    // alignItems: "center",
-    // gap: 10,
-    width: "40%",
-    height: "75%",
-    alignItems: "center",
-    // justifyContent: "center",
-    borderWidth: 0.5,
-    borderColor: "#FEBA00",
-    borderRadius: 2,
-  },
-  endedCenterColumn: {
-    // alignItems: "center",
-    // gap: 10,
-    width: "40%",
-    height: "40%",
-    alignItems: "center",
-    // justifyContent: "center",
-    borderWidth: 0.5,
-    borderColor: "#FEBA00",
-    borderRadius: 2,
-  },
-  endedStatusBadge: {
-    paddingHorizontal: 15,
-    paddingVertical: 4,
-    backgroundColor: colors.red,
-    alignItems: "center",
-    justifyContent: "center",
-    // gap: 2,
-    width: "100%",
-    // height: "10%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  upcomingStatusBadge: {
-    paddingHorizontal: 15,
-    paddingVertical: 4,
-    backgroundColor: "#FEBA00",
-    alignItems: "center",
-    justifyContent: "center",
-    // gap: 2,
-    width: "100%",
-    // height: "10%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  upcomingRightColumn: {
-    alignItems: "flex-end",
-    gap: 6,
-  },
-  upcomingCTA: {
-    marginTop: 4,
-    backgroundColor: colors.buttonBg,
-    height: 44,
-    borderRadius: 18,
-  },
-  ongoingCard: {
-    borderRadius: 9,
-    borderColor: "#403013",
-    overflow: "hidden",
-    backgroundColor: colors.themeElevationColor,
-  },
-  ongoingTop: {
-    height: 170,
-    position: "relative",
-    justifyContent: "flex-end",
-  },
-  ongoingBanner: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  ongoingTopOverlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  ongoingTimer: {
-    position: "absolute",
-    top: 0,
-    alignSelf: "center",
-    backgroundColor: colors.buttonBg,
-    paddingHorizontal: 18,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  ongoingTimerText: {
-    color: colors.black,
-  },
-  ongoingTopContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 26,
-    gap: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  ongoingSubHeadline: {
-    lineHeight: 20,
-  },
-  ongoingBottom: {
-    backgroundColor: colors.themeElevationColor,
-    paddingHorizontal: 24,
-    paddingTop: 10,
-    paddingBottom: 10,
-    gap: 5,
-  },
-  ongoingTokenRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  ongoingTokenIcon: {
-    // height: 48,
-    // width: 48,
-    // borderRadius: 24,
-    // borderWidth: 1,
-    // borderColor: "#2E2E2E",
-    // backgroundColor: "#1D1D1D",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ongoingTokenMeta: {
-    flex: 1,
-    gap: 4,
-  },
-  ongoingStats: {
-    gap: 5,
-  },
-  ongoingStatRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  ongoingCTA: {
-    marginTop: 5,
-    borderRadius: 4,
-    height: 35,
-  },
-  detailsSection: {
-    borderWidth: 1,
-    borderColor: "#302008",
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 10,
-    backgroundColor: "rgba(27, 18, 6, 0.6)",
-  },
-  detailRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  projectPrimaryButton: {
-    marginTop: 18,
-    alignSelf: "stretch",
-    backgroundColor: colors.buttonBg,
-    borderRadius: 30,
-    paddingVertical: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sliderDots: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  sliderDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.inactiveDot,
-  },
-  sliderDotActive: {
-    width: 22,
-    borderRadius: 3,
-    backgroundColor: colors.buttonBg,
-  },
-  faqSection: {
-    width: "100%",
-    gap: 16,
-    marginBottom: 40,
-  },
-  faqHighlightCard: {
-    position: "relative",
-    backgroundColor: "#1B1B1B",
-    borderRadius: 16,
-    padding: 20,
-    overflow: "hidden",
-  },
-  faqHighlightTitle: {
-    marginBottom: 6,
-  },
-  faqHighlightSubtitle: {
-    width: "80%",
-    lineHeight: 20,
-  },
-  faqHighlightIcon: {
-    position: "absolute",
-    right: 16,
-    bottom: 16,
-    height: 40,
-    width: 40,
-    opacity: 0.6,
-  },
-  faqList: {
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#1F1F1F",
-    overflow: "hidden",
-  },
-  faqRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1F1F1F",
-    backgroundColor: "#121212",
-  },
-  faqRowLast: {
-    borderBottomWidth: 0,
-  },
-  faqQuestion: {
-    flex: 1,
-    marginRight: 12,
-  },
-  faqToggle: {
-    height: 28,
-    width: 28,
-    borderRadius: 14,
-    backgroundColor: colors.buttonBg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  faqToggleIcon: {
-    height: 14,
-    width: 14,
-    tintColor: colors.black,
-  },
-  emptyStateCard: {
-    width: "100%",
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "#1F1F1F",
-    padding: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.themeElevationColor,
-  },
-  stateWrapper: {
-    marginTop: 24,
-    marginBottom: 16,
-    alignItems: "center",
-    gap: 12,
-  },
-  stateMessage: {
-    textAlign: "center",
-    width: width * 0.8,
-  },
-  retryButton: {
-    backgroundColor: colors.buttonBg,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  tokenLogo: {
-    width: 30,
-    height: 30,
-    borderRadius: 20,
-  },
-  statusLiveBadge: {
-    backgroundColor: colors.buttonBg,
-  },
-  statusUpcomingBadge: {
-    backgroundColor: "#433415",
-  },
-  statusEndedBadge: {
-    backgroundColor: colors.red,
-  },
-  projectBanner: {
-    width: "100%",
-    height: 140,
-  },
-  upcomingInfoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  upcomingStatsBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 6,
-  },
-  upcomingStatsColumn: {
-    gap: 10,
-  },
-  upcomingStatsColumnRight: {
-    alignItems: "flex-end",
-    gap: 10,
-  },
-  upcomingCarouselContainer: {
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  upcomingCardWrapper: {
-    width: width - 40,
-    alignSelf: "center",
-  },
+  safeArea: { flex: 1 },
+  contentContainer: { paddingBottom: 40 },
+  heroCard: { width: "100%", height: 220, overflow: "hidden" },
+  heroGradient: { flex: 1, paddingHorizontal: 24, paddingVertical: 14 },
+  heroTextContainer: { flex: 1, justifyContent: "center" },
+  heroTitle: { marginBottom: 4 },
+  heroSubtitle: { lineHeight: 18, marginBottom: 8, width: "95%" },
+  heroStatsRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 12 },
+  heroStatItem: { flex: 1, alignItems: "center" },
+  heroArtContainer: { width: 110, height: 100 },
+  heroImage: { width: "100%", height: "100%" },
+  tabContainer: { paddingHorizontal: 20, marginBottom: 10 },
+  tabHeading: { marginBottom: 16 },
+  tabRow: { flexDirection: 'row', gap: 12 },
+  tabBtn: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#EEEEEE' },
+  projectListContainer: { paddingHorizontal: 20, paddingTop: 10 },
+  webCard: { borderRadius: 16, padding: 16, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 5, elevation: 2, width: '100%' },
+  webCardTop: { flexDirection: 'column', gap: 16, marginBottom: 16 },
+  webCardTopLeft: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  webTokenIconContainer: { width: 48, height: 48, borderRadius: 8, overflow: 'hidden' },
+  webTokenLogo: { width: '100%', height: '100%' },
+  webTokenPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  webTokenMeta: { flex: 1 },
+  webTokenTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  webStatusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
+  bgLive: { backgroundColor: '#1E1F22' },
+  bgUpcoming: { backgroundColor: '#FEBA00' },
+  bgEnded: { backgroundColor: colors.red },
+  webCardTopRight: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
+  webStatCol: { flex: 1, alignItems: 'flex-start' },
+  statSeparator: { width: 1, height: 24, backgroundColor: 'rgba(0,0,0,0.1)', marginHorizontal: 12 },
+  webInnerBox: { borderRadius: 12, padding: 16, gap: 16 },
+  webInnerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  webInnerLft: { flexDirection: 'row', gap: 8, alignItems: 'center', flex: 1 },
+  webQuoteIcon: { width: 28, height: 28, borderRadius: 14, overflow: 'hidden' },
+  webParticipants: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  userIcon: { width: 14, height: 14, borderRadius: 7, backgroundColor: '#6E6E6E' },
+  webInnerList: { gap: 10, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)', paddingTop: 12 },
+  webInnerRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  webCTA: { marginTop: 8, height: 44, borderRadius: 22, backgroundColor: 'transparent', borderWidth: 1, borderColor: '#EEEEEE' },
+  stateWrapper: { marginTop: 40, alignItems: 'center', gap: 12 },
+  stateMessage: { textAlign: 'center', paddingHorizontal: 40 },
+  retryButton: { marginTop: 10, backgroundColor: colors.buttonBg, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 20 },
 });
 
 export default Launchpad;

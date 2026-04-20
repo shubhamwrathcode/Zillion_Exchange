@@ -23,10 +23,10 @@ export function ChartProvider({ children }) {
       >
         <WebView
           ref={webview}
-          source={{ uri: "https://gatbits.com/chart/dark/BTC_USDT" }}
+          source={{ uri: "https://zillion.wrathcode.com/chart/dark/BTC_USDT" }}
           javaScriptEnabled
           domStorageEnabled
-          onLoadEnd={() => {}}
+          onLoadEnd={() => { }}
         />
       </View>
 

@@ -180,7 +180,7 @@ const MoreMenu = () => {
                 source={memexDarkIcon}
                 resizeMode="contain"
                 style={{ width: 34, height: 34 }}
-                //tintColor={colors.buttonBg}
+              //tintColor={colors.buttonBg}
               />
               <AppText color={BLACK} style={{ marginTop: 5 }} type={ELEVEN}>
                 MemeX
@@ -225,7 +225,7 @@ const MoreMenu = () => {
                 source={convertIcon}
                 resizeMode="contain"
                 style={{ width: 34, height: 34 }}
-                // tintColor={theme !== "Dark" ? colors.black : colors.buttonBg}
+              // tintColor={theme !== "Dark" ? colors.black : colors.buttonBg}
               />
               <AppText color={BLACK} style={{ marginTop: 5 }} type={ELEVEN}>
                 Swap
@@ -246,7 +246,7 @@ const MoreMenu = () => {
                 source={newReferalIcon}
                 resizeMode="contain"
                 style={{ width: 34, height: 34 }}
-                //tintColor={colors.buttonBg}
+              //tintColor={colors.buttonBg}
               />
               <AppText color={BLACK} style={{ marginTop: 5 }} type={ELEVEN}>
                 Staking
@@ -260,7 +260,7 @@ const MoreMenu = () => {
                 source={newHubIcon}
                 resizeMode="contain"
                 style={{ width: 34, height: 34 }}
-                //tintColor={colors.buttonBg}
+              //tintColor={colors.buttonBg}
               />
               <AppText color={BLACK} style={{ marginTop: 5 }} type={ELEVEN}>
                 Referral{"\n"}Reward
@@ -282,7 +282,7 @@ const MoreMenu = () => {
                   source={arbitary}
                   resizeMode="contain"
                   style={{ width: 24, height: 24 }}
-                  //tintColor={colors.buttonBg}
+                //tintColor={colors.buttonBg}
                 />
               </TouchableOpacity>
               <AppText color={BLACK} style={{ marginTop: 5 }} type={ELEVEN}>
@@ -304,7 +304,7 @@ const MoreMenu = () => {
                 source={cardCoinIcon}
                 resizeMode="contain"
                 style={{ width: 34, height: 34 }}
-                //tintColor={colors.buttonBg}
+              //tintColor={colors.buttonBg}
               />
               <AppText
                 color={BLACK}
@@ -319,7 +319,7 @@ const MoreMenu = () => {
                 source={stakCalculatorIcon}
                 resizeMode="contain"
                 style={{ width: 34, height: 34 }}
-                //tintColor={colors.buttonBg}
+              //tintColor={colors.buttonBg}
               />
               <AppText
                 color={BLACK}
@@ -354,7 +354,7 @@ const MoreMenu = () => {
                 source={bell_ic}
                 resizeMode="contain"
                 style={{ width: 34, height: 34 }}
-                //tintColor={colors.buttonBg}
+              //tintColor={colors.buttonBg}
               />
               <AppText color={BLACK} style={{ marginTop: 5 }} type={ELEVEN}>
                 Notification
@@ -368,7 +368,7 @@ const MoreMenu = () => {
                 source={myHelpIcon}
                 resizeMode="contain"
                 style={{ width: 34, height: 34 }}
-                // tintColor={colors.white}
+              // tintColor={colors.white}
               />
               <AppText color={BLACK} style={{ marginTop: 5 }} type={ELEVEN}>
                 KYC
@@ -384,7 +384,7 @@ const MoreMenu = () => {
                 source={blogIcon}
                 resizeMode="contain"
                 style={{ width: 34, height: 34 }}
-                // tintColor={colors.white}
+              // tintColor={colors.white}
               />
               <AppText color={BLACK} style={{ marginTop: 5 }} type={ELEVEN}>
                 Security
@@ -398,7 +398,7 @@ const MoreMenu = () => {
                 source={newContactICon}
                 resizeMode="contain"
                 style={{ width: 34, height: 34 }}
-                //tintColor={colors.buttonBg}
+              //tintColor={colors.buttonBg}
               />
               <AppText color={BLACK} style={{ marginTop: 5 }} type={ELEVEN}>
                 Contact Us

@@ -800,16 +800,9 @@ const Spot = () => {
     }
   }, [route?.params?.coinDetail, dispatch, navigation, spotSelectedPair]);
 
-  // Restore order book from Redux cache on mount so returning to Spot shows data instantly (no refetch)
-  useEffect(() => {
-    if (!spotSelectedPair) return;
-    const hasCachedOrderBook = (buyOrders?.length > 0 || sellOrders?.length > 0);
-    if (!hasCachedOrderBook) return;
-    setLastSocketData((prev) => (prev ? prev : { cached: true }));
-    setLocalBuyOrders((prev) => (prev?.length > 0 ? prev : buyOrders || []));
-    setLocalSellOrders((prev) => (prev?.length > 0 ? prev : sellOrders || []));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Removed automatic restoration from Redux cache to ensure only fresh socket data is shown.
+  // This satisfies the requirement: "if data comes from backend, show; otherwise don't".
+
 
   const lastChartPairRef = useRef(null);
 
@@ -1027,6 +1020,13 @@ const Spot = () => {
       }
       const currentPair = currentCurrencyRef.current || currency;
       if (currentPair?.base_currency_id && currentPair?.quote_currency_id) {
+        // Clear order book before subscribing so we don't show stale data during connection
+        dispatch(setBuyOrders([]));
+        dispatch(setSellOrders([]));
+        setLastSocketData(null);
+        setLocalBuyOrders([]);
+        setLocalSellOrders([]);
+
         const newKey = `${currentPair.base_currency_id}-${currentPair.quote_currency_id}`;
         const lastExchange = lastSubscribedExchangeRef.current;
         const alreadySubscribed = lastExchange && `${lastExchange.base_currency_id}-${lastExchange.quote_currency_id}` === newKey;
@@ -1100,12 +1100,22 @@ const Spot = () => {
 
         // Do not reset webViewReady on blur so when user returns to Spot the chart is still visible (data persistence).
 
-        // Unsubscribe from exchange when leaving Spot to avoid unnecessary updates; cache stays in Redux for instant show on return
+        // Unsubscribe from exchange when leaving Spot to avoid unnecessary updates
         const last = lastSubscribedExchangeRef.current;
         if (last?.base_currency_id != null && last?.quote_currency_id != null) {
           unsubscribeFromExchange(last.base_currency_id, last.quote_currency_id);
           lastSubscribedExchangeRef.current = null;
         }
+
+        // Clear order book data when leaving the screen so "last saved data" is never shown on return.
+        // Data will only reappear once the next socket update is received.
+        dispatch(setBuyOrders([]));
+        dispatch(setSellOrders([]));
+        setLastSocketData(null);
+        setLocalBuyOrders([]);
+        setLocalSellOrders([]);
+        lastFlushedBuyRef.current = null;
+        lastFlushedSellRef.current = null;
       };
     }, [subscribeToExchange, unsubscribeFromExchange, currency, dispatch])
   );

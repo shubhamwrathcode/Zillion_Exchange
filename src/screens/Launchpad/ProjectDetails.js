@@ -34,20 +34,24 @@ import {
   YELLOW,
   Button,
   Input,
+  SIXTEEN,
 } from "../../shared";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import { colors } from "../../theme/colors";
-import { back_ic, linkIcon } from "../../helper/ImageAssets";
-import NavigationService from "../../navigation/NavigationService";
+import { back_ic, defaultPic, externalLinkIcon, linkIcon, tick } from "../../helper/ImageAssets";
 import { IMAGE_BASE_URL } from "../../helper/Constants";
 import { showError } from "../../helper/logger";
+import { appOperation } from "../../appOperation";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width } = Dimensions.get("window");
 
 const ProjectDetails = () => {
+  const { colors: themeColors, isDark } = useTheme();
   const route = useRoute();
   const projectFromParams = route?.params?.project || {};
-  const [project, setProject] = useState("");
+  // Start with the project passed from listing, then update if fetch succeeds
+  const [project, setProject] = useState(projectFromParams);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [purchaseAmount, setPurchaseAmount] = useState("");
@@ -60,28 +64,41 @@ const ProjectDetails = () => {
   const fetchProjectDetails = useCallback(async (projectId) => {
     if (!projectId) return;
 
+    // Optional: If we already have full data from params, we can skip initial loading spinner
+    // but we still fetch in background to get latest stats
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        `http://159.195.23.93:5001/v1/user/user-launchpad-details/${projectId}`,
-        {
-          headers: {
-            Accept: "application/json",
-          },
+      // Use appOperation for correct base URL and authentication
+      const result = await appOperation.get(`launchpad/get-launchpads`, undefined, undefined, 'GUEST');
+      if (result?.success) {
+        const list = Array.isArray(result.data) ? result.data : [];
+        const found = list.find(x => String(x?._id) === String(projectId));
+        if (found) {
+          setProject(found);
+        } else {
+          // If not in standard list, try specific detail end-point via appOperation domain
+          const detailRes = await appOperation.get(`user/user-launchpad-details/${projectId}`);
+          if (detailRes?.success) {
+            setProject(detailRes.data);
+          } else {
+            throw new Error("Project not found in current inventory.");
+          }
         }
-      );
-      const payload = await response.json();
-      if (!response.ok || !payload?.success) {
-        throw new Error(payload?.message || "Unable to fetch project details.");
+      } else {
+        throw new Error(result?.message || "Unable to fetch launchpad listings.");
       }
-      setProject(payload?.data || {});
     } catch (fetchError) {
-      setError(fetchError?.message || "Something went wrong.");
+      // If we have data from params, don't show block-level error, just log it
+      if (Object.keys(projectFromParams).length > 2) {
+        console.warn("Fetch failed, using cached params:", fetchError);
+      } else {
+        setError(fetchError?.message || "Something went wrong.");
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [projectFromParams]);
 
   useEffect(() => {
     const projectId = projectFromParams?._id || project?._id;
@@ -143,12 +160,14 @@ const ProjectDetails = () => {
     }
   };
 
-  const tokenLogoSource = project?.logoUrl
-    ? {
-        uri: `${IMAGE_BASE_URL}${project.logoUrl}`,
-        priority: FastImage.priority.normal,
-      }
-    : null;
+  const tokenLogoSource = (() => {
+    let path = project?.logo || project?.base_currency_id?.icon_path || project?.logoUrl;
+    if (!path) return null;
+    if (path.startsWith("http")) return { uri: path };
+    const base = IMAGE_BASE_URL.endsWith("/") ? IMAGE_BASE_URL.slice(0, -1) : IMAGE_BASE_URL;
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return { uri: `${base}${cleanPath}` };
+  })();
 
   // Determine status
   const status = project?.status?.toUpperCase() || "ENDED";
@@ -156,10 +175,10 @@ const ProjectDetails = () => {
     status === "ENDED"
       ? colors.inactiveDot || "#666666"
       : status === "UPCOMING"
-      ? colors.buttonBg
-      : status === "LIVE" || status === "ONGOING"
-      ? "#4CAF50"
-      : colors.inactiveDot || "#666666";
+        ? colors.buttonBg
+        : status === "LIVE" || status === "ONGOING"
+          ? "#4CAF50"
+          : colors.inactiveDot || "#666666";
 
   // Determine subscription currency (default to USDT)
   const subscriptionCurrency = "USDT";
@@ -170,8 +189,12 @@ const ProjectDetails = () => {
     : project?.tokenName || "ENL";
 
   // Map API fields to component fields
-  const minSubscription = project?.minPurchase || project?.minSubscription || 0;
-  const maxSubscription = project?.maxPurchase || project?.maxSubscription || 0;
+  // Map API fields to component fields for parity with web platform
+  const minSubscription = project?.minBuy ?? project?.minPurchase ?? project?.minSubscription ?? 10;
+  const maxSubscription = project?.maxBuy ?? project?.maxPurchase ?? project?.maxSubscription ?? 15000;
+  const tokenPrice = project?.tokenPrice ?? project?.subscription_price ?? project?.price ?? 0;
+  const totalAllocation = project?.availableTokens ?? project?.tokensForSale ?? project?.totalDistribution ?? project?.totalAllocation ?? 0;
+  const quoteSymbol = project?.acceptedCurrency || project?.quoteSymbol || ((typeof project?.quote_currency_id === "object") ? project?.quote_currency_id?.short_name : "USDT");
 
   // Calculate tokens to receive
   const tokensToReceive = purchaseAmount && project?.tokenPrice
@@ -189,38 +212,38 @@ const ProjectDetails = () => {
 
   const fetchSubscriptionHistory = useCallback(async () => {
     setSubscriptionsLoading(true);
+    const lpId = project?._id || route?.params?.projectId;
+    if (!lpId) {
+      setSubscriptions([]);
+      setSubscriptionsLoading(false);
+      return;
+    }
     try {
-      const token = await AsyncStorage.getItem("USER_TOKEN_KEY");
-      const response = await fetch(
-        "http://159.195.23.93:5001/v1/user/user-token-subscription-history",
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            Authorization: token || "",
-          },
+      const response = await appOperation.get(`user/user-launchpad-details/${lpId}`);
+      if (response?.success) {
+        // Transactions are usually in a nested field or separate endpoint, 
+        // following the pattern from handleConfirmPurchase in web which calls getLaunchpadTransactions
+        const historyRes = await appOperation.get(`user/user-token-subscription-history`);
+        if (historyRes?.success) {
+          const list = Array.isArray(historyRes?.data) ? historyRes.data : [];
+          setSubscriptions(list.filter(x => String(x.launchpadId) === String(lpId)));
         }
-      );
-      const payload = await response.json();
-      if (response.ok && payload?.success) {
-        setSubscriptions(payload?.data || []);
       } else {
-        showError(payload?.message || "Failed to fetch subscription history.");
         setSubscriptions([]);
       }
     } catch (fetchError) {
-      showError(fetchError?.message || "Something went wrong.");
+      console.warn("History fetch error:", fetchError);
       setSubscriptions([]);
     } finally {
       setSubscriptionsLoading(false);
     }
-  }, []);
+  }, [project?._id, route?.params?.projectId]);
 
   const handleOpenSubscriptionSheet = async () => {
     await fetchSubscriptionHistory();
-    if(subscriptions.length > 0){
+    if (subscriptions.length > 0) {
       subscriptionSheetRef.current?.open();
-    } 
+    }
   };
 
   const handleCloseSubscriptionSheet = () => {
@@ -244,53 +267,42 @@ const ProjectDetails = () => {
     const maxAmount = parseFloat(maxSubscription || 15000);
 
     if (amount < minAmount) {
-      showError(`Minimum purchase amount is ${minAmount} USDT.`);
+      showError(`Minimum purchase amount is ${minAmount} ${quoteSymbol}.`);
       return;
     }
 
     if (amount > maxAmount) {
-      showError(`Maximum purchase amount is ${maxAmount} USDT.`);
+      showError(`Maximum purchase amount is ${maxAmount} ${quoteSymbol}.`);
       return;
     }
 
-    // Call API to purchase tokens
+    // Call API to purchase tokens via appOperation (replaces hardcoded IP)
     setPurchasing(true);
     try {
-      const token = await AsyncStorage.getItem("USER_TOKEN_KEY");
-      const response = await fetch(
-        "http://159.195.23.93:5001/v1/user/purchase-token",
-        {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            Authorization: token || "",
-          },
-          body: JSON.stringify({
-            amountInvested: amount,
-            launchpadId: project._id,
-          }),
-        }
-      );
+      const result = await appOperation.post("user/purchase-token", {
+        amountInvested: amount,
+        launchpadId: project._id,
+      });
 
-      const payload = await response.json();
-      
-      if (response.ok && payload?.success) {
-        showError(payload?.message || "Purchase successful!");
+      if (result?.success) {
+        showError(result?.message || "Purchase successful!");
         handleCloseBuySheet();
-        // Refresh project details to get updated data
         fetchProjectDetails(project._id);
       } else {
-        showError(payload?.message || "Purchase failed. Please try again.");
+        showError(result?.message || "Something went wrong.");
       }
     } catch (purchaseError) {
-      showError(purchaseError?.message || "Something went wrong. Please try again.");
+      showError(purchaseError?.message || "Error processing purchase.");
     } finally {
       setPurchasing(false);
     }
   };
 
-  if (loading) {
+  // Use theme colors for text consistency
+  const textColor = isDark ? themeColors.text : "#000000";
+  const secondaryTextColor = isDark ? themeColors.secondaryText : "#666666";
+
+  if (loading && !project?._id) {
     return (
       <AppSafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
@@ -313,7 +325,7 @@ const ProjectDetails = () => {
           <TouchableOpacityView
             style={styles.retryButton}
             onPress={() => {
-              const projectId = project?._id;
+              const projectId = projectFromParams?._id || project?._id;
               if (projectId) {
                 fetchProjectDetails(projectId);
               }
@@ -329,14 +341,14 @@ const ProjectDetails = () => {
   }
 
   return (
-    <AppSafeAreaView style={styles.safeArea}>
+    <AppSafeAreaView style={[styles.areaWrapper, { backgroundColor: themeColors.background }]}>
       <ScrollView
         bounces={false}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }]}>
           <TouchableOpacityView
             onPress={() => NavigationService.goBack()}
             style={styles.backButton}
@@ -345,315 +357,191 @@ const ProjectDetails = () => {
               source={back_ic}
               style={styles.backIcon}
               resizeMode="contain"
-              tintColor={colors.white}
+              tintColor={textColor}
             />
           </TouchableOpacityView>
           <AppText
             type={EIGHTEEN}
             weight={SEMI_BOLD}
-            style={styles.headerTitle}
+            style={[styles.headerTitle, { color: textColor }]}
           >
-            {project?.tokenName || "EUL"}
+            {project?.tokenSymbol || "ZTC"}
           </AppText>
-          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-            <AppText type={TWELVE} weight={SEMI_BOLD} color={WHITE}>
+          <View style={[styles.statusBadge, { backgroundColor: statusColor, marginRight: 8 }]}>
+            <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: colors.white }}>
               {status}
             </AppText>
           </View>
         </View>
 
-        {/* Project Overview */}
-        <View style={styles.projectOverview}>
-          <View style={styles.projectIdentity}>
-            {tokenLogoSource ? (
-              <FastImage
-                source={tokenLogoSource}
-                resizeMode={FastImage.resizeMode.cover}
-                style={styles.projectLogo}
-              />
+        {/* Timeline Horizontal */}
+        <View style={styles.horizontalTimeline}>
+          {[
+            { label: "Subscription Starts", date: project?.startTime },
+            { label: "Subscription Ends", date: project?.endTime },
+            { label: "Allocation Starts", date: project?.endTime },
+          ].map((item, index) => (
+            <View key={index} style={[styles.timelineItemHoriz, {
+              borderLeftWidth: index === 0 ? 0 : 2, borderLeftColor: colors.secondBorder, width: "35%",
+              paddingHorizontal: 8,
+            }]}>
+              {/* <View style={styles.timelinePointRow}>
+                <View style={[styles.timelinePoint, { backgroundColor: colors.buttonBg, shadowColor: colors.buttonBg, shadowOpacity: 0.8, shadowRadius: 6, elevation: 5 }]} />
+                {index < 2 && <View style={[styles.timelineLineHoriz, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "#DDD" }]} />}
+              </View> */}
+              <AppText style={[styles.timelineLabelHoriz, {
+                color: secondaryTextColor,
+                // textAlign: 'left',
+                fontSize: 11
+              }]}>
+                {item.label}
+              </AppText>
+              <AppText type={TEN} weight={SEMI_BOLD} style={[styles.timelineDateHoriz, { color: textColor, }]}>
+                {moment(item.date).format("YYYY-MM-DD\nHH:mm")}
+              </AppText>
+            </View>
+          ))}
+        </View>
+
+        {/* Top Distribution Card */}
+        <View style={[styles.summaryCard, { backgroundColor: isDark ? "#1F1F1F" : "#F9F9F9", }]}>
+          <View style={styles.summaryCol}>
+            <AppText type={TWELVE} style={{ color: secondaryTextColor }}>Total Distribution</AppText>
+            <AppText type={SIXTEEN} weight={BOLD} style={{ color: textColor, marginTop: 4 }}>
+              {formatNumber(project?.tokensForSale || 0)} {tokenSymbol}
+            </AppText>
+          </View>
+          <View style={[styles.summaryDivider, { backgroundColor: isDark ? "#333" : "#EEE" }]} />
+          <View style={styles.summaryCol}>
+            <AppText type={TWELVE} style={{ color: secondaryTextColor }}>Participants</AppText>
+            <AppText type={SIXTEEN} weight={BOLD} style={{ color: textColor, marginTop: 4 }}>
+              {project?.participantsCount || 0}
+            </AppText>
+          </View>
+          <View style={[styles.summaryDivider, { backgroundColor: isDark ? "#333" : "#EEE" }]} />
+          <View style={[styles.summaryCol, { justifyContent: 'center' }]}>
+            {(status === "LIVE" || status === "ONGOING") ? (
+              <TouchableOpacityView
+                onPress={handleOpenBuySheet}
+                style={[styles.subscribeButton, { paddingVertical: 10, paddingHorizontal: 16, marginTop: 0, minWidth: 70 }]}
+              >
+                <AppText weight={BOLD} color={WHITE} type={THIRTEEN}>Trade</AppText>
+              </TouchableOpacityView>
             ) : (
-              <View style={styles.projectLogoPlaceholder}>
-                <AppText type={TWENTY} weight={BOLD} color={WHITE}>
-                  {(project?.tokenSymbol || project?.tokenName || "?")
-                    ?.toString()
-                    .charAt(0)}
-                </AppText>
+              <View style={[styles.subscribeButton, { backgroundColor: "#DDD", opacity: 0.5, paddingVertical: 10, paddingHorizontal: 16, marginTop: 0, minWidth: 70 }]}>
+                <AppText weight={BOLD} color={WHITE} type={THIRTEEN}>Trade</AppText>
               </View>
-            )}
-            <AppText
-              type={EIGHTEEN}
-              weight={SEMI_BOLD}
-              style={styles.projectName}
-            >
-              {project?.tokenName || "EUL"}
-            </AppText>
-          </View>
-          <View style={styles.externalLinks}>
-            {project?.website && (
-            <TouchableOpacityView
-              style={styles.linkButton}
-              onPress={handleWebsitePress}
-            >
-              <FastImage
-                source={linkIcon}
-                style={styles.linkIcon}
-                resizeMode="contain"
-                tintColor={colors.whiteShadow || "#999"}
-              />
-              <AppText type={TWELVE} style={styles.linkText}>
-                Website
-              </AppText>
-            </TouchableOpacityView>
-            )}
-            {project?.whitepaper && (
-            <TouchableOpacityView
-              style={styles.linkButton}
-              onPress={handleWhitepaperPress}
-            >
-              <FastImage
-                source={linkIcon}
-                style={styles.linkIcon}
-                resizeMode="contain"
-                tintColor={colors.whiteShadow || "#999"}
-              />
-              <AppText type={TWELVE} style={styles.linkText}>
-                Whitepaper
-                </AppText>
-              </TouchableOpacityView>
             )}
           </View>
         </View>
 
-        {/* Subscription Details */}
-        <View style={styles.section}>
-          <AppText
-            type={FIFTEEN}
-            weight={SEMI_BOLD}
-            style={styles.sectionTitle}
-          >
-            Subscription Details
+        {/* Subscription Main Section */}
+        <View style={[styles.commitSection, { backgroundColor: isDark ? "#1F1F1F" : "#F9F9F9", }]}>
+          <AppText type={SIXTEEN} weight={BOLD} style={{ color: textColor, marginBottom: 20 }}>
+            Commit {subscriptionCurrency} to Subscribe {tokenSymbol}
           </AppText>
-          <View style={styles.detailsList}>
-            <View style={styles.detailRow}>
-              <AppText type={THIRTEEN} style={styles.detailLabel}>
-              Participants
+
+          <View style={styles.badgesRow}>
+            <View style={[styles.badge, { backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5", flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+              <FastImage source={defaultPic}
+                resizeMode="contain"
+                style={{ width: 25, height: 25 }} tintColor={isDark ? "#AAA" : "#666"} />
+              <AppText type={TEN} weight={BOLD} style={{ color: isDark ? "#CCC" : "#333" }}>New User Exclusive</AppText>
+            </View>
+            <View style={[styles.badge, { backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5", flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+              <FastImage source={tick} style={{ width: 10, height: 10 }} tintColor={isDark ? "#AAA" : "#666"} />
+              <AppText type={TEN} weight={BOLD} style={{ color: isDark ? "#CCC" : "#333" }}>60% Off</AppText>
+            </View>
+            <View style={[styles.badge, { backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5", flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+              <FastImage source={externalLinkIcon} style={{ width: 10, height: 10 }} tintColor={isDark ? "#AAA" : "#666"} />
+              <AppText type={TEN} weight={BOLD} style={{ color: isDark ? "#CCC" : "#333" }}>Raise Limit</AppText>
+            </View>
+          </View>
+
+          <View style={styles.statsGrid}>
+            <View style={styles.statBox}>
+              <AppText type={ELEVEN} style={{ color: secondaryTextColor }}>Exclusive Subscription Price</AppText>
+              <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: textColor, marginTop: 6 }}>
+                1 {tokenSymbol} = {tokenPrice} {quoteSymbol}
               </AppText>
-              <AppText
-                type={THIRTEEN}
-                weight={SEMI_BOLD}
-                style={styles.detailValue}
-              >
-                {/* {formatTokenPrice(project?.participantsCount, tokenSymbol)} */} 
-                {project?.participantsCount || "0.00"}
+              <AppText type={TEN} style={{ color: secondaryTextColor, marginTop: 4 }}>
+                Sell Price: {project?.sellPrice ?? project?.listingPrice ?? tokenPrice} {quoteSymbol}
               </AppText>
             </View>
-            <View style={styles.detailRow}>
-              <AppText type={THIRTEEN} style={styles.detailLabel}>
-              Current Percent
-              </AppText>
-              <AppText
-                type={THIRTEEN}
-                weight={SEMI_BOLD}
-                style={styles.detailValue}
-              >
-                {/* {project?.tokensForSale
-                  ? `${formatNumber(project.tokensForSale)} ${tokenSymbol}`
-                  : "--"} */}
-                {project?.progressPercent || "0.00"}
-              </AppText>
-            </View>
-            <View style={styles.detailRow}>
-              <AppText type={THIRTEEN} style={styles.detailLabel}>
-              Raised
-              </AppText>
-              <AppText
-                type={THIRTEEN}
-                weight={SEMI_BOLD}
-                style={styles.detailValue}
-              >
-                {/* {minSubscription
-                  ? `${formatNumber(minSubscription)} ${subscriptionCurrency}`
-                  : "--"} */}
-                  {project?.totalInvested || "0.00"}
-              </AppText>
-            </View>
-            <View style={styles.detailRow}>
-              <AppText type={THIRTEEN} style={styles.detailLabel}>
-              Total Supply
-              </AppText>
-              <AppText
-                type={THIRTEEN}
-                weight={SEMI_BOLD}
-                style={styles.detailValue}
-              >
-                {/* {maxSubscription
-                  ? `${formatNumber(maxSubscription)} ${subscriptionCurrency}`
-                  : "--"} */}
-                  {project?.totalSupply || "0.00"}
+            <View style={styles.statBox}>
+              <AppText type={ELEVEN} style={{ color: secondaryTextColor }}>Total Allocation</AppText>
+              <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: textColor, marginTop: 6 }}>
+                {formatNumber(totalAllocation)} {tokenSymbol}
               </AppText>
             </View>
           </View>
+
+          <View style={styles.statsGrid}>
+            <View style={styles.statBox}>
+              <AppText type={ELEVEN} style={{ color: secondaryTextColor }}>Total Committed</AppText>
+              <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: textColor, marginTop: 6 }}>
+                {formatNumber(project?.totalRaised ?? project?.totalInvested ?? 0)} {quoteSymbol}
+              </AppText>
+            </View>
+            <View style={styles.statBox}>
+              <AppText type={ELEVEN} style={{ color: secondaryTextColor }}>Subscribed</AppText>
+              <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: textColor, marginTop: 6 }}>
+                {project?.subscribed != null ? formatNumber(project.subscribed) : "---"}
+              </AppText>
+            </View>
+          </View>
+
+          <View style={styles.statsGrid}>
+            <View style={styles.statBox}>
+              <AppText type={ELEVEN} style={{ color: secondaryTextColor }}>Allocated</AppText>
+              <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: textColor, marginTop: 6 }}>
+                {project?.allocated != null ? formatNumber(project.allocated) : "---"}
+              </AppText>
+            </View>
+            <View style={styles.statBox}>
+              <AppText type={ELEVEN} style={{ color: secondaryTextColor }}>Refunded</AppText>
+              <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: textColor, marginTop: 6 }}>
+                {project?.refunded != null ? formatNumber(project.refunded) : "---"}
+              </AppText>
+            </View>
+          </View>
+
+
+          <TouchableOpacityView onPress={handleOpenSubscriptionSheet} style={{ alignSelf: 'flex-end', marginTop: 16 }}>
+            <AppText type={THIRTEEN} style={{ color: colors.buttonBg }}>My Subscription &rarr;</AppText>
+          </TouchableOpacityView>
         </View>
 
-        {(status === "LIVE" || status === "ONGOING") && (
-          <Button
-            onPress={handleOpenBuySheet}
-            children="Buy now"
-            containerStyle={styles.buyNowButton}
-          />
-        )}
-
-        {/* Project Cycle */}
+        {/* Project Summary */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <AppText
-              type={FIFTEEN}
-              weight={SEMI_BOLD}
-              style={styles.sectionTitle}
-            >
-              Project Cycle
+          <AppText type={SIXTEEN} weight={BOLD} style={{ color: textColor, marginBottom: 16 }}>Project Summary</AppText>
+          <View style={[styles.summaryBox, { backgroundColor: isDark ? "#1F1F1F" : "#F9F9F9", }]}>
+            <AppText type={TWELVE} style={{ color: secondaryTextColor, lineHeight: 18 }}>
+              {project?.description || "No description available."}
             </AppText>
-            {status !== "UPCOMING" && (
-              <TouchableOpacityView onPress={handleOpenSubscriptionSheet}>
-                <AppText
-                  type={THIRTEEN}
-                  color={YELLOW}
-                  style={styles.subscriptionLink}
-                >
-                  My Subscription &gt;
-                </AppText>
-              </TouchableOpacityView>
-            )}
-          </View>
-          <View style={styles.timeline}>
-            <View style={styles.timelineItem}>
-              <View style={styles.timelineCircle}>
-                <AppText type={TWELVE} weight={BOLD} color={BLACK}>
-                  1.
-                </AppText>
-              </View>
-              <View style={styles.timelineContent}>
-                <AppText
-                  type={THIRTEEN}
-                  weight={SEMI_BOLD}
-                  style={styles.timelineTitle}
-                >
-                  Start Subscription
-                </AppText>
-                <AppText type={TWELVE} style={styles.timelineDate}>
-                  {formatListing(project?.startTime) || "26/05/2025 05:30:00"}
-                </AppText>
-              </View>
-            </View>
-            <View style={styles.timelineLine} />
-            <View style={styles.timelineItem}>
-              <View style={styles.timelineCircle}>
-                <AppText type={TWELVE} weight={BOLD} color={BLACK}>
-                  2.
-                </AppText>
-              </View>
-              <View style={styles.timelineContent}>
-                <AppText
-                  type={THIRTEEN}
-                  weight={SEMI_BOLD}
-                  style={styles.timelineTitle}
-                >
-                  End Subscription
-                </AppText>
-                <AppText type={TWELVE} style={styles.timelineDate}>
-                  {formatListing(project?.endTime) || "26/05/2025 05:30:00"}
-                </AppText>
-              </View>
-            </View>
           </View>
         </View>
 
         {/* Key Highlight */}
         <View style={styles.section}>
-          <AppText
-            type={FIFTEEN}
-            weight={SEMI_BOLD}
-            style={styles.sectionTitle}
-          >
-            Key Highlight
-          </AppText>
+          <AppText type={SIXTEEN} weight={BOLD} style={{ color: textColor, marginBottom: 16 }}>Details</AppText>
           <View style={styles.highlightTable}>
-            <View style={[styles.tableRow, { backgroundColor: "#1F1F1F",}]}>
-              <AppText type={THIRTEEN} style={styles.tableLabel}>
-                Token Symbol
-              </AppText>
-              <AppText
-                type={THIRTEEN}
-                weight={SEMI_BOLD}
-                style={styles.tableValue}
-              >
-                {tokenSymbol}
+            <View style={[styles.tableRow, { backgroundColor: isDark ? "#1F1F1F" : "#F5F5F3" }]}>
+              <AppText type={TWELVE} style={{ color: secondaryTextColor }}>Exclusive Subscription Price</AppText>
+              <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: textColor }}>
+                1 {tokenSymbol} = {tokenPrice} {quoteSymbol}
               </AppText>
             </View>
-            <View style={styles.tableRow}>
-              <AppText type={THIRTEEN} style={styles.tableLabel}>
-                Total Platform Issuance
-              </AppText>
-              <AppText
-                type={THIRTEEN}
-                weight={SEMI_BOLD}
-                style={styles.tableValue}
-              >
-                {project?.totalSupply
-                  ? `${formatNumber(project.totalSupply)} ${tokenSymbol}`
-                  : "--"}
+            <View style={[styles.tableRow, { backgroundColor: isDark ? "#121212" : "#FFF" }]}>
+              <AppText type={TWELVE} style={{ color: textColor }}>Launchpad Total Allocation</AppText>
+              <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: textColor }}>
+                {formatNumber(totalAllocation)} {tokenSymbol}
               </AppText>
             </View>
-            <View style={[styles.tableRow, { backgroundColor: "#1F1F1F",}]}>
-              <AppText type={THIRTEEN} style={styles.tableLabel}>
-                Subscription Price
-              </AppText>
-              <AppText
-                type={THIRTEEN}
-                weight={SEMI_BOLD}
-                style={styles.tableValue}
-              >
-                {formatTokenPrice(project?.tokenPrice, tokenSymbol)}
-              </AppText>
-            </View>
-            <View style={styles.tableRow}>
-              <AppText type={THIRTEEN} style={styles.tableLabel}>
-                Min Subscription Amount
-              </AppText>
-              <AppText
-                type={THIRTEEN}
-                weight={SEMI_BOLD}
-                style={styles.tableValue}
-              >
-                {minSubscription
-                  ? `${formatNumber(minSubscription)} ${subscriptionCurrency}`
-                  : "--"}
-              </AppText>
-            </View>
-            <View style={[styles.tableRow, { backgroundColor: "#1F1F1F",}]}>
-              <AppText type={THIRTEEN} style={styles.tableLabel}>
-                Max Subscription Amount
-              </AppText>
-              <AppText
-                type={THIRTEEN}
-                weight={SEMI_BOLD}
-                style={styles.tableValue}
-              >
-                {maxSubscription
-                  ? `${formatNumber(maxSubscription)} ${subscriptionCurrency}`
-                  : "--"}
-              </AppText>
-            </View>
-            <View style={styles.tableRow}>
-              <AppText type={THIRTEEN} style={styles.tableLabel}>
-                Tokens For Sale
-              </AppText>
-              <AppText
-                type={THIRTEEN}
-                weight={SEMI_BOLD}
-                style={styles.tableValue}
-              >
-                {project?.tokensForSale}
+            <View style={[styles.tableRow, { backgroundColor: isDark ? "#1F1F1F" : "#F5F5F3" }]}>
+              <AppText type={TWELVE} style={{ color: secondaryTextColor }}>Individual Subscription Limit</AppText>
+              <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: textColor }}>
+                {formatNumber(minSubscription)} - {formatNumber(maxSubscription)} {quoteSymbol}
               </AppText>
             </View>
           </View>
@@ -687,11 +575,11 @@ const ProjectDetails = () => {
       >
         <View style={styles.bottomSheetContent}>
           <View style={styles.bottomSheetHeader}>
-            <AppText type={EIGHTEEN} weight={SEMI_BOLD} style={styles.bottomSheetTitle}>
+            <AppText type={EIGHTEEN} weight={SEMI_BOLD} color={textColor}>
               Enter Purchase Amount
             </AppText>
             <TouchableOpacityView onPress={handleCloseBuySheet}>
-              <AppText type={TWENTY} weight={BOLD} style={styles.closeButton}>
+              <AppText type={TWENTY} weight={BOLD} color={textColor}>
                 ✖
               </AppText>
             </TouchableOpacityView>
@@ -784,8 +672,8 @@ const ProjectDetails = () => {
               </AppText>
             </View>
           ) : subscriptions && subscriptions.length > 0 ? (
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.subscriptionTableScroll}
               nestedScrollEnabled={true}
@@ -793,14 +681,14 @@ const ProjectDetails = () => {
               decelerationRate="fast"
             >
               <View style={styles.subscriptionTableWrapper}>
-                <ScrollView 
+                <ScrollView
                   stickyHeaderIndices={[0]}
                   showsVerticalScrollIndicator={false}
                 >
                   {/* Table Header */}
                   {subscriptions.length > 0 && (
-                    <ScrollView 
-                      style={[styles.subscriptionTableRow, styles.subscriptionTableHeaderRow]} 
+                    <ScrollView
+                      style={[styles.subscriptionTableRow, styles.subscriptionTableHeaderRow]}
                       horizontal
                       showsHorizontalScrollIndicator={false}
                       scrollEnabled={false}
@@ -832,19 +720,19 @@ const ProjectDetails = () => {
                   {/* Table Body */}
                   {subscriptions.length > 0 ? (
                     subscriptions.map((sub, index) => {
-                      const totalInvested = sub.totalInvested?.$numberDecimal 
+                      const totalInvested = sub.totalInvested?.$numberDecimal
                         ? parseFloat(sub.totalInvested.$numberDecimal).toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
                         : "0.00";
-                      
-                      const statusColor = 
+
+                      const statusColor =
                         sub.status === "LIVE" || sub.status === "ONGOING"
                           ? "#4CAF50"
                           : sub.status === "ENDED"
-                          ? "#F44336"
-                          : "#555";
+                            ? "#F44336"
+                            : "#555";
 
                       return (
                         <View
@@ -870,12 +758,12 @@ const ProjectDetails = () => {
                             {sub.totalTokensReceived || "0"}
                           </AppText>
                           <AppText type={TWELVE} style={styles.subscriptionTableCell}>
-                            {sub.lastPurchase 
+                            {sub.lastPurchase
                               ? moment(sub.lastPurchase).format("DD/MM/YYYY LT")
                               : "--"}
                           </AppText>
-                          <AppText 
-                            type={TWELVE} 
+                          <AppText
+                            type={TWELVE}
                             weight={SEMI_BOLD}
                             style={[styles.subscriptionTableCell, { color: statusColor }]}
                           >
@@ -917,7 +805,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
     paddingBottom: 40,
   },
   header: {
@@ -1060,28 +948,21 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   highlightTable: {
-    borderRadius: 8,
+    borderRadius: 12,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#1F1F1F",
   },
   tableRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 16,
-   
-    borderBottomWidth: 1,
-    borderBottomColor: "#0A0A0A",
+    paddingVertical: 18,
   },
   tableLabel: {
-    color: colors.whiteShadow || "#999",
     flex: 1,
   },
   tableValue: {
-    color: colors.white,
-    flex: 1,
+    flex: 2,
     textAlign: "right",
   },
   loadingContainer: {
@@ -1255,5 +1136,97 @@ const styles = StyleSheet.create({
     backgroundColor: colors.buttonBg,
     paddingVertical: 12,
     borderRadius: 8,
+  },
+  horizontalTimeline: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 30,
+    marginBottom: 35,
+    alignSelf: "center"
+  },
+  timelineItemHoriz: {
+  },
+  timelinePointRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  timelinePoint: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    zIndex: 2,
+  },
+  timelineLineHoriz: {
+    height: 1,
+    flex: 1,
+    position: "absolute",
+    left: "50%",
+    right: -10,
+    zIndex: 1,
+  },
+  timelineLabelHoriz: {
+    textAlign: "center",
+    fontSize: 9,
+  },
+  timelineDateHoriz: {
+    textAlign: "center",
+    marginTop: 4,
+    fontSize: 9,
+  },
+  summaryCard: {
+    flexDirection: "row",
+    marginHorizontal: 0,
+    borderRadius: 15,
+    paddingVertical: 25,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  summaryCol: {
+    flex: 1,
+    alignItems: "center",
+  },
+  summaryDivider: {
+    width: 1,
+    height: 40,
+    marginHorizontal: 10,
+  },
+  commitSection: {
+    marginHorizontal: 0,
+    borderRadius: 15,
+    padding: 24,
+    marginBottom: 20,
+  },
+  badgesRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 24,
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  statsGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  statBox: {
+    flex: 1,
+  },
+  subscribeButton: {
+    backgroundColor: colors.buttonBg,
+    paddingVertical: 16,
+    borderRadius: 30,
+    alignItems: "center",
+    marginTop: 25,
+  },
+  summaryBox: {
+    borderRadius: 15,
+    padding: 20,
   },
 });
