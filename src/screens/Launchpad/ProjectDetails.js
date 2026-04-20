@@ -8,10 +8,12 @@ import {
   ActivityIndicator,
   TextInput,
 } from "react-native";
-import { useRoute } from "@react-navigation/native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import FastImage from "react-native-fast-image";
 import moment from "moment";
+import { LOGIN_SCREEN } from "../../navigation/routes";
+import { CUSTOMER_TYPE } from "../../appOperation/types";
 import RBSheet from "react-native-raw-bottom-sheet";
 import {
   AppSafeAreaView,
@@ -38,17 +40,19 @@ import {
 } from "../../shared";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import { colors } from "../../theme/colors";
-import { back_ic, defaultPic, externalLinkIcon, linkIcon, tick } from "../../helper/ImageAssets";
+import { back_ic, defaultPic, externalLinkIcon, linkIcon, NO_NOTIFICATION_ICON, tick } from "../../helper/ImageAssets";
 import { IMAGE_BASE_URL } from "../../helper/Constants";
 import { showError } from "../../helper/logger";
 import { appOperation } from "../../appOperation";
 import { useTheme } from "../../hooks/useTheme";
+import NavigationService from "../../navigation/NavigationService";
 
 const { width } = Dimensions.get("window");
 
 const ProjectDetails = () => {
   const { colors: themeColors, isDark } = useTheme();
   const route = useRoute();
+  const navigation = useNavigation();
   const projectFromParams = route?.params?.project || {};
   // Start with the project passed from listing, then update if fetch succeeds
   const [project, setProject] = useState(projectFromParams);
@@ -77,13 +81,8 @@ const ProjectDetails = () => {
         if (found) {
           setProject(found);
         } else {
-          // If not in standard list, try specific detail end-point via appOperation domain
-          const detailRes = await appOperation.get(`user/user-launchpad-details/${projectId}`);
-          if (detailRes?.success) {
-            setProject(detailRes.data);
-          } else {
-            throw new Error("Project not found in current inventory.");
-          }
+          // Fallback to project list again if needed, or throw error
+          throw new Error("Project not found in current inventory.");
         }
       } else {
         throw new Error(result?.message || "Unable to fetch launchpad listings.");
@@ -202,6 +201,11 @@ const ProjectDetails = () => {
     : "0.00";
 
   const handleOpenBuySheet = () => {
+    if (!appOperation.customerToken) {
+      showError("Please login to participate.");
+      navigation.navigate(LOGIN_SCREEN);
+      return;
+    }
     buySheetRef.current?.open();
   };
 
@@ -213,21 +217,16 @@ const ProjectDetails = () => {
   const fetchSubscriptionHistory = useCallback(async () => {
     setSubscriptionsLoading(true);
     const lpId = project?._id || route?.params?.projectId;
-    if (!lpId) {
+    // Check for token parity with web platform
+    if (!lpId || !appOperation.customerToken) {
       setSubscriptions([]);
       setSubscriptionsLoading(false);
       return;
     }
     try {
-      const response = await appOperation.get(`user/user-launchpad-details/${lpId}`);
-      if (response?.success) {
-        // Transactions are usually in a nested field or separate endpoint, 
-        // following the pattern from handleConfirmPurchase in web which calls getLaunchpadTransactions
-        const historyRes = await appOperation.get(`user/user-token-subscription-history`);
-        if (historyRes?.success) {
-          const list = Array.isArray(historyRes?.data) ? historyRes.data : [];
-          setSubscriptions(list.filter(x => String(x.launchpadId) === String(lpId)));
-        }
+      const historyRes = await appOperation.get(`launchpad/transactions/${lpId}`, undefined, undefined, CUSTOMER_TYPE);
+      if (historyRes?.success) {
+        setSubscriptions(Array.isArray(historyRes?.data) ? historyRes.data : []);
       } else {
         setSubscriptions([]);
       }
@@ -240,10 +239,13 @@ const ProjectDetails = () => {
   }, [project?._id, route?.params?.projectId]);
 
   const handleOpenSubscriptionSheet = async () => {
-    await fetchSubscriptionHistory();
-    if (subscriptions.length > 0) {
-      subscriptionSheetRef.current?.open();
+    if (!appOperation.customerToken) {
+      showError("Please login to view history.");
+      navigation.navigate(LOGIN_SCREEN);
+      return;
     }
+    subscriptionSheetRef.current?.open();
+    fetchSubscriptionHistory();
   };
 
   const handleCloseSubscriptionSheet = () => {
@@ -279,10 +281,10 @@ const ProjectDetails = () => {
     // Call API to purchase tokens via appOperation (replaces hardcoded IP)
     setPurchasing(true);
     try {
-      const result = await appOperation.post("user/purchase-token", {
-        amountInvested: amount,
+      const result = await appOperation.post("launchpad/buy-token", {
+        amount: amount,
         launchpadId: project._id,
-      });
+      }, CUSTOMER_TYPE);
 
       if (result?.success) {
         showError(result?.message || "Purchase successful!");
@@ -301,10 +303,14 @@ const ProjectDetails = () => {
   // Use theme colors for text consistency
   const textColor = isDark ? themeColors.text : "#000000";
   const secondaryTextColor = isDark ? themeColors.secondaryText : "#666666";
+  const cardBg = themeColors.card;
+  const subCardBg = isDark ? "rgba(255, 255, 255, 0.03)" : "#F5F5F3";
+  const borderColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0,0,0,0.05)";
+  const dividerColor = isDark ? "rgba(255, 255, 255, 0.1)" : "#EEE";
 
   if (loading && !project?._id) {
     return (
-      <AppSafeAreaView style={styles.safeArea}>
+      <AppSafeAreaView style={[styles.areaWrapper, { backgroundColor: themeColors.background }]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator color={colors.buttonBg} size="large" />
           <AppText type={FOURTEEN} color={SECOND} style={styles.loadingText}>
@@ -317,7 +323,7 @@ const ProjectDetails = () => {
 
   if (error) {
     return (
-      <AppSafeAreaView style={styles.safeArea}>
+      <AppSafeAreaView style={[styles.areaWrapper, { backgroundColor: themeColors.background }]}>
         <View style={styles.errorContainer}>
           <AppText type={FOURTEEN} color={SECOND} style={styles.errorText}>
             {error}
@@ -348,7 +354,7 @@ const ProjectDetails = () => {
         contentContainerStyle={styles.contentContainer}
       >
         {/* Header */}
-        <View style={[styles.header, { borderBottomColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }]}>
+        <View style={[styles.header, { borderBottomColor: borderColor }]}>
           <TouchableOpacityView
             onPress={() => NavigationService.goBack()}
             style={styles.backButton}
@@ -382,7 +388,7 @@ const ProjectDetails = () => {
             { label: "Allocation Starts", date: project?.endTime },
           ].map((item, index) => (
             <View key={index} style={[styles.timelineItemHoriz, {
-              borderLeftWidth: index === 0 ? 0 : 2, borderLeftColor: colors.secondBorder, width: "35%",
+              borderLeftWidth: index === 0 ? 0 : 2, borderLeftColor: isDark ? "rgba(255,255,255,0.05)" : colors.secondBorder, width: "35%",
               paddingHorizontal: 8,
             }]}>
               {/* <View style={styles.timelinePointRow}>
@@ -404,55 +410,55 @@ const ProjectDetails = () => {
         </View>
 
         {/* Top Distribution Card */}
-        <View style={[styles.summaryCard, { backgroundColor: isDark ? "#1F1F1F" : "#F9F9F9", }]}>
+        <View style={[styles.summaryCard, { backgroundColor: cardBg, borderWidth: 1, borderColor: borderColor }]}>
           <View style={styles.summaryCol}>
             <AppText type={TWELVE} style={{ color: secondaryTextColor }}>Total Distribution</AppText>
             <AppText type={SIXTEEN} weight={BOLD} style={{ color: textColor, marginTop: 4 }}>
               {formatNumber(project?.tokensForSale || 0)} {tokenSymbol}
             </AppText>
           </View>
-          <View style={[styles.summaryDivider, { backgroundColor: isDark ? "#333" : "#EEE" }]} />
+          <View style={[styles.summaryDivider, { backgroundColor: dividerColor }]} />
           <View style={styles.summaryCol}>
             <AppText type={TWELVE} style={{ color: secondaryTextColor }}>Participants</AppText>
             <AppText type={SIXTEEN} weight={BOLD} style={{ color: textColor, marginTop: 4 }}>
               {project?.participantsCount || 0}
             </AppText>
           </View>
-          <View style={[styles.summaryDivider, { backgroundColor: isDark ? "#333" : "#EEE" }]} />
+          <View style={[styles.summaryDivider, { backgroundColor: dividerColor }]} />
           <View style={[styles.summaryCol, { justifyContent: 'center' }]}>
             {(status === "LIVE" || status === "ONGOING") ? (
               <TouchableOpacityView
                 onPress={handleOpenBuySheet}
                 style={[styles.subscribeButton, { paddingVertical: 10, paddingHorizontal: 16, marginTop: 0, minWidth: 70 }]}
               >
-                <AppText weight={BOLD} color={WHITE} type={THIRTEEN}>Trade</AppText>
+                <AppText weight={BOLD} style={{ color: "#FFFFFF" }} type={THIRTEEN}>Trade</AppText>
               </TouchableOpacityView>
             ) : (
               <View style={[styles.subscribeButton, { backgroundColor: "#DDD", opacity: 0.5, paddingVertical: 10, paddingHorizontal: 16, marginTop: 0, minWidth: 70 }]}>
-                <AppText weight={BOLD} color={WHITE} type={THIRTEEN}>Trade</AppText>
+                <AppText weight={BOLD} style={{ color: "#FFFFFF" }} type={THIRTEEN}>Trade</AppText>
               </View>
             )}
           </View>
         </View>
 
         {/* Subscription Main Section */}
-        <View style={[styles.commitSection, { backgroundColor: isDark ? "#1F1F1F" : "#F9F9F9", }]}>
+        <View style={[styles.commitSection, { backgroundColor: cardBg, borderWidth: 1, borderColor: borderColor }]}>
           <AppText type={SIXTEEN} weight={BOLD} style={{ color: textColor, marginBottom: 20 }}>
             Commit {subscriptionCurrency} to Subscribe {tokenSymbol}
           </AppText>
 
           <View style={styles.badgesRow}>
-            <View style={[styles.badge, { backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5", flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+            <View style={[styles.badge, { backgroundColor: subCardBg, flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
               <FastImage source={defaultPic}
                 resizeMode="contain"
                 style={{ width: 25, height: 25 }} tintColor={isDark ? "#AAA" : "#666"} />
               <AppText type={TEN} weight={BOLD} style={{ color: isDark ? "#CCC" : "#333" }}>New User Exclusive</AppText>
             </View>
-            <View style={[styles.badge, { backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5", flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+            <View style={[styles.badge, { backgroundColor: subCardBg, flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
               <FastImage source={tick} style={{ width: 10, height: 10 }} tintColor={isDark ? "#AAA" : "#666"} />
               <AppText type={TEN} weight={BOLD} style={{ color: isDark ? "#CCC" : "#333" }}>60% Off</AppText>
             </View>
-            <View style={[styles.badge, { backgroundColor: isDark ? "#2A2A2A" : "#F5F5F5", flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+            <View style={[styles.badge, { backgroundColor: subCardBg, flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
               <FastImage source={externalLinkIcon} style={{ width: 10, height: 10 }} tintColor={isDark ? "#AAA" : "#666"} />
               <AppText type={TEN} weight={BOLD} style={{ color: isDark ? "#CCC" : "#333" }}>Raise Limit</AppText>
             </View>
@@ -515,7 +521,7 @@ const ProjectDetails = () => {
         {/* Project Summary */}
         <View style={styles.section}>
           <AppText type={SIXTEEN} weight={BOLD} style={{ color: textColor, marginBottom: 16 }}>Project Summary</AppText>
-          <View style={[styles.summaryBox, { backgroundColor: isDark ? "#1F1F1F" : "#F9F9F9", }]}>
+          <View style={[styles.summaryBox, { backgroundColor: cardBg, borderWidth: 1, borderColor: borderColor }]}>
             <AppText type={TWELVE} style={{ color: secondaryTextColor, lineHeight: 18 }}>
               {project?.description || "No description available."}
             </AppText>
@@ -526,19 +532,19 @@ const ProjectDetails = () => {
         <View style={styles.section}>
           <AppText type={SIXTEEN} weight={BOLD} style={{ color: textColor, marginBottom: 16 }}>Details</AppText>
           <View style={styles.highlightTable}>
-            <View style={[styles.tableRow, { backgroundColor: isDark ? "#1F1F1F" : "#F5F5F3" }]}>
+            <View style={[styles.tableRow, { backgroundColor: cardBg, borderTopLeftRadius: 10, borderTopRightRadius: 10 }]}>
               <AppText type={TWELVE} style={{ color: secondaryTextColor }}>Exclusive Subscription Price</AppText>
               <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: textColor }}>
                 1 {tokenSymbol} = {tokenPrice} {quoteSymbol}
               </AppText>
             </View>
-            <View style={[styles.tableRow, { backgroundColor: isDark ? "#121212" : "#FFF" }]}>
+            <View style={[styles.tableRow, { backgroundColor: subCardBg }]}>
               <AppText type={TWELVE} style={{ color: textColor }}>Launchpad Total Allocation</AppText>
               <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: textColor }}>
                 {formatNumber(totalAllocation)} {tokenSymbol}
               </AppText>
             </View>
-            <View style={[styles.tableRow, { backgroundColor: isDark ? "#1F1F1F" : "#F5F5F3" }]}>
+            <View style={[styles.tableRow, { backgroundColor: cardBg, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }]}>
               <AppText type={TWELVE} style={{ color: secondaryTextColor }}>Individual Subscription Limit</AppText>
               <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: textColor }}>
                 {formatNumber(minSubscription)} - {formatNumber(maxSubscription)} {quoteSymbol}
@@ -557,7 +563,7 @@ const ProjectDetails = () => {
         animationType="slide"
         customStyles={{
           container: {
-            backgroundColor: "#191919",
+            backgroundColor: isDark ? themeColors.card : themeColors.background,
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
             paddingHorizontal: 20,
@@ -568,7 +574,7 @@ const ProjectDetails = () => {
             backgroundColor: "#0006",
           },
           draggableIcon: {
-            backgroundColor: colors.whiteShadow || "#666",
+            backgroundColor: isDark ? colors.whiteShadow || "#666" : "#CCCCCC",
             width: 40,
           },
         }}
@@ -591,8 +597,8 @@ const ProjectDetails = () => {
             value={purchaseAmount}
             onChangeText={setPurchaseAmount}
             mainContainer={styles.buyInputMainContainer}
-            containerStyle={styles.buyInputContainer}
-            inputStyle={styles.buyInput}
+            containerStyle={[styles.buyInputContainer, { backgroundColor: subCardBg, borderColor: borderColor }]}
+            inputStyle={[styles.buyInput, { color: textColor }]}
           />
 
           {purchaseAmount && project?.tokenPrice && (
@@ -603,7 +609,7 @@ const ProjectDetails = () => {
             </View>
           )}
 
-          <AppText type={TWELVE} style={styles.limitText}>
+          <AppText type={TWELVE} style={[styles.limitText, { color: secondaryTextColor }]}>
             Min: {formatNumber(minSubscription || 10)} USDT | Max: {formatNumber(maxSubscription || 15000)} USDT
           </AppText>
 
@@ -636,7 +642,7 @@ const ProjectDetails = () => {
         animationType="slide"
         customStyles={{
           container: {
-            backgroundColor: "#191919",
+            backgroundColor: isDark ? themeColors.card : themeColors.background,
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
             paddingHorizontal: 20,
@@ -647,18 +653,18 @@ const ProjectDetails = () => {
             backgroundColor: "#0006",
           },
           draggableIcon: {
-            backgroundColor: colors.whiteShadow || "#666",
+            backgroundColor: isDark ? colors.whiteShadow || "#666" : "#CCCCCC",
             width: 40,
           },
         }}
       >
         <View style={styles.subscriptionSheetContent}>
           <View style={styles.subscriptionSheetHeader}>
-            <AppText type={EIGHTEEN} weight={SEMI_BOLD} style={styles.subscriptionSheetTitle}>
+            <AppText type={EIGHTEEN} weight={SEMI_BOLD} style={[styles.subscriptionSheetTitle, { color: textColor }]}>
               My Subscription
             </AppText>
             <TouchableOpacityView onPress={handleCloseSubscriptionSheet}>
-              <AppText type={TWENTY} weight={BOLD} style={styles.closeButton}>
+              <AppText type={TWENTY} weight={BOLD} style={[styles.closeButton, { color: textColor }]}>
                 ✖
               </AppText>
             </TouchableOpacityView>
@@ -687,31 +693,29 @@ const ProjectDetails = () => {
                 >
                   {/* Table Header */}
                   {subscriptions.length > 0 && (
-                    <ScrollView
-                      style={[styles.subscriptionTableRow, styles.subscriptionTableHeaderRow]}
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      scrollEnabled={false}
-                    >
-                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell]}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.subscriptionTableHeader}>
+                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell, { width: 40 }]}>
                         #
                       </AppText>
-                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell]}>
+                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell, { width: 100 }]}>
                         Token Name
                       </AppText>
-                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell]}>
-                        Token Symbol
+                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell, { width: 80 }]}>
+                        Symbol
                       </AppText>
-                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell]}>
-                        Invested ($)
+                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell, { width: 80 }]}>
+                        Amount
                       </AppText>
-                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell]}>
-                        Total Tokens
+                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell, { width: 80 }]}>
+                        Tokens
                       </AppText>
-                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell]}>
-                        Last Purchase
+                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell, { width: 80 }]}>
+                        Quote
                       </AppText>
-                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell]}>
+                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell, { width: 100 }]}>
+                        Date
+                      </AppText>
+                      <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.subscriptionTableCell, styles.subscriptionTableHeaderCell, { width: 80 }]}>
                         Status
                       </AppText>
                     </ScrollView>
@@ -720,17 +724,21 @@ const ProjectDetails = () => {
                   {/* Table Body */}
                   {subscriptions.length > 0 ? (
                     subscriptions.map((sub, index) => {
-                      const totalInvested = sub.totalInvested?.$numberDecimal
-                        ? parseFloat(sub.totalInvested.$numberDecimal).toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })
-                        : "0.00";
+                      const lp = sub.launchpadId && typeof sub.launchpadId === "object" ? sub.launchpadId : {};
+
+                      const rawInvested = sub.amount ?? (sub.totalInvested?.$numberDecimal ? parseFloat(sub.totalInvested.$numberDecimal) : 0);
+                      const totalInvested = Number(rawInvested).toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      });
+
+                      const tokensReceived = sub.tokens ?? sub.totalTokensReceived ?? "0";
+                      const purchaseDate = sub.createdAt ?? sub.lastPurchase;
 
                       const statusColor =
-                        sub.status === "LIVE" || sub.status === "ONGOING"
+                        sub.status === "LIVE" || sub.status === "ONGOING" || sub.status === "COMPLETED"
                           ? "#4CAF50"
-                          : sub.status === "ENDED"
+                          : sub.status === "ENDED" || sub.status === "CANCELLED"
                             ? "#F44336"
                             : "#555";
 
@@ -739,33 +747,40 @@ const ProjectDetails = () => {
                           key={index}
                           style={[
                             styles.subscriptionTableRow,
-                            index % 2 === 0 ? styles.subscriptionTableEvenRow : styles.subscriptionTableOddRow,
+                            {
+                              backgroundColor: index % 2 === 0
+                                ? (isDark ? "#191919" : "#F9F9F9")
+                                : (isDark ? "#1F1F1F" : "#FFFFFF")
+                            }
                           ]}
                         >
-                          <AppText type={TWELVE} style={styles.subscriptionTableCell}>
+                          <AppText type={TWELVE} style={[styles.subscriptionTableCell, { color: textColor, width: 40 }]}>
                             {index + 1}
                           </AppText>
-                          <AppText type={TWELVE} style={styles.subscriptionTableCell}>
-                            {sub.tokenName || "--"}
+                          <AppText type={TWELVE} style={[styles.subscriptionTableCell, { color: textColor, width: 100 }]}>
+                            {lp.tokenName || sub.tokenName || "--"}
                           </AppText>
-                          <AppText type={TWELVE} style={styles.subscriptionTableCell}>
-                            {sub.tokenSymbol || "--"}
+                          <AppText type={TWELVE} style={[styles.subscriptionTableCell, { color: textColor, width: 80 }]}>
+                            {lp.tokenSymbol || sub.tokenSymbol || "--"}
                           </AppText>
-                          <AppText type={TWELVE} style={styles.subscriptionTableCell}>
+                          <AppText type={TWELVE} style={[styles.subscriptionTableCell, { color: textColor, width: 80 }]}>
                             {totalInvested}
                           </AppText>
-                          <AppText type={TWELVE} style={styles.subscriptionTableCell}>
-                            {sub.totalTokensReceived || "0"}
+                          <AppText type={TWELVE} style={[styles.subscriptionTableCell, { color: textColor, width: 80 }]}>
+                            {tokensReceived}
                           </AppText>
-                          <AppText type={TWELVE} style={styles.subscriptionTableCell}>
-                            {sub.lastPurchase
-                              ? moment(sub.lastPurchase).format("DD/MM/YYYY LT")
+                          <AppText type={TWELVE} style={[styles.subscriptionTableCell, { color: textColor, width: 80 }]}>
+                            {sub.acceptedCurrencyName || sub.currency || quoteSymbol || "USDT"}
+                          </AppText>
+                          <AppText type={TWELVE} style={[styles.subscriptionTableCell, { color: textColor, width: 100 }]}>
+                            {purchaseDate
+                              ? moment(purchaseDate).format("DD/MM/YYYY LT")
                               : "--"}
                           </AppText>
                           <AppText
                             type={TWELVE}
                             weight={SEMI_BOLD}
-                            style={[styles.subscriptionTableCell, { color: statusColor }]}
+                            style={[styles.subscriptionTableCell, { color: statusColor, width: 80 }]}
                           >
                             {sub.status ? sub.status.charAt(0) + sub.status.slice(1).toLowerCase() : "--"}
                           </AppText>
@@ -778,19 +793,24 @@ const ProjectDetails = () => {
             </ScrollView>
           ) : (
             <View style={styles.subscriptionEmptyContainer}>
+              <FastImage
+                source={NO_NOTIFICATION_ICON}
+                style={styles.subscriptionEmptyImage}
+                resizeMode="contain"
+              />
               <AppText type={FOURTEEN} color={SECOND} style={styles.subscriptionEmptyText}>
-                No subscription data found.
+                No subscription data found for this project.
               </AppText>
             </View>
           )}
 
-          <View style={styles.subscriptionSheetFooter}>
+          {/* <View style={[styles.subscriptionSheetFooter, { borderTopColor: isDark ? "#1F1F1F" : "#EEE" }]}>
             <Button
               children="Close"
               onPress={handleCloseSubscriptionSheet}
               containerStyle={styles.subscriptionCloseButton}
             />
-          </View>
+          </View> */}
         </View>
       </RBSheet>
     </AppSafeAreaView>
@@ -800,8 +820,7 @@ const ProjectDetails = () => {
 export default ProjectDetails;
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: "#0A0A0A",
+  areaWrapper: {
     flex: 1,
   },
   contentContainer: {
@@ -868,7 +887,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: "#1F1F1F",
     borderRadius: 8,
     gap: 8,
   },
@@ -1124,6 +1142,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 60,
   },
+  subscriptionEmptyImage: {
+    width: 64,
+    height: 64,
+    marginBottom: 16,
+    opacity: 0.5,
+  },
   subscriptionEmptyText: {
     textAlign: "center",
   },
@@ -1184,6 +1208,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 20,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   summaryCol: {
     flex: 1,
@@ -1199,6 +1227,10 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 24,
     marginBottom: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   badgesRow: {
     flexDirection: "row",
@@ -1228,5 +1260,9 @@ const styles = StyleSheet.create({
   summaryBox: {
     borderRadius: 15,
     padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
 });

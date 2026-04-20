@@ -1,7 +1,7 @@
 import guest from './lib/guest';
 import customer from './lib/customer';
-import {GUEST_TYPE, CUSTOMER_TYPE} from './types';
-import {BASE_URL} from '../helper/Constants';
+import { GUEST_TYPE, CUSTOMER_TYPE } from './types';
+import { BASE_URL } from '../helper/Constants';
 
 class ApiError extends Error {
   constructor(m: string) {
@@ -49,16 +49,19 @@ export class AppOperation {
   }
 
   send(url: string, method: string, params: any, data: any, type: string) {
-    let uri: any ;
+    let uri: any;
 
-    // `api/...` routes (e.g. meta) are under `/api/...` on the host; everything else uses `/v1/...`.
+    // Ensure no double slashes between base_url and root_path or url
+    const baseUrl = this.base_url.endsWith('/') ? this.base_url.slice(0, -1) : this.base_url;
+
     if (url.startsWith('api/')) {
-      uri = `${this.base_url}${url}`;
+      uri = `${baseUrl}/${url}`;
     } else {
-      uri = `${this.base_url}${this.root_path}${url}`;
+      const rootPath = this.root_path.startsWith('/') ? this.root_path : `/${this.root_path}`;
+      const cleanRootPath = rootPath.endsWith('/') ? rootPath : `${rootPath}/`;
+      const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+      uri = `${baseUrl}${cleanRootPath}${cleanUrl}`;
     }
-    // let uri = `${this.base_url}${this.root_path}${url}`;
-    // let uri = `${this.base_url}${this.root_path}${url}`;
 
     if (params) {
       let separator = '?';
@@ -102,7 +105,7 @@ export class AppOperation {
         controller.abort();
       }, 30000); // 30 second timeout
 
-      fetch(uri, {method, headers, body: bodyData, signal: controller.signal})
+      fetch(uri, { method, headers, body: bodyData, signal: controller.signal })
         .then(response => {
           clearTimeout(timeoutId);
           let status = response.status;
@@ -111,17 +114,17 @@ export class AppOperation {
               .text()
               .then(responseData => {
                 let jsonData: any = JSON.parse(responseData);
-                resolve({...jsonData, code: status});
+                resolve({ ...jsonData, code: status });
               })
               .catch(errorResponse =>
-                Promise.reject({code: status, data: errorResponse}),
+                Promise.reject({ code: status, data: errorResponse }),
               );
           }
           // Possible 401 or other network error
           return response
             .text()
             .then(errorResponse => {
-              const errData = {code: status, ...JSON.parse(errorResponse || '{}')};
+              const errData = { code: status, ...JSON.parse(errorResponse || '{}') };
               console.warn('[API] Error response:', status, JSON.stringify(errData));
               reject(errData);
             });

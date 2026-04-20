@@ -128,7 +128,7 @@ const Launchpad = () => {
     if (!project) return null;
 
     const status = String(project?.status || "N/A").toUpperCase();
-    const isLive = status === "LIVE";
+    const isLive = status === "LIVE" || status === "ONGOING";
     const isUpcoming = status === "UPCOMING";
     const isEnded = status === "ENDED" || status === "CANCELLED";
 
@@ -156,7 +156,7 @@ const Launchpad = () => {
               <View style={styles.webTokenTitleRow}>
                 <AppText type={SIXTEEN} weight={BOLD} color={textColor}>{getTokenSymbol(project)}</AppText>
                 <View style={[styles.webStatusBadge, isLive ? styles.bgLive : isUpcoming ? styles.bgUpcoming : styles.bgEnded]}>
-                  <AppText type={TEN} weight={BOLD} color={WHITE}>{status}</AppText>
+                  <AppText type={TEN} weight={BOLD} style={{ color: "#FFFFFF" }}>{status}</AppText>
                 </View>
               </View>
               <AppText type={TWELVE} color={secondaryTextColor}>{getTokenName(project)}</AppText>
@@ -294,7 +294,7 @@ const Launchpad = () => {
             <AppText
               type={FOURTEEN}
               weight={activeTab === tab ? SEMI_BOLD : NORMAL}
-              color={activeTab === tab ? WHITE : (isDark ? SECOND : "#666")}
+              color={activeTab === tab ? "#FFFFFF" : (isDark ? SECOND : "#666")}
               style={{ textTransform: 'capitalize' }}
             >{tab}</AppText>
           </TouchableOpacityView>
@@ -311,7 +311,7 @@ const Launchpad = () => {
       <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentContainer}>
         <View style={styles.heroCard}>
           <LinearGradient
-            colors={isDark ? ["rgba(0, 0, 0, 0.45)", "rgba(0, 0, 0, 0.75)"] : ["rgba(255, 255, 255, 0.2)", "rgba(255, 255, 255, 0.5)"]}
+            colors={[isDark ? colors.newThemeColor : colors.newThemeColor, colors.newThemeColor]}
             style={styles.heroGradient}
           >
             <View style={{ flex: 1 }}>
@@ -374,7 +374,7 @@ const Launchpad = () => {
           </>
         )}
       </ScrollView>
-    </AppSafeAreaView>
+    </AppSafeAreaView >
   );
 };
 
@@ -470,10 +470,10 @@ const styles = StyleSheet.create({
   webTokenPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   webTokenMeta: { flex: 1 },
   webTokenTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  webStatusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  bgLive: { backgroundColor: '#1E1F22' },
+  webStatusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+  bgLive: { backgroundColor: '#4CAF50' },
   bgUpcoming: { backgroundColor: '#FEBA00' },
-  bgEnded: { backgroundColor: colors.red },
+  bgEnded: { backgroundColor: '#F44336' },
   webCardTopRight: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
   webStatCol: { flex: 1, alignItems: 'flex-start' },
   statSeparator: { width: 1, height: 24, backgroundColor: 'rgba(0,0,0,0.1)', marginHorizontal: 12 },
