@@ -28,7 +28,7 @@ import {
 } from "../../shared";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import { colors } from "../../theme/colors";
-import { launchpad_hero_img, tetherIcon, peopleIcon, defaultPic } from "../../helper/ImageAssets";
+import { launchpad_hero_img, tetherIcon, peopleIcon, defaultPic, NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
 import FastImage from "react-native-fast-image";
 import moment from "moment";
 import { IMAGE_BASE_URL } from "../../helper/Constants";
@@ -277,6 +277,8 @@ const Launchpad = () => {
 
   const renderEmptyState = (tab) => (
     <View style={styles.stateWrapper}>
+
+      <FastImage source={NO_NOTIFICATION_ICON} style={{ width: 80, height: 80, }} resizeMode="contain" />
       <AppText type={FOURTEEN} color={isDark ? themeColors.secondaryText : "#333"} style={styles.stateMessage}>No {tab} projects found.</AppText>
     </View>
   );
@@ -294,8 +296,8 @@ const Launchpad = () => {
             <AppText
               type={FOURTEEN}
               weight={activeTab === tab ? SEMI_BOLD : NORMAL}
-              color={activeTab === tab ? "#FFFFFF" : (isDark ? SECOND : "#666")}
-              style={{ textTransform: 'capitalize' }}
+              color={activeTab === tab ? WHITE : (isDark ? SECOND : "#666")}
+              style={{ textTransform: 'capitalize', color: isDark ? "#FFFFFF" : (activeTab === tab ? "#FFFFFF" : undefined) }}
             >{tab}</AppText>
           </TouchableOpacityView>
         ))}
@@ -311,7 +313,7 @@ const Launchpad = () => {
       <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentContainer}>
         <View style={styles.heroCard}>
           <LinearGradient
-            colors={[isDark ? colors.newThemeColor : colors.newThemeColor, colors.newThemeColor]}
+            colors={[isDark ? colors.newThemeColor : colors.white, isDark ? colors.newThemeColor : colors.white]}
             style={styles.heroGradient}
           >
             <View style={{ flex: 1 }}>

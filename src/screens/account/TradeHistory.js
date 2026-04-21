@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Dimensions } from "react-native";
+import ReactNativeModal from "react-native-modal";
 import {
   AppSafeAreaView,
   AppText,
@@ -18,6 +19,8 @@ import { toFixedSix, toFixedEight } from "../../helper/utility";
 import NavigationService from "../../navigation/NavigationService";
 import { SPOT_ORDER_HISTORY_DETAIL } from "../../navigation/routes";
 import { fontFamilySemiBold } from "../../theme/typography";
+import { cancelOrder } from "../../actions/homeActions";
+import { CommonModal } from "../../shared";
 
 const TradeHistory = ({
   investments = [],
@@ -33,6 +36,9 @@ const TradeHistory = ({
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+  const [isCancelLoading, setIsCancelLoading] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState(null);
   const limit = 10;
   const hasLoggedCardRef = useRef(false);
 
@@ -125,6 +131,9 @@ const TradeHistory = ({
 
     const textColor = themeColors.text;
     const labelColor = themeColors.secondaryText;
+    const statusUpper = String(status).toUpperCase().trim();
+    const orderId = inv?._id || inv?.id;
+    const canCancel = !!orderId && !["FILLED", "CANCELLED", "CANCELED", "COMPLETED", "EXECUTED", "REJECTED"].includes(statusUpper);
 
     return (
       <TouchableOpacity
@@ -176,6 +185,21 @@ const TradeHistory = ({
           <AppText style={[styles.cardValue, { color: getStatusColor(status) }]}>{statusLabel}</AppText>
         </View>
 
+        {canCancel && (
+          <View style={[styles.cardRow, { marginTop: 8 }]}>
+            <AppText style={[styles.cardLabel, { color: labelColor }]}>Action:</AppText>
+            <TouchableOpacity
+              style={styles.cancelActionBtn}
+              onPress={() => {
+                setOrderToCancel(inv);
+                setIsCancelModalVisible(true);
+              }}
+            >
+              <AppText style={{ color: colors.red, fontWeight: "600", fontSize: 13 }}>Cancel</AppText>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
       </TouchableOpacity>
     );
@@ -220,6 +244,120 @@ const TradeHistory = ({
           />
         </View>
       )}
+
+      <ReactNativeModal
+        isVisible={isCancelModalVisible}
+        animationIn="zoomIn"
+        animationOut="zoomOut"
+        backdropOpacity={0.5}
+        onBackdropPress={() => setIsCancelModalVisible(false)}
+        onBackButtonPress={() => setIsCancelModalVisible(false)}
+        style={{ justifyContent: "center", alignItems: "center" }}
+      >
+        <View
+          style={{
+            backgroundColor: themeColors.themeElevationColor,
+            borderRadius: 20,
+            padding: 25,
+            width: Dimensions.get("window").width * 0.85,
+            alignItems: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.25,
+            shadowRadius: 20,
+            elevation: 10,
+            borderWidth: 1,
+            borderColor: themeColors.border,
+          }}
+        >
+          <AppText
+            style={{
+              fontSize: 20,
+              fontWeight: "700",
+              color: themeColors.text,
+              textAlign: "center",
+              marginBottom: 15,
+            }}
+          >
+            Cancel Order
+          </AppText>
+
+          <AppText
+            style={{
+              fontSize: 15,
+              color: themeColors.secondaryText,
+              textAlign: "center",
+              marginBottom: 25,
+              lineHeight: 22,
+            }}
+          >
+            Are you sure you want to cancel this order?
+          </AppText>
+
+          <View style={{ flexDirection: "row", width: "100%", gap: 10 }}>
+            <TouchableOpacity
+              onPress={() => setIsCancelModalVisible(false)}
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderRadius: 12,
+                backgroundColor: themeColors.themeElevationColor,
+                borderWidth: 1,
+                borderColor: themeColors.themeBorderColor,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <AppText style={{ fontSize: 14, fontWeight: "600", color: themeColors.text }}>
+                No, Keep
+              </AppText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              disabled={isCancelLoading}
+              onPress={async () => {
+                const orderId = orderToCancel?._id || orderToCancel?.id;
+                if (orderId) {
+                  setIsCancelLoading(true);
+                  const res = await dispatch(cancelOrder({ order_id: orderId }));
+                  setIsCancelLoading(false);
+                  if (res?.success) {
+                    setIsCancelModalVisible(false);
+                    setOrderToCancel(null);
+                  }
+                } else {
+                  setIsCancelModalVisible(false);
+                  setOrderToCancel(null);
+                }
+              }}
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderRadius: 12,
+                backgroundColor: themeColors.red,
+                alignItems: "center",
+                justifyContent: "center",
+                shadowColor: themeColors.red,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 5,
+                opacity: isCancelLoading ? 0.7 : 1,
+              }}
+            >
+              {isCancelLoading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <AppText style={{ fontSize: 14, fontWeight: "600", color: "#FFFFFF" }}>
+                  Yes, Cancel
+                </AppText>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ReactNativeModal>
     </AppSafeAreaView>
   );
 };
@@ -309,6 +447,16 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     paddingVertical: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelActionBtn: {
+    borderWidth: 1,
+    borderColor: "#FF4F4F",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 6,
+    minWidth: 80,
     alignItems: "center",
     justifyContent: "center",
   },

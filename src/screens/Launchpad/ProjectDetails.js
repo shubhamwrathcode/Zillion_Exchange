@@ -513,10 +513,11 @@ const ProjectDetails = () => {
           </View>
 
 
-          <TouchableOpacityView onPress={handleOpenSubscriptionSheet} style={{ alignSelf: 'flex-end', marginTop: 16 }}>
-            <AppText type={THIRTEEN} style={{ color: colors.buttonBg }}>My Subscription &rarr;</AppText>
-          </TouchableOpacityView>
+
         </View>
+        <TouchableOpacityView onPress={handleOpenSubscriptionSheet} style={{ alignSelf: 'flex-end', marginVertical: 5, marginRight: 10 }}>
+          <AppText type={THIRTEEN} style={{ color: colors.buttonBg }}>My Subscription &rarr;</AppText>
+        </TouchableOpacityView>
 
         {/* Project Summary */}
         <View style={styles.section}>

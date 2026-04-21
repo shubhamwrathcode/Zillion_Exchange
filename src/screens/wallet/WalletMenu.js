@@ -6,6 +6,7 @@ import {
   buySellDarkIcon,
   buySellIcon,
   convertIcon,
+  convertIconDark,
   newDepositDarkIcon,
   newDepositIcon,
   newWidthrawDarkIcon,
@@ -83,7 +84,7 @@ const WalletMenu = ({ onDeposit, onWithdraw }) => {
           onPress={() => NavigationService.navigate(CONVERT_SCREEN)}
         >
           <FastImage
-            source={theme !== 'Dark' ? buySellIcon : convertIcon}
+            source={theme !== "Dark" ? convertIconDark : convertIcon}
             resizeMode="contain"
             style={{ width: 25, height: 25 }}
           />
@@ -96,7 +97,8 @@ const WalletMenu = ({ onDeposit, onWithdraw }) => {
           onPress={() => NavigationService.navigate(TRANSFER_SCREEN)}
         >
           <FastImage
-            source={theme !== 'Dark' ? transferIcon : transferDarkIcon}
+            source={theme !== 'Dark' ? transferDarkIcon : transferIcon}
+            tintColor={theme !== 'Dark' ? colors.black : colors.white}
             resizeMode="contain"
             style={{ width: 25, height: 25 }}
           />

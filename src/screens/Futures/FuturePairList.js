@@ -18,7 +18,7 @@ const FuturePairList = ({
   onSearchChange,
 }) => {
   const { isDark, colors: themeColors } = useTheme();
-  
+
   const selectedBorder = isDark ? colors.buttonDarkBg : colors.buttonBg;
   const selectedBg = isDark ? "rgba(243, 187, 43, 0.14)" : "rgba(243, 187, 43, 0.10)";
   const cardBg = themeColors.background;
@@ -69,6 +69,7 @@ const FuturePairList = ({
 
       <FlatList
         data={pairs}
+        showsVerticalScrollIndicator={false}
         keyExtractor={(item) =>
           item?._id ?? `${item?.short_name}-${item?.margin_asset}`
         }
@@ -208,4 +209,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FuturePairList;
+export default FuturePairList;

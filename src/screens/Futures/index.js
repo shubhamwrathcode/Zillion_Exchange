@@ -47,7 +47,7 @@ import {
 import HeaderTop from "../../shared/components/HeaderTop";
 import { SocketContext } from "../../SocketProvider";
 import RBSheet from "react-native-raw-bottom-sheet";
-import { universalPaddingHorizontal } from "../../theme/dimens";
+import { borderWidth, universalPaddingHorizontal } from "../../theme/dimens";
 import {
   AppText,
   BLACK,
@@ -59,6 +59,7 @@ import {
   FIFTEEN,
   FOURTEEN,
   Input,
+  MEDIUM,
   NINE,
   SEMI_BOLD,
   TEN,
@@ -1985,12 +1986,12 @@ const Futures = () => {
                     }}
                     style={[
                       styles.tab,
-                      { borderColor: isDark ? "#302F2F" : "#EEE" },
+                      { borderWidth: 0, borderColor: themeColors.border },
                     ]}
                   >
                     <AppText
                       type={NINE}
-                      weight={BOLD}
+                      weight={MEDIUM}
                       style={[
                         styles.tabText,
                         {
@@ -3117,10 +3118,10 @@ const Futures = () => {
                 ) : activePositionTab === "order_history" ? (
                   ordersHistory?.length === 0 ? (
                     <View style={styles.emptyHistoryView}>
-                      <FastImage 
-                        source={NO_NOTIFICATION_ICON} 
-                        resizeMode="contain" 
-                        style={{ width: 80, height: 80, marginBottom: 16 }} 
+                      <FastImage
+                        source={NO_NOTIFICATION_ICON}
+                        resizeMode="contain"
+                        style={{ width: 80, height: 80, marginBottom: 16 }}
                         tintColor={themeColors.secondaryText}
                       />
                     </View>

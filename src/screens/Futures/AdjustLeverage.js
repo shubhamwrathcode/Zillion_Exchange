@@ -194,7 +194,7 @@ const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
           <View
             style={[
               styles.activeTrack,
-              { width: Math.max(knobPosition, 0), backgroundColor: colors.buttonDarkBg },
+              { width: Math.max(knobPosition, 0), backgroundColor: colors.buttonBg },
             ]}
           />
           <View style={styles.tickRow}>
@@ -222,7 +222,7 @@ const AdjustLeverage = ({ onSelectLeverage, leverage, onClose }) => {
               },
             ]}
           >
-            <View style={[styles.knob, { borderColor: isDark ? "#1D1D1D" : "#FFF", backgroundColor: colors.buttonDarkBg }]} />
+            <View style={[styles.knob, { borderColor: isDark ? "#1D1D1D" : "#FFF", backgroundColor: colors.buttonBg }]} />
           </View>
         </View>
 
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "45deg" }],
   },
   tickActive: {
-    backgroundColor: colors.buttonDarkBg,
+    backgroundColor: colors.buttonBg,
   },
   knobTouchArea: {
     position: "absolute",
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   labelText: {
   },
   labelTextActive: {
-    color: colors.buttonDarkBg,
+    color: colors.buttonBg,
     fontWeight: "bold",
   },
   labelHitSlop: {

@@ -1,6 +1,6 @@
 import {Alert} from 'react-native';
 import {appOperation} from '../appOperation';
-import {logger, showError} from '../helper/logger';
+import {logger, showError, showSuccess} from '../helper/logger';
 import {
   AddToFavoriteProps,
   CancelOrderProps,
@@ -195,18 +195,20 @@ export const getHistoricData =
 export const cancelOrder =
   (data: CancelOrderProps) => async (dispatch: AppDispatch) => {
     try {
-      dispatch(setLoading(true));
       const response: any = await appOperation.customer.cancel_order(data);
 
       if (response.success) {
-        showError(response?.message);
+        showSuccess(response?.message || "Order cancelled successfully");
         dispatch(onCancelOrder(data.order_id));
         dispatch(getOpenOrders(0, 10));
+      } else {
+        showError(response?.message || "Failed to cancel order");
       }
+      return response;
     } catch (e) {
       logger(e);
-    } finally {
-      dispatch(setLoading(false));
+      showError(e?.message || "An error occurred");
+      return { success: false, message: e?.message };
     }
   };
 

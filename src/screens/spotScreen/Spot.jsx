@@ -13,6 +13,7 @@ import {
   Animated,
   ImageBackground,
   LayoutAnimation,
+  ActivityIndicator,
   Platform,
   UIManager,
 } from "react-native";
@@ -705,36 +706,7 @@ const Spot = () => {
   const navigation = useNavigation();
   const { subscribeToExchange, unsubscribeFromExchange, unsubscribeFromMarket, unsubscribeFromFutures } = useContext(SocketContext);
   const dispatch = useDispatch();
-  const webview = useRef(null);
-  const wsRef = useRef(null);
-  const currentSubscriptionRef = useRef(null);
-  const reconnectIntervalRef = useRef(null);
-  const rbSheetNumber = useRef();
-  const rbSheetlimit = useRef();
-  const appStateRef = useRef(AppState.currentState);
-  const latestSocketDataRef = useRef(null);
-  const latestLocalBuyOrdersRef = useRef([]);
-  const latestLocalSellOrdersRef = useRef([]);
-  const currentCurrencyRef = useRef(null);
-  const SOCKET_UI_THROTTLE_MS = 500;
-  const socketThrottleTimerRef = useRef(null);
-  const socketLastFlushRef = useRef(0);
-  const pendingSocketFlushRef = useRef(null);
-  const binanceThrottleTimerRef = useRef(null);
-  const binanceLastFlushRef = useRef(0);
-  const pendingBinanceRef = useRef(null);
-  const isSpotFocusedRef = useRef(true);
-  const lastSubscribedPairRef = useRef(null);
-  const lastSubscribedExchangeRef = useRef(null);
-  const lastFlushedSellRef = useRef(null);
-  const lastFlushedBuyRef = useRef(null);
-  const pendingOrderBookOnBlurRef = useRef(null);
-  const flushSocketToStateRef = useRef(null);
-  const activeTabRef = useRef(1);
-  const chartSymbolChangeTimeoutRef = useRef(null);
-  const webViewReadyFallbackRef = useRef(null);
-  const chartReadyDelayRef = useRef(null);
-  const chartRevealedOnceRef = useRef(false);
+
   const coinData = useAppSelector((state) => state.home.coinData);
   const spotSelectedPair = useAppSelector((state) => state.home.spotSelectedPair);
   const coinBalance = useAppSelector((state) => state.home.coinBalance);
@@ -744,6 +716,7 @@ const Spot = () => {
   const pastOrders = useAppSelector((state) => state.home.pastOrders);
   const buyOrders = useAppSelector((state) => state.home.buyOrders);
   const sellOrders = useAppSelector((state) => state.home.sellOrders);
+
   const [currency, setCurrency] = useState(null);
   const [currencyData, setCurrencyData] = useState(null);
   const [recentTrades, setRecentTrades] = useState([]);
@@ -755,7 +728,75 @@ const Spot = () => {
   const [expandedRowIndex, setExpandedRowIndex] = useState(null);
   const [lastSocketData, setLastSocketData] = useState(null);
   const [appState, setAppState] = useState(AppState.currentState);
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+  const [isCancelLoading, setIsCancelLoading] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState(null);
   const isSpotFocused = useIsFocused();
+
+  const webview = useRef(null);
+  const rbSheetNumber = useRef();
+  const rbSheetlimit = useRef();
+  const appStateRef = useRef(AppState.currentState);
+  const latestSocketDataRef = useRef(null);
+  const latestLocalBuyOrdersRef = useRef([]);
+  const latestLocalSellOrdersRef = useRef([]);
+  const currentCurrencyRef = useRef(null);
+  const SOCKET_UI_THROTTLE_MS = 500;
+  const socketThrottleTimerRef = useRef(null);
+  const socketLastFlushRef = useRef(0);
+  const pendingSocketFlushRef = useRef(null);
+  const isSpotFocusedRef = useRef(true);
+  const webViewReadyFallbackRef = useRef(null);
+  const chartReadyDelayRef = useRef(null);
+  const chartSymbolChangeTimeoutRef = useRef(null);
+  const lastSubscribedExchangeRef = useRef(null);
+  const lastSubscribedPairRef = useRef(null);
+  const lastFlushedBuyRef = useRef(null);
+  const lastFlushedSellRef = useRef(null);
+  const pendingOrderBookOnBlurRef = useRef(null);
+  const flushSocketToStateRef = useRef(null);
+  const activeTabRef = useRef(1);
+  const chartRevealedOnceRef = useRef(false);
+
+  // Get decimal places from step_size or tick_size
+  const getDecimalPlaces = (value) => {
+    if (!value || value >= 1) return 0;
+    const str = value.toString();
+    if (str.includes("e-")) return parseInt(str.split("e-")[1], 10);
+    const decimalPart = str.split(".")[1];
+    return decimalPart ? decimalPart.length : 0;
+  };
+
+  const getPricePrecision = () => {
+    const tickSize = currencyData?.tick_size;
+    if (tickSize === undefined || tickSize === null) return 8;
+    return getDecimalPlaces(tickSize);
+  };
+
+  const getQuantityPrecision = () => {
+    const stepSize = currencyData?.step_size;
+    if (stepSize === undefined || stepSize === null) return 8;
+    return getDecimalPlaces(stepSize);
+  };
+
+  const pricePrecision = useMemo(() => getPricePrecision(), [currencyData?.tick_size]);
+  const quantityPrecision = useMemo(() => getQuantityPrecision(), [currencyData?.step_size]);
+
+  const formatPrice = useCallback(
+    (price) => {
+      if (price === undefined || price === null || isNaN(price)) return "0";
+      return parseFloat(Number(price).toFixed(pricePrecision));
+    },
+    [pricePrecision]
+  );
+
+  const formatQuantity = useCallback(
+    (qty) => {
+      if (qty === undefined || qty === null || isNaN(qty)) return "0";
+      return parseFloat(Number(qty).toFixed(quantityPrecision));
+    },
+    [quantityPrecision]
+  );
 
   const chartBaseUrl = useMemo(
     () => `https://zillion.wrathcode.com/chart/${theme === "Dark" ? "dark" : "light"}/`,
@@ -825,6 +866,7 @@ const Spot = () => {
       setLocalSellOrders([]);
       dispatch(setBuyOrders([]));
       dispatch(setSellOrders([]));
+      setRecentTrades([]);
     }
 
     if (lastChartPairRef.current === newKey) return;
@@ -995,10 +1037,10 @@ const Spot = () => {
   const orderBookReady = !!lastSocketData || (buyOrders?.length > 0 || sellOrders?.length > 0);
   const showOrderBookSkeleton = !orderBookReady;
 
-  const binanceEndpoint = "wss://stream.binance.com:9443/ws";
 
 
-  // console.log(wsRef,"wsRef");
+
+
 
   // Lifecycle: on focus subscribe and show content; on blur clear global loader first (no overlay), then all timers and unsubscribe
   useFocusEffect(
@@ -1049,9 +1091,6 @@ const Spot = () => {
           dispatch(setSellOrders(latestLocalSellOrdersRef.current));
         }
       }
-      if (currentPair?.available !== "LOCAL" && wsRef.current === null) {
-        connectWebSocket();
-      }
       // Ensure loader hides after a timeout if data is stuck, but mainly rely on data
       const stopLoaderTimer = setTimeout(() => {
         dispatch(setLoading(false));
@@ -1083,20 +1122,12 @@ const Spot = () => {
           clearTimeout(chartSymbolChangeTimeoutRef.current);
           chartSymbolChangeTimeoutRef.current = null;
         }
-        if (reconnectIntervalRef.current) {
-          clearTimeout(reconnectIntervalRef.current);
-          reconnectIntervalRef.current = null;
-        }
+
         if (socketThrottleTimerRef.current) {
           clearTimeout(socketThrottleTimerRef.current);
           socketThrottleTimerRef.current = null;
         }
-        if (binanceThrottleTimerRef.current) {
-          clearTimeout(binanceThrottleTimerRef.current);
-          binanceThrottleTimerRef.current = null;
-        }
         pendingSocketFlushRef.current = null;
-        pendingBinanceRef.current = null;
 
         // Do not reset webViewReady on blur so when user returns to Spot the chart is still visible (data persistence).
 
@@ -1272,203 +1303,7 @@ const Spot = () => {
   // Order history now comes from socket (executed_order), so we removed the API call here
   // This matches the website implementation where order history comes from socket messages
 
-  const subscribeToPair = (pair) => {
-    // For LOCAL pairs, don't use Binance WebSocket - data comes from our backend socket
-    if (pair?.available === "LOCAL") {
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && currentSubscriptionRef.current) {
-        const unsubscribeMsg = {
-          method: "UNSUBSCRIBE",
-          params: [currentSubscriptionRef.current],
-          id: 1
-        };
-        wsRef.current.send(JSON.stringify(unsubscribeMsg));
-        currentSubscriptionRef.current = null;
-      }
-      const pairKey = pair ? `${pair.base_currency}_${pair.quote_currency}` : "";
-      const samePair = lastSubscribedPairRef.current === pairKey;
-      lastSubscribedPairRef.current = pairKey;
-      if (!samePair) {
-        dispatch(setSellOrders([]));
-        dispatch(setBuyOrders([]));
-        setRecentTrades([]);
-      }
-      return;
-    }
 
-    // For non-LOCAL pairs, use Binance WebSocket
-    const pairKey = pair ? `${pair.base_currency}_${pair.quote_currency}` : "";
-    const samePair = lastSubscribedPairRef.current === pairKey;
-    lastSubscribedPairRef.current = pairKey;
-    if (!samePair) {
-      dispatch(setSellOrders([]));
-      dispatch(setBuyOrders([]));
-    }
-    if (wsRef?.current?.readyState !== WebSocket.OPEN) {
-      wsRef.current = null;
-      connectWebSocket();
-      return;
-    }
-    // Already subscribed to this exact pair — avoid duplicate subscription
-    const data = `${pair?.base_currency.toLowerCase()}${pair?.quote_currency.toLowerCase()}`;
-    const stream = `${data}@depth20`;
-    if (currentSubscriptionRef.current === stream) {
-      return;
-    }
-    // Unsubscribe from the current stream if there's an active subscription
-    if (currentSubscriptionRef.current) {
-      const unsubscribeMsg = {
-        method: "UNSUBSCRIBE",
-        params: [currentSubscriptionRef.current],
-        id: 1,
-      };
-      wsRef.current.send(JSON.stringify(unsubscribeMsg));
-    }
-    // Subscribe to the new pair
-    const subscribeMsg = {
-      method: "SUBSCRIBE",
-      params: [stream],
-      id: 1,
-    };
-    wsRef.current.send(JSON.stringify(subscribeMsg));
-    currentSubscriptionRef.current = stream;
-  };
-
-  const transformBid = (bid) => ({
-    _id: `binance_buy_${bid[0]}`, // Stable ID based on price
-    side: "BUY",
-    price: parseFloat(bid[0]),
-    quantity: parseFloat(bid[1]),
-    filled: 0,
-    remaining: parseFloat(bid[1]),
-    maker_fee: 0.1,
-    taker_fee: 0.1,
-    status: "PENDING",
-    transaction_fee: 0.1,
-    tds: 1,
-    __v: 0,
-  });
-
-  const transformAsk = (ask) => ({
-    _id: `binance_sell_${ask[0]}`, // Stable ID based on price
-    side: "SELL",
-    price: parseFloat(ask[0]),
-    quantity: parseFloat(ask[1]),
-    filled: 0,
-    remaining: parseFloat(ask[1]),
-    maker_fee: 0.1,
-    taker_fee: 0.1,
-    status: "PENDING",
-    transaction_fee: 0,
-    tds: 0,
-    order_by: "BOT",
-    __v: 0,
-  });
-
-  const connectWebSocket = () => {
-    const ws = new WebSocket(binanceEndpoint);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      // Use ref to get current currency (persists even when component re-renders)
-      const currentPair = currentCurrencyRef.current || currency || coinData[0];
-      if (currentPair) {
-        subscribeToPair(currentPair);
-      }
-    };
-
-    ws.onmessage = (event) => {
-      if (!isSpotFocusedRef.current || appStateRef.current !== "active") return;
-      const message = JSON.parse(event.data);
-      if (currentCurrencyRef.current?.available === "LOCAL" || !message?.bids?.length || !message?.asks?.length) return;
-
-      const transformedBids = message.bids.map(transformBid);
-      const transformedAsks = message.asks.map(transformAsk);
-      const MIN_QTY = 0.0001;
-      const fakeTrades = [];
-      for (let i = 0; i < 5; i++) {
-        const isBuy = Math.random() > 0.5;
-        const orders = isBuy ? transformedBids : transformedAsks;
-        const selected = orders[Math.floor(Math.random() * orders.length)];
-        if (!selected) continue;
-        const rawQty = Math.random() * selected.quantity;
-        const qty = Math.max(rawQty, MIN_QTY);
-        fakeTrades.push({
-          side: isBuy ? "BUY" : "SELL",
-          price: selected.price,
-          quantity: parseFloat(Math.max(rawQty, MIN_QTY).toFixed(4)),
-          time: new Date().toLocaleTimeString("en-GB", { hour12: false }),
-        });
-      }
-      const payload = { bids: transformedBids, asks: transformedAsks?.reverse(), fakeTrades };
-
-      pendingBinanceRef.current = payload;
-      const now = Date.now();
-      const elapsed = now - binanceLastFlushRef.current;
-      const flushBinance = () => {
-        const p = pendingBinanceRef.current;
-        if (!p) return;
-        pendingBinanceRef.current = null;
-        binanceLastFlushRef.current = Date.now();
-        if (!orderBookDataEqual(lastFlushedBuyRef.current, p.bids)) {
-          lastFlushedBuyRef.current = p.bids;
-          dispatch(setBuyOrders(p.bids));
-        }
-        if (!orderBookDataEqual(lastFlushedSellRef.current, p.asks)) {
-          lastFlushedSellRef.current = p.asks;
-          dispatch(setSellOrders(p.asks));
-        }
-        setRecentTrades((prev) => [...(p.fakeTrades || []), ...prev].slice(0, 50));
-      };
-      if (elapsed >= SOCKET_UI_THROTTLE_MS || binanceLastFlushRef.current === 0) {
-        flushBinance();
-        if (binanceThrottleTimerRef.current) {
-          clearTimeout(binanceThrottleTimerRef.current);
-          binanceThrottleTimerRef.current = null;
-        }
-      } else if (binanceThrottleTimerRef.current == null) {
-        binanceThrottleTimerRef.current = setTimeout(() => {
-          binanceThrottleTimerRef.current = null;
-          flushBinance();
-        }, SOCKET_UI_THROTTLE_MS - elapsed);
-      }
-    };
-
-    ws.onerror = () => { };
-
-    ws.onclose = () => {
-      if (!isSpotFocusedRef.current) return;
-      if (__DEV__) console.warn("WebSocket closed. Reconnecting...");
-      reconnectIntervalRef.current = setTimeout(() => {
-        if (isSpotFocusedRef.current && wsRef.current === null) connectWebSocket();
-      }, 3000);
-    };
-  };
-
-  useEffect(() => {
-    const currentPair = currentCurrencyRef.current || effectiveCurrency || currency || coinData[0];
-    if (currentPair && wsRef.current !== null) {
-      subscribeToPair(currentPair);
-    }
-  }, [currency, effectiveCurrency]);
-
-  useEffect(() => {
-    if (wsRef.current === null) {
-      connectWebSocket();
-    }
-
-    return () => {
-      if (wsRef.current) {
-        try {
-          wsRef.current.close();
-        } catch (e) { }
-      }
-      clearTimeout(reconnectIntervalRef.current);
-      if (binanceThrottleTimerRef.current) {
-        clearTimeout(binanceThrottleTimerRef.current);
-        binanceThrottleTimerRef.current = null;
-      }
-    };
-  }, [binanceEndpoint]);
 
 
   useEffect(() => {
@@ -1489,45 +1324,9 @@ const Spot = () => {
     setAmount(formatQuantity(itemQuantity).toString());
   }, [isLimit]);
 
-  // Get decimal places from step_size or tick_size
-  const getDecimalPlaces = (value) => {
-    if (!value || value >= 1) return 0;
-    const str = value.toString();
-    if (str.includes("e-")) return parseInt(str.split("e-")[1], 10);
-    const decimalPart = str.split(".")[1];
-    return decimalPart ? decimalPart.length : 0;
-  };
 
-  const getPricePrecision = () => {
-    const tickSize = currencyData?.tick_size;
-    if (tickSize === undefined || tickSize === null) return 8;
-    return getDecimalPlaces(tickSize);
-  };
 
-  const getQuantityPrecision = () => {
-    const stepSize = currencyData?.step_size;
-    if (stepSize === undefined || stepSize === null) return 8;
-    return getDecimalPlaces(stepSize);
-  };
 
-  const pricePrecision = useMemo(() => getPricePrecision(), [currencyData?.tick_size]);
-  const quantityPrecision = useMemo(() => getQuantityPrecision(), [currencyData?.step_size]);
-
-  const formatPrice = useCallback(
-    (price) => {
-      if (price === undefined || price === null || isNaN(price)) return "0";
-      return parseFloat(Number(price).toFixed(pricePrecision));
-    },
-    [pricePrecision]
-  );
-
-  const formatQuantity = useCallback(
-    (qty) => {
-      if (qty === undefined || qty === null || isNaN(qty)) return "0";
-      return parseFloat(Number(qty).toFixed(quantityPrecision));
-    },
-    [quantityPrecision]
-  );
 
   const validateOrder = (price, quantity, side) => {
     const tick_size = currencyData?.tick_size || 0.01;
@@ -1985,54 +1784,76 @@ const Spot = () => {
     const orderTypeLabel = (inv?.order_type === "MARKET" ? "Market" : "Limit") + " / " + (inv?.side === "BUY" ? "Buy" : "Sell");
     const statusLabel = status === "FILLED" ? "Filled" : (status === "CANCELLED" || status === "CANCELED" ? "Canceled" : (status === "OPEN" ? "Open" : (status === "PARTIAL" ? "Partial" : status)));
 
+    const statusUpper = String(status).toUpperCase().trim();
+    const orderId = inv?._id || inv?.id;
+    const canCancel = !!orderId && !["FILLED", "CANCELLED", "CANCELED", "COMPLETED", "EXECUTED", "REJECTED"].includes(statusUpper);
+
     const textColor = themeColors.text;
     const labelColor = themeColors.secondaryText;
 
     return (
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={() => NavigationService.navigate(SPOT_ORDER_HISTORY_DETAIL, { order: inv })}
+      <View
         style={[styles.openOrderCard, { backgroundColor: themeColors.background }]}
       >
-        <View style={styles.openOrderTopRow}>
-          <View style={styles.pairRow}>
-            <AppText style={[styles.openOrderCardTitle, { color: textColor }]}>{currencyPair}</AppText>
-          </View>
-          <AppText style={[styles.openOrderCardDate, { color: labelColor }]}>
-            {formatDateTimeCard(inv?.updatedAt || inv?.createdAt)}
-          </AppText>
-        </View>
-
-        <AppText
-          style={[
-            styles.openOrderTypeLabel,
-            { color: inv?.side === "BUY" ? themeColors.green : themeColors.red },
-          ]}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => NavigationService.navigate(SPOT_ORDER_HISTORY_DETAIL, { order: inv })}
         >
-          {orderTypeLabel}
-        </AppText>
+          <View style={styles.openOrderTopRow}>
+            <View style={styles.pairRow}>
+              <AppText style={[styles.openOrderCardTitle, { color: textColor }]}>{currencyPair}</AppText>
+            </View>
+            <AppText style={[styles.openOrderCardDate, { color: labelColor }]}>
+              {formatDateTimeCard(inv?.updatedAt || inv?.createdAt)}
+            </AppText>
+          </View>
 
-        <View style={styles.openOrderCardRow}>
-          <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Amount:</AppText>
-          <AppText style={[styles.openOrderCardValue, { color: textColor }]}>
-            {toFixedEight(filled)} / {toFixedEight(totalQty)}
+          <AppText
+            style={[
+              styles.openOrderTypeLabel,
+              { color: inv?.side === "BUY" ? themeColors.green : themeColors.red },
+            ]}
+          >
+            {orderTypeLabel}
           </AppText>
-        </View>
 
-        <View style={styles.openOrderCardRow}>
-          <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Avg. / Price:</AppText>
-          <AppText style={[styles.openOrderCardValue, { color: textColor }]}>
-            {isFilled ? `${toFixedSix(avgPrice)} / ${toFixedSix(price)} (Counterparty 1)` : `0 / ${toFixedSix(price)}`}
-          </AppText>
-        </View>
+          <View style={styles.openOrderCardRow}>
+            <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Amount:</AppText>
+            <AppText style={[styles.openOrderCardValue, { color: textColor }]}>
+              {toFixedEight(filled)} / {toFixedEight(totalQty)}
+            </AppText>
+          </View>
 
-        <View style={styles.openOrderCardRow}>
-          <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Status:</AppText>
-          <AppText style={[styles.openOrderCardValue, { color: getStatusColor(inv?.status) }]}>{statusLabel}</AppText>
-        </View>
+          <View style={styles.openOrderCardRow}>
+            <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Avg. / Price:</AppText>
+            <AppText style={[styles.openOrderCardValue, { color: textColor }]}>
+              {isFilled ? `${toFixedSix(avgPrice)} / ${toFixedSix(price)} (Counterparty 1)` : `0 / ${toFixedSix(price)}`}
+            </AppText>
+          </View>
+
+          <View style={styles.openOrderCardRow}>
+            <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Status:</AppText>
+            <AppText style={[styles.openOrderCardValue, { color: getStatusColor(inv?.status) }]}>{statusLabel}</AppText>
+          </View>
+        </TouchableOpacity>
+
+        {canCancel && (
+          <View style={[styles.openOrderCardRow, { marginTop: 8 }]}>
+            <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Action:</AppText>
+            <TouchableOpacity
+              style={styles.cancelActionBtn}
+              onPress={() => {
+                setOrderToCancel(inv);
+                setIsCancelModalVisible(true);
+              }}
+            >
+              <AppText style={{ color: themeColors.red, fontWeight: "600", fontSize: 13 }}>Cancel</AppText>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View style={[styles.openOrderCardDivider, { backgroundColor: themeColors.themeBorderColor }]} />
-      </TouchableOpacity>
+      </View>
     );
   }, [themeColors, formatDateTimeCard, getStatusColor]);
 
@@ -2064,56 +1885,77 @@ const Spot = () => {
     const status = inv?.status || "";
     const isFilled = status === "FILLED";
     const orderTypeLabel = (inv?.order_type === "MARKET" ? "Market" : "Limit") + " / " + (inv?.side === "BUY" ? "Buy" : "Sell");
-    const statusLabel = status === "FILLED" ? "Filled" : (status === "CANCELLED" || status === "CANCELED" ? "Canceled" : (status === "OPEN" ? "Open" : (status === "PARTIAL" ? "Partial" : status)));
+    const statusLabel = status === "FILLED" ? "Filled" : (status === "CANCELLED" || status === "CANCELED" ? "Cancelled" : (status === "OPEN" ? "Open" : (status === "PARTIAL" ? "Partial" : status)));
+    const statusUpper = String(status).toUpperCase().trim();
+    const orderId = inv?._id || inv?.id;
+    const canCancel = !!orderId && !["FILLED", "CANCELLED", "CANCELED", "COMPLETED", "EXECUTED", "REJECTED"].includes(statusUpper);
 
     const textColor = themeColors.text;
     const labelColor = themeColors.secondaryText;
 
     return (
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={() => NavigationService.navigate(SPOT_ORDER_HISTORY_DETAIL, { order: inv })}
+      <View
         style={[styles.openOrderCard, { backgroundColor: themeColors.background }]}
       >
-        <View style={styles.openOrderTopRow}>
-          <View style={styles.pairRow}>
-            <AppText style={[styles.openOrderCardTitle, { color: textColor }]}>{currencyPair}</AppText>
-          </View>
-          <AppText style={[styles.openOrderCardDate, { color: labelColor }]}>
-            {formatDateTimeCard(inv?.updatedAt || inv?.createdAt)}
-          </AppText>
-        </View>
-
-        <AppText
-          style={[
-            styles.openOrderTypeLabel,
-            { color: inv?.side === "BUY" ? themeColors.green : themeColors.red },
-          ]}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => NavigationService.navigate(SPOT_ORDER_HISTORY_DETAIL, { order: inv })}
         >
-          {orderTypeLabel}
-        </AppText>
+          <View style={styles.openOrderTopRow}>
+            <View style={styles.pairRow}>
+              <AppText style={[styles.openOrderCardTitle, { color: textColor }]}>{currencyPair}</AppText>
+            </View>
+            <AppText style={[styles.openOrderCardDate, { color: labelColor }]}>
+              {formatDateTimeCard(inv?.updatedAt || inv?.createdAt)}
+            </AppText>
+          </View>
 
-        <View style={styles.openOrderCardRow}>
-          <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Amount:</AppText>
-          <AppText style={[styles.openOrderCardValue, { color: textColor }]}>
-            {toFixedEight(filled)} / {toFixedEight(totalQty)}
+          <AppText
+            style={[
+              styles.openOrderTypeLabel,
+              { color: inv?.side === "BUY" ? themeColors.green : themeColors.red },
+            ]}
+          >
+            {orderTypeLabel}
           </AppText>
-        </View>
 
-        <View style={styles.openOrderCardRow}>
-          <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Avg. / Price:</AppText>
-          <AppText style={[styles.openOrderCardValue, { color: textColor }]}>
-            {isFilled ? `${toFixedSix(avgPrice)} / ${toFixedSix(price)} (Counterparty 1)` : `0 / ${toFixedSix(price)}`}
-          </AppText>
-        </View>
+          <View style={styles.openOrderCardRow}>
+            <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Amount:</AppText>
+            <AppText style={[styles.openOrderCardValue, { color: textColor }]}>
+              {toFixedEight(filled)} / {toFixedEight(totalQty)}
+            </AppText>
+          </View>
 
-        <View style={styles.openOrderCardRow}>
-          <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Status:</AppText>
-          <AppText style={[styles.openOrderCardValue, { color: getStatusColor(inv?.status) }]}>{statusLabel}</AppText>
-        </View>
+          <View style={styles.openOrderCardRow}>
+            <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Avg. / Price:</AppText>
+            <AppText style={[styles.openOrderCardValue, { color: textColor }]}>
+              {isFilled ? `${toFixedSix(avgPrice)} / ${toFixedSix(price)} (Counterparty 1)` : `0 / ${toFixedSix(price)}`}
+            </AppText>
+          </View>
+
+          <View style={styles.openOrderCardRow}>
+            <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Status:</AppText>
+            <AppText style={[styles.openOrderCardValue, { color: getStatusColor(inv?.status) }]}>{statusLabel}</AppText>
+          </View>
+        </TouchableOpacity>
+
+        {canCancel && (
+          <View style={[styles.openOrderCardRow, { marginTop: 8 }]}>
+            <AppText style={[styles.openOrderCardLabel, { color: labelColor }]}>Action:</AppText>
+            <TouchableOpacity
+              style={styles.cancelActionBtn}
+              onPress={() => {
+                setOrderToCancel(inv);
+                setIsCancelModalVisible(true);
+              }}
+            >
+              <AppText style={{ color: themeColors.red, fontWeight: "600", fontSize: 13 }}>Cancel</AppText>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View style={[styles.openOrderCardDivider, { backgroundColor: themeColors.themeBorderColor }]} />
-      </TouchableOpacity>
+      </View>
     );
   }, [themeColors, formatDateTimeCard, getStatusColor]);
 
@@ -2646,7 +2488,7 @@ const Spot = () => {
                       <AppText
                         style={[
                           styles.viewAllText,
-                          { color: isDark ? themeColors.buttonDarkBg : "#F3BB2B" },
+                          { color: colors.buttonBg },
                         ]}
                       >
                         View More
@@ -2696,7 +2538,7 @@ const Spot = () => {
                       <AppText
                         style={[
                           styles.viewAllText,
-                          { color: isDark ? themeColors.buttonDarkBg : "#F3BB2B" },
+                          { color: colors.buttonBg },
                         ]}
                       >
                         View More
@@ -2894,6 +2736,120 @@ const Spot = () => {
         >
           {renderLimit(theme)}
         </RBSheet>
+
+        <ReactNativeModal
+          isVisible={isCancelModalVisible}
+          animationIn="zoomIn"
+          animationOut="zoomOut"
+          backdropOpacity={0.5}
+          onBackdropPress={() => setIsCancelModalVisible(false)}
+          onBackButtonPress={() => setIsCancelModalVisible(false)}
+          style={{ justifyContent: "center", alignItems: "center" }}
+        >
+          <View
+            style={{
+              backgroundColor: themeColors.themeElevationColor,
+              borderRadius: 20,
+              padding: 25,
+              width: Width * 0.85,
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.25,
+              shadowRadius: 20,
+              elevation: 10,
+              borderWidth: 1,
+              borderColor: themeColors.themeBorderColor,
+            }}
+          >
+            <AppText
+              style={{
+                fontSize: 20,
+                fontWeight: "700",
+                color: themeColors.text,
+                textAlign: "center",
+                marginBottom: 15,
+              }}
+            >
+              Cancel Order
+            </AppText>
+
+            <AppText
+              style={{
+                fontSize: 15,
+                color: themeColors.secondaryText,
+                textAlign: "center",
+                marginBottom: 25,
+                lineHeight: 22,
+              }}
+            >
+              Are you sure you want to cancel this order?
+            </AppText>
+
+            <View style={{ flexDirection: "row", width: "100%", gap: 10 }}>
+              <TouchableOpacity
+                onPress={() => setIsCancelModalVisible(false)}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  borderRadius: 12,
+                  backgroundColor: themeColors.themeElevationColor,
+                  borderWidth: 1,
+                  borderColor: themeColors.themeBorderColor,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <AppText style={{ fontSize: 14, fontWeight: "600", color: themeColors.text }}>
+                  No, Keep
+                </AppText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                disabled={isCancelLoading}
+                onPress={async () => {
+                  const orderId = orderToCancel?._id || orderToCancel?.id;
+                  if (orderId) {
+                    setIsCancelLoading(true);
+                    const res = await dispatch(cancelOrder({ order_id: orderId }));
+                    setIsCancelLoading(false);
+                    if (res?.success) {
+                      setIsCancelModalVisible(false);
+                      setOrderToCancel(null);
+                    }
+                  } else {
+                    setIsCancelModalVisible(false);
+                    setOrderToCancel(null);
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  borderRadius: 12,
+                  backgroundColor: themeColors.red,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  shadowColor: themeColors.red,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 5,
+                  opacity: isCancelLoading ? 0.7 : 1,
+                }}
+              >
+                {isCancelLoading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <AppText style={{ fontSize: 14, fontWeight: "600", color: "#FFFFFF" }}>
+                    Yes, Cancel
+                  </AppText>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ReactNativeModal>
       </ScrollView>
     </View>
   );
@@ -2970,13 +2926,13 @@ const styles = StyleSheet.create({
   ordersTabContentWrapper: {
     minHeight: 180,
     marginVertical: 20,
-    marginHorizontal: 15,
+    marginHorizontal: 5,
     position: "relative",
     paddingBottom: 100,
   },
   ordersTabPanel: {
     paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingHorizontal: 4,
     borderRadius: 10,
     overflow: "hidden",
   },
@@ -3464,5 +3420,15 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#ccc",
     marginTop: 14,
+  },
+  cancelActionBtn: {
+    borderWidth: 1,
+    borderColor: "#FF4F4F",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 6,
+    minWidth: 80,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

@@ -402,57 +402,7 @@ const WalletNew = () => {
                         tintColor={theme !== "Dark" ? colors.black : colors.white}
                       />
                     </TouchableOpacity>
-                    {/* <TouchableOpacity
-                  style={{
-                    flexDirection: "row",
-                    borderWidth: 1,
-                    borderColor: theme !== "Dark" ? "#D4D4D4" : "#595959",
-                    borderRadius: 10,
-                    padding: 15,
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: 10,
-                    backgroundColor:
-                      theme !== "Dark" ? colors.offWhite : "#18191DB2",
-                  }}
-                  onPress={() => setActiveTab("Swap")}
-                >
-                  <View>
-                    <AppText
-                      style={{
-                        color: theme !== "Dark" ? "#404040" : "#A8A7A7",
-                        fontWeight: SEMI_BOLD,
-                        marginBottom: 5,
-                      }}
-                      type={FOURTEEN}
-                    >
-                      Swap Wallet
-                    </AppText>
 
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 5,
-                      }}
-                    >
-                      <AppText color={BLACK} weight={SEMI_BOLD} type={FOURTEEN}>
-                        {toFixedFive(walletBalanceSwap?.currencyPrice) || 0}
-                      </AppText>
-                      <AppText color={BLACK}>{walletBalance?.Currency}</AppText>
-                    </View>
-                  </View>
-                  <FastImage
-                    source={back_ic}
-                    resizeMode="contain"
-                    style={{
-                      width: 20,
-                      height: 20,
-                      transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
-                    }}
-                    tintColor={theme !== "Dark" ? colors.black : colors.white}
-                  />
-                </TouchableOpacity> */}
                     <TouchableOpacity
                       style={{
                         flexDirection: "row",
