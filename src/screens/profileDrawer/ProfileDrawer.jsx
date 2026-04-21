@@ -299,7 +299,7 @@ const DepositWithdrawCard = ({ theme, bigImage, smallIcon, label }) => {
           style={{ height: 24, width: 24, marginBottom: 6 }}
           resizeMode="contain"
         />
-        <AppText style={{ fontWeight: "500" ,color:theme=="Dark" ? colors.white : colors.black}}>{label}</AppText>
+        <AppText style={{ fontWeight: "500", color: theme == "Dark" ? colors.white : colors.black }}>{label}</AppText>
       </View>
     </>
   );
@@ -668,7 +668,7 @@ const ProfileDrawer = () => {
             >
               <DepositWithdrawCard
                 theme={effectiveTheme}
-                bigImage={ effectiveTheme !== "Dark" ? depositImage : depositImageDark}
+                bigImage={effectiveTheme !== "Dark" ? depositImage : depositImageDark}
                 smallIcon={
                   effectiveTheme !== "Dark" ? newDepositIcon : newDepositDarkIcon
                 }
@@ -683,7 +683,7 @@ const ProfileDrawer = () => {
             >
               <DepositWithdrawCard
                 theme={effectiveTheme}
-                bigImage={ effectiveTheme !== "Dark" ? withdrawImage : withdrawImageDark}
+                bigImage={effectiveTheme !== "Dark" ? withdrawImage : withdrawImageDark}
                 smallIcon={
                   effectiveTheme !== "Dark" ? newWidthrawIcon : newWidthrawDarkIcon
                 }
@@ -839,8 +839,8 @@ const ProfileDrawer = () => {
               />
             </View>
 
-            <AppText style={[styles.logoutTitle, { color: drawerColors.text }]}>Confirm Logout</AppText>
-            <AppText style={[styles.logoutDesc, { color: drawerColors.secondaryText }]}>
+            <AppText style={[styles.logoutTitle, { color: themeColors.text }]}>Confirm Logout</AppText>
+            <AppText style={[styles.logoutDesc, { color: themeColors.text }]}>
               Are you sure you want to log out of your account?
             </AppText>
 
@@ -850,11 +850,15 @@ const ProfileDrawer = () => {
                 style={[
                   styles.logoutBtn,
                   styles.logoutBtnSecondary,
-                  { backgroundColor: effectiveTheme === "Dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)" },
+
+                  {
+                    borderColor: isDark ? "transparent" : colors.inputBorder,
+                    backgroundColor: isDark ? "rgba(255,255,255,0.06)" : colors.inputBackground,
+                  },
                 ]}
                 onPress={() => closeLogoutModal()}
               >
-                <AppText style={[styles.logoutBtnSecondaryText, { color: drawerColors.text }]}>Cancel</AppText>
+                <AppText style={[styles.logoutBtnSecondaryText, { color: themeColors.text }]}>Cancel</AppText>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -942,7 +946,6 @@ const styles = StyleSheet.create({
   logoutBtnSecondary: {
     backgroundColor: "rgba(255,255,255,0.06)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
   },
   logoutBtnSecondaryText: {
     color: colors.white,

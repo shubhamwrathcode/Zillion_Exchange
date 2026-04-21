@@ -25,7 +25,7 @@ import { AppText, BLACK, BOLD, DISCLAIMTEXT, FOURTEEN, SEMI_BOLD, TEN } from "./
 import FastImage from "react-native-fast-image";
 import { toFixedFive } from "../helper/utility";
 import { showError } from "../helper/logger";
-import { closeIcon, NO_NOTIFICATION_ICON, searchIcon } from "../helper/ImageAssets";
+import { closeIcon, NO_NOTIFICATION_ICON, searchIcon, checkIcon } from "../helper/ImageAssets";
 import { colors } from "../theme/colors";
 import { useTheme } from "../hooks/useTheme";
 
@@ -127,7 +127,7 @@ const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId, selec
         ]}
         onPress={() => {
           if (isDisabled) {
-            showError("Same coin can't be swap.");
+            showError("Already selected in other field.");
             return;
           }
           onSelect(item);
@@ -167,7 +167,15 @@ const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId, selec
         </View>
 
         <View style={styles.coinRight}>
-          <AppText 
+          {/* {isSelected && (
+            <FastImage
+              source={checkIcon}
+              style={{ width: 16, height: 16, marginRight: 12 }}
+              tintColor={themeColors.button}
+              resizeMode="contain"
+            />
+          )} */}
+          <AppText
             style={[
               styles.coinBalance,
               { color: isSelected ? themeColors.button : themeColors.text }

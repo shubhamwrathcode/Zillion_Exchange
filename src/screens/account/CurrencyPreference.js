@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  button: { marginTop: 50, marginHorizontal: universalPaddingHorizontalHigh },
+  button: { marginVertical: 20, marginHorizontal: universalPaddingHorizontalHigh },
   rightIc: {
     height: 10,
     width: 10,

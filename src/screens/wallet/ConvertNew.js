@@ -327,7 +327,7 @@ function ConvertNew() {
         <>
           {/* From / To card - overlaps header */}
           <View style={styles.fromToSectionWrap}>
-            <View style={[styles.fromToSection, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1, elevation: 0, shadowOpacity: 0 }]}>
+            <View style={[styles.fromToSection, { backgroundColor: isDark ? colors.newThemeColor : "#FFFFFF", borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1, elevation: 0, shadowOpacity: 0 }]}>
               <View style={styles.fromToLeft}>
                 <TouchableOpacity style={styles.fieldRow} onPress={() => openCoinModal("from")} activeOpacity={0.7}>
                   <View>
@@ -367,7 +367,7 @@ function ConvertNew() {
 
           <KeyBoardAware style={{ flex: 1, paddingHorizontal: 20, backgroundColor: themeColors.background }}>
             <AppText type={TEN} style={[styles.sectionLabel, { color: labelColor }]}>Amount</AppText>
-            <View style={[styles.amountField, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1 }]}>
+            <View style={[styles.amountField, { backgroundColor: isDark ? "transparent" : "#FFFFFF", borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1 }]}>
               <TextInput
                 placeholder="Enter the amount"
                 placeholderTextColor={themeColors.secondaryText}
@@ -398,7 +398,7 @@ function ConvertNew() {
               </AppText>
             )}
 
-            <View style={[styles.detailCard, { backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF", borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1 }]}>
+            <View style={[styles.detailCard, { backgroundColor: isDark ? "transparent" : "#FFFFFF", borderColor: isDark ? themeColors.border : "#EEE", borderWidth: 1 }]}>
               <View style={styles.detailRow}>
                 <AppText type={TEN} style={{ color: labelColor }}>Conversion rate</AppText>
                 <AppText type={TEN} style={{ color: labelColor }}>
@@ -425,7 +425,7 @@ function ConvertNew() {
               </View>
             </View>
 
-            <View style={[styles.disclaimerBox, { backgroundColor: isDark ? "#1A1A1A" : "#FFF9E6", borderColor: isDark ? themeColors.border : "#F3BB2B", borderWidth: 1 }]}>
+            <View style={[styles.disclaimerBox, { backgroundColor: isDark ? "transparent" : "#FFF9E6", borderColor: isDark ? themeColors.border : "#F3BB2B", borderWidth: 1 }]}>
               <FastImage source={disclaimerIcon} style={styles.disclaimerIcon} resizeMode="contain" />
               <AppText type={NINE} style={[styles.disclaimerText, { color: labelColor }]}>
                 The final conversion amount will be calculated at the current available market rate at the time of execution. The actual value may differ slightly from the rate displayed here due to market fluctuations.
@@ -451,10 +451,11 @@ function ConvertNew() {
       <CoinListModal
         visible={coinModal}
         onClose={() => setCoinModal(false)}
-        data={swapCurrencyList}
+        data={swapCurrencyList?.filter(item => item?.currency_id !== (type === "from" ? toCoin?.currency_id : fromCoin?.currency_id))}
         onSelect={handleSelectCoin}
         isDark={isDark}
         disabledCoinId={type === "from" ? toCoin?.currency_id : fromCoin?.currency_id}
+        selectedCoinId={type === "from" ? fromCoin?.currency_id : toCoin?.currency_id}
       />
       <TransferModal
         visible={visible}

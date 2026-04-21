@@ -1,8 +1,9 @@
 import React from 'react';
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import {tick} from '../helper/ImageAssets';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { tick } from '../helper/ImageAssets';
 import FastImage from 'react-native-fast-image';
-import {colors} from '../theme/colors';
+import { colors } from '../theme/colors';
+import { useTheme } from '../hooks/useTheme';
 
 const Checkbox = ({
   onPress,
@@ -14,12 +15,15 @@ const Checkbox = ({
   theme,
   containerStyle,
 }) => {
+  const { colors: themeColors, isDark } = useTheme();
+
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
-      style={[{height: 22, width: 22,
-        alignItems:"center",justifyContent:"center"
+      style={[{
+        height: 22, width: 22,
+        alignItems: "center", justifyContent: "center"
       }, containerStyle]}>
       <View style={[styles.linearGradientWrapper, style]}>
         {value ? (
@@ -27,7 +31,7 @@ const Checkbox = ({
             <FastImage
               source={tick}
               resizeMode={'contain'}
-              tintColor={colors.white}
+              tintColor={isDark ? colors.white : colors.black}
               style={[styles.checkboxTick(type, colors)]}
             />
           </View>

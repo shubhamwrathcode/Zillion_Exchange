@@ -24,7 +24,7 @@ const { width } = Dimensions.get("window");
 
 const ANIM_DURATION = 300;
 
-const TradingDataModal = ({ visible, onClose, setCurrency }) => {
+const TradingDataModal = ({ visible, onClose, setCurrency, isDark, theme }) => {
   const tabs = ["Favorites", "USDT", "BTC"];
   const filters = ["All", "New", "AI Agents", "DePIN"];
   const coinData = useAppSelector((state) => state.home.coinPairs);
@@ -35,6 +35,16 @@ const TradingDataModal = ({ visible, onClose, setCurrency }) => {
 
   const translateX = useRef(new Animated.Value(-width)).current;
   const overlayOpacity = useRef(new Animated.Value(1)).current;
+
+  const darkMode = typeof isDark === "boolean" ? isDark : theme === "Dark";
+  const modalBg = darkMode ? "#0F141C" : "#fff";
+  const textColor = darkMode ? "#fff" : "#222";
+  const subTextColor = darkMode ? "rgba(255,255,255,0.60)" : "#9D9D9D";
+  const borderColor = darkMode ? "rgba(255,255,255,0.14)" : "#ccc";
+  const rowBorderColor = darkMode ? "rgba(255,255,255,0.08)" : "#eee";
+  const inputBg = darkMode ? "rgba(255,255,255,0.06)" : "transparent";
+  const iconTint = darkMode ? colors.white : colors.black;
+  const searchTint = darkMode ? "rgba(255,255,255,0.70)" : "#595757";
 
   const runCloseAnimation = (callback) => {
     Animated.parallel([
@@ -134,22 +144,30 @@ const TradingDataModal = ({ visible, onClose, setCurrency }) => {
       animationInTiming={0}
       animationOutTiming={0}
       onBackdropPress={handleRequestClose}
-      style={styles.modalContainer}
+      style={[
+        styles.modalContainer,
+        { backgroundColor: darkMode ? "rgba(0,0,0,0.45)" : "rgba(0,0,70,0.2)" },
+      ]}
     >
       <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
-        <Animated.View style={[styles.modal, { transform: [{ translateX }] }]}>
+        <Animated.View
+          style={[
+            styles.modal,
+            { transform: [{ translateX }], backgroundColor: modalBg, borderRightWidth: darkMode ? 1 : 0, borderRightColor: rowBorderColor },
+          ]}
+        >
           <ScrollView
             contentContainerStyle={{ paddingBottom: 20 }}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.header}>
-              <Text style={styles.title}>Margin</Text>
+              <Text style={[styles.title, { color: textColor }]}>Margin</Text>
               <TouchableOpacity onPress={handleRequestClose}>
                 <FastImage
                   source={closeIcon}
                   resizeMode="contain"
                   style={{ width: 20, height: 20 }}
-                  tintColor={colors.black}
+                  tintColor={iconTint}
                 />
               </TouchableOpacity>
             </View>
@@ -158,11 +176,12 @@ const TradingDataModal = ({ visible, onClose, setCurrency }) => {
                 flexDirection: "row",
                 alignItems: "center",
                 borderWidth: 0.6,
-                borderColor: "#ccc",
+                borderColor,
                 paddingHorizontal: 10,
                 // paddingVertical: 8,
                 borderRadius: 20,
                 marginVertical: 20,
+                backgroundColor: inputBg,
               }}
             >
               {/* <AntDesign name={'search1'} color={'#595757'} size={16}/> */}
@@ -170,12 +189,12 @@ const TradingDataModal = ({ visible, onClose, setCurrency }) => {
                 source={searchIcon}
                 resizeMode="contain"
                 style={{ width: 16, height: 16 }}
-                tintColor={"#595757"}
+                tintColor={searchTint}
               />
               <TextInput
                 placeholder="Search Currency Pairs"
-                placeholderTextColor="#888"
-                style={styles.searchInput}
+                placeholderTextColor={darkMode ? "rgba(255,255,255,0.45)" : "#888"}
+                style={[styles.searchInput, { color: darkMode ? "#fff" : "#000" }]}
               />
             </View>
 
@@ -237,22 +256,25 @@ const TradingDataModal = ({ visible, onClose, setCurrency }) => {
             {coinData.map((item, index) => (
               <TouchableOpacity
                 key={index}
-                style={styles.row}
+                style={[styles.row, { borderColor: rowBorderColor }]}
                 onPress={() => handleChangePair(item)}
               >
                 <View style={{ width: "50%" }}>
-                  <Text style={[styles.cell, {}]}>
+                  <Text style={[styles.cell, { color: darkMode ? "#fff" : "#000" }]}>
                     {item?.base_currency}
-                    <Text style={{ fontWeight: "400", color: "#9D9D9D" }}>
+                    <Text style={{ fontWeight: "400", color: subTextColor }}>
                       /{item?.quote_currency}
                     </Text>
                   </Text>
-                  <Text style={[styles.vol, {}]}>{item.volume}</Text>
+                  <Text style={[styles.vol, { color: subTextColor }]}>{item.volume}</Text>
                 </View>
 
                 <View style={{ flex: 1, width: "50%", alignItems: "flex-end" }}>
                   <Text
-                    style={[styles.cell, { fontSize: 14, fontWeight: "bold" }]}
+                    style={[
+                      styles.cell,
+                      { fontSize: 14, fontWeight: "bold", color: darkMode ? "#fff" : "#000" },
+                    ]}
                   >
                     {item.buy_price}
                   </Text>
