@@ -194,12 +194,12 @@ const getSupportToolsData = (theme) => [
     icon:  theme !== "Dark" ? helpiconLight : helpicon,
     onPress: () => NavigationService.navigate("Support"),
   },
-  {
-    id: "7",
-    title: "Currency Preference",
-    icon:  theme !== "Dark" ? currencyPreferLight : currencyPreferIcon,
-    onPress: () => NavigationService.navigate(CURRENCY_PREFERENCE_SCREEN),
-  },
+  // {
+  //   id: "7",
+  //   title: "Currency Preference",
+  //   icon:  theme !== "Dark" ? currencyPreferLight : currencyPreferIcon,
+  //   onPress: () => NavigationService.navigate(CURRENCY_PREFERENCE_SCREEN),
+  // },
 ];
 const getHistoryData = (theme) => [
   {
