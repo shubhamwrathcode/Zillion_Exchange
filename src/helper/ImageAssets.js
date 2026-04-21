@@ -275,8 +275,12 @@ export const alarmDark = require('../../assets/images/alarmDark.png');
 export const kycixonLight = require('../../assets/images/kycixonLight.png');
 export const lockLight = require('../../assets/images/lockLight.png');
 export const helpiconLight = require('../../assets/images/helpiconLight.png');
-
-
+export const orderIconLight = require('../../assets/images/orderIconLight.png');
+export const walletTransferIconLight = require('../../assets/images/walletTransferIconLight.png');
+export const tradehistoryLight = require('../../assets/images/tradehistoryLight.png');
+export const swapHistoryLight = require('../../assets/images/swapHistoryLight.png');
+export const bonusHistoryLight = require('../../assets/images/bonusHistoryLight.png');
+export const INFERNAL_TRANSFER_Light = require('../../assets/images/INFERNAL_TRANSFER_Light.png');
 
 export const tradehistory = require('../../assets/images/tradehistory.png');
 export const swapHistory = require('../../assets/images/swapHistory.png');

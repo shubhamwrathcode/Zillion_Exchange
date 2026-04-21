@@ -77,6 +77,13 @@ import {
   lockLight,
   helpiconLight,
   currencyPreferLight,
+  orderIconLight,
+  walletTransferIconLight,
+  tradehistoryLight,
+  swapHistoryLight,
+  infernalTransferLight,
+  bonusHistoryLight,
+  INFERNAL_TRANSFER_Light,
 } from "../../helper/ImageAssets";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import { AppText, BLACK, DISCLAIMTEXT, ELEVEN, THIRTEEN, TWELVE, YELLOW } from "../../shared";
@@ -194,24 +201,24 @@ const getSupportToolsData = (theme) => [
     onPress: () => NavigationService.navigate(CURRENCY_PREFERENCE_SCREEN),
   },
 ];
-const Data3 = [
+const getHistoryData = (theme) => [
   {
     id: "1",
     title: "Open Orders",
-    icon: orderIcon,
+    icon: theme == "Dark" ? orderIcon : orderIconLight,
     onPress: () => NavigationService.navigate("Open_Order"),
   },
 
   {
     id: "2",
     title: "Transaction History",
-    icon: walletTransferIcon,
+    icon: theme !== "Dark" ? walletTransferIconLight : walletTransferIcon,
     onPress: () => NavigationService.navigate("Wallet_History"),
   },
   {
     id: "3",
     title: "Spot Order",
-    icon: tradehistory,
+    icon: theme !== "Dark" ? tradehistoryLight : tradehistory,
     onPress: () => {
       NavigationService.navigate("Trade_History");
     },
@@ -219,19 +226,19 @@ const Data3 = [
   {
     id: "4",
     title: "Swap History",
-    icon: swapHistory,
+    icon: theme !== "Dark" ? swapHistoryLight : swapHistory,
     onPress: () => NavigationService.navigate("Swap_History"),
   },
   {
     id: "4",
     title: "Interal Transfer",
-    icon: INFERNAL_TRANSFER,
+    icon: theme !== "Dark" ? INFERNAL_TRANSFER_Light : INFERNAL_TRANSFER,
     onPress: () => NavigationService.navigate("Interanl_Trade_History"),
   },
   {
     id: "5",
     title: "Bonus History",
-    icon: transactionhis,
+    icon: theme !== "Dark" ? bonusHistoryLight : transactionhis,
     onPress: () => NavigationService.navigate("Admin_Trade"),
   },
 ];
@@ -456,6 +463,7 @@ const ProfileDrawer = () => {
   const userData = useAppSelector((state) => state.auth.userData);
   const Data = getGeneralFeaturesData(effectiveTheme);
   const Data2 = getSupportToolsData(effectiveTheme);
+  const Data3 = getHistoryData(effectiveTheme);
   const [refresh, setRefresh] = useState(true);
   const emailTextOpacity = useRef(new Animated.Value(0)).current;
   const emailTextTranslateY = useRef(new Animated.Value(10)).current;
