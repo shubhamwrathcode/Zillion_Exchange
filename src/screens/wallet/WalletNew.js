@@ -66,6 +66,7 @@ const WalletNew = () => {
   const depsoitSheet = useRef(null);
   const withdrawSheet = useRef(null);
   const { colors: themeColors, theme, isDark } = useTheme();
+  const userData = useAppSelector((state) => state.auth.userData);
   const walletBalance = useAppSelector((state) => {
     return state.wallet.walletBalance;
   });
@@ -167,6 +168,10 @@ const WalletNew = () => {
       const t = setTimeout(() => setContentLoading(false), 1500);
       return () => clearTimeout(t);
     }, [dispatch, activeTab])
+
+
+
+
   );
 
   return (

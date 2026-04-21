@@ -245,7 +245,7 @@ export const Mode = require('../../assets/images/Mode.png');
 export const right = require('../../assets/images/right.png');
 export const logoutIcon = require('../../assets/images/logoutIcon.png');
 
-export const withdrawImage = require('../../assets/images/withdrawIcon.png');
+export const withdrawImage = require('../../assets/images/withdrawImage.png');
 export const depositImage = require('../../assets/images/depositImage.png');
 
 export const spottradingIcon = require('../../assets/images/spottradingIcon.png');
@@ -254,6 +254,7 @@ export const shareIcon = require('../../assets/images/shareIcon.png');
 export const launchpadImage = require('../../assets/images/launchpadImage.png');
 
 export const currencyPreferIcon = require('../../assets/images/currencyPreferIcon.png');
+export const currencyPreferLight = require('../../assets/images/currencyPreferLight.png');
 export const alarm = require('../../assets/images/alarm.png');
 export const kycixon = require('../../assets/images/kycixon.png');
 export const settings = require('../../assets/images/settings.png');
@@ -270,9 +271,10 @@ export const PHONE_VERIFY = require('../../assets/images/phone_verify.png');
 export const EMAIL_VERIFY = require('../../assets/images/email_verify.png');
 export const GOOGLE_VERIFY = require('../../assets/images/google_verify.png');
 export const PASSKEY_VERIFY = require('../../assets/images/passkey_verify.png');
-
-
-
+export const alarmDark = require('../../assets/images/alarmDark.png');
+export const kycixonLight = require('../../assets/images/kycixonLight.png');
+export const lockLight = require('../../assets/images/lockLight.png');
+export const helpiconLight = require('../../assets/images/helpiconLight.png');
 
 
 

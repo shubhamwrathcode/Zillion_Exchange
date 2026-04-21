@@ -70,7 +70,7 @@ const TransferModal = ({visible, handleVisiblity, type}) => {
               <View style={styles.btnContainer}>
                 <TouchableOpacityView
                   onPress={handelPress}
-                  style={[styles.actionBtn, {height: type === "earning" && 30}]}>
+                  style={[styles.actionBtn, {height: type === "earning" && 45}]}>
                   <AppText type={THIRTEEN} weight={SEMI_BOLD} color={colors.white}>
                     {type === "earning" ? 'View Portfolio' : 'OK'}
                   </AppText>

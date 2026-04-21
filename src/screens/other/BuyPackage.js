@@ -101,7 +101,7 @@ const BuyPackage = ({}) => {
 
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ backgroundColor: theme !== "Dark" ? "#FFFFFF" : colors.newThemeColor }}>
       <KeyBoardAware style={{ paddingHorizontal: 20 }}>
         {contentLoading ? (
           <BuyPackageSkeleton />
@@ -114,10 +114,10 @@ const BuyPackage = ({}) => {
                 source={BACK_ICON}
                 style={{ width: 20, height: 20 }}
                 resizeMode="contain"
-                tintColor={colors.white}
+                tintColor={theme !== "Dark" ? colors.black : colors.white}
               />
             </TouchableOpacity>
-            <AppText style={styles.title} weight={SEMI_BOLD}>
+            <AppText style={[styles.title, { color: theme !== "Dark" ? "#111" : "#fff" }]} weight={SEMI_BOLD}>
               {packages?.currency} Subscribe
             </AppText>
           </View>
@@ -131,12 +131,25 @@ const BuyPackage = ({}) => {
                 marginVertical: 20,
               }}
             >
-              <FastImage
-                source={{ uri: BASE_URL + packages?.icon_path }}
-                resizeMode="contain"
-                style={{ width: 30, height: 30 }}
-              />
-              <AppText style={[styles.title]} weight={SEMI_BOLD}>
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: theme !== "Dark" ? "rgba(0,0,0,0.04)" : "transparent",
+                  borderWidth: theme !== "Dark" ? 1 : 0,
+                  borderColor: theme !== "Dark" ? "rgba(0,0,0,0.08)" : "transparent",
+                }}
+              >
+                <FastImage
+                  source={{ uri: BASE_URL + packages?.icon_path }}
+                  resizeMode="contain"
+                  style={{ width: 30, height: 30 }}
+                />
+              </View>
+              <AppText style={[styles.title, { color: theme !== "Dark" ? "#111" : "#fff" }]} weight={SEMI_BOLD}>
                 {packages?.currency}
               </AppText>
             </View>
@@ -159,7 +172,7 @@ const BuyPackage = ({}) => {
                   style={{
                     borderWidth: 1,
                     borderColor:
-                      activeTab === item ? colors.buttonBg : "#FFFFFF80",
+                      activeTab === item ? colors.buttonBg : "transparent",
                     paddingVertical: 5,
                     paddingHorizontal: 10,
                     borderRadius: 4,
@@ -169,7 +182,7 @@ const BuyPackage = ({}) => {
                   <AppText
                     type={TWELVE}
                     weight={SEMI_BOLD}
-                    style={{color:colors.white}}
+                    style={{color:theme !== "Dark" ? colors.black : colors.white}}
                   >
                     {item?.duration_days} D
                   </AppText>
@@ -209,7 +222,9 @@ const BuyPackage = ({}) => {
               Subscription Amount
             </AppText>
 
-            <View style={styles.inputRow}>
+            <View style={[styles.inputRow,{
+              borderColor: theme !== "Dark" ?colors.secondBorder : colors.secondaryText,
+            }]}>
               <TextInput
                 placeholder={"Enter Subscription Amount"}
                 style={[
@@ -517,9 +532,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: "#23262F",
+    
     borderRadius: 8,
-    backgroundColor: colors.themeElevationColor,
+    // backgroundColor: colors.themeElevationColor,
     paddingRight: 12,
   },
   input: {

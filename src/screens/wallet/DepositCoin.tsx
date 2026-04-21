@@ -1887,8 +1887,7 @@ const styles = StyleSheet.create({
     },
     helpText: {
         marginTop: 10,
-        textAlign: 'center',
-        right: 10
+        textAlign:"left"
     },
     faqSection: {
         marginTop: 20,

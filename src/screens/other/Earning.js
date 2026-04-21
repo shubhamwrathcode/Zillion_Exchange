@@ -1116,7 +1116,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: colors.dividerColor || "rgba(255,255,255,0.08)",
+    borderTopColor: colors.secondBorder || "rgba(255,255,255,0.08)",
   },
   allPlansCardDetailItem: {
     flex: 1,

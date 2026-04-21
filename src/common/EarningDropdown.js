@@ -22,6 +22,14 @@ const formatWalletLabel = (item) => {
 
 const EarningDropdown = ({ data = [], onSelect, selected, theme }) => {
   const sheetRef = useRef(null);
+  const darkMode = theme === "Dark";
+
+  const sheetBg = darkMode ? colors.sheetColor : "#FFFFFF";
+  const textColor = darkMode ? colors.white : "#111";
+  const subBorder = darkMode ? colors.dividerColor : "rgba(0,0,0,0.10)";
+  const dropdownBg = darkMode ? colors.themeElevationColor : "#FFFFFF";
+  const dropdownBorder = darkMode ? colors.inputBorder : "rgba(0,0,0,0.12)";
+  const maskBg = darkMode ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.35)";
 
   const handleSelect = (item) => {
     onSelect(item);
@@ -34,8 +42,15 @@ const EarningDropdown = ({ data = [], onSelect, selected, theme }) => {
 
   return (
     <View>
-      <TouchableOpacity style={styles.dropdown} onPress={openSheet}>
-        <AppText color={colors.white}>
+      <TouchableOpacity
+        style={[
+          styles.dropdown,
+          { backgroundColor: dropdownBg, borderColor: dropdownBorder },
+        ]}
+        onPress={openSheet}
+        activeOpacity={0.8}
+      >
+        <AppText color={textColor}>
           {selected ? formatWalletLabel(selected) : 'Select Payment Wallet'}
         </AppText>
       </TouchableOpacity>
@@ -49,15 +64,17 @@ const EarningDropdown = ({ data = [], onSelect, selected, theme }) => {
           container: {
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
-            backgroundColor: colors.sheetColor,
+            backgroundColor: sheetBg,
             paddingBottom: 24,
           },
-          wrapper: { backgroundColor: 'rgba(0,0,0,0.6)' },
-          draggableIcon: { backgroundColor: colors.dividerColor },
+          wrapper: { backgroundColor: maskBg },
+          draggableIcon: { backgroundColor: subBorder },
         }}
       >
         <View style={styles.sheetHeader}>
-          <AppText style={styles.sheetTitle}>Select Payment Wallet</AppText>
+          <AppText style={[styles.sheetTitle, { color: textColor }]}>
+            Select Payment Wallet
+          </AppText>
           <TouchableOpacity
             onPress={() => sheetRef.current?.close()}
             style={styles.closeBtn}
@@ -66,12 +83,12 @@ const EarningDropdown = ({ data = [], onSelect, selected, theme }) => {
             <FastImage
               source={closeIcon}
               style={styles.closeIcon}
-              tintColor={colors.white}
+              tintColor={textColor}
               resizeMode="contain"
             />
           </TouchableOpacity>
         </View>
-        <View style={styles.sheetDivider} />
+        <View style={[styles.sheetDivider, { backgroundColor: subBorder }]} />
         <FlatList
           data={data}
           keyExtractor={(item, index) => index.toString()}
@@ -79,10 +96,10 @@ const EarningDropdown = ({ data = [], onSelect, selected, theme }) => {
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => handleSelect(item)}
-              style={styles.option}
+              style={[styles.option, { borderBottomColor: subBorder }]}
               activeOpacity={0.7}
             >
-              <AppText color={colors.white}>{formatWalletLabel(item)}</AppText>
+              <AppText color={textColor}>{formatWalletLabel(item)}</AppText>
             </TouchableOpacity>
           )}
         />

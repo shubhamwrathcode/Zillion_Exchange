@@ -72,6 +72,11 @@ import {
   stakingDrawerDark,
   walletDrawerDark,
   settingsDark,
+  alarmDark,
+  kycixonLight,
+  lockLight,
+  helpiconLight,
+  currencyPreferLight,
 } from "../../helper/ImageAssets";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import { AppText, BLACK, DISCLAIMTEXT, ELEVEN, THIRTEEN, TWELVE, YELLOW } from "../../shared";
@@ -147,18 +152,18 @@ const getGeneralFeaturesData = (theme) => [
   },
 ];
 
-const Data2 = [
+const getSupportToolsData = (theme) => [
   {
     id: "1",
     title: "Notification",
-    icon: alarm,
+    icon: theme == "Dark" ? alarmDark : alarm,
     onPress: () => NavigationService.navigate(NOTIFICATION_SCREEN),
   },
 
   {
     id: "2",
     title: "Verification",
-    icon: kycixon,
+    icon: theme !== "Dark" ? kycixonLight : kycixon,
     onPress: () =>
       NavigationService.navigate(KYC_STATUS_SCREEN, { from: "home" }),
   },
@@ -166,7 +171,7 @@ const Data2 = [
   {
     id: "4",
     title: "Security",
-    icon: lock,
+    icon: theme !== "Dark" ? lockLight : lock,
     onPress: () =>
       NavigationService.navigate(TWO_FACTOR_AUTHENTICATION, { from: "home" }),
   },
@@ -179,13 +184,13 @@ const Data2 = [
   {
     id: "6",
     title: "Help Center",
-    icon: helpicon,
+    icon:  theme !== "Dark" ? helpiconLight : helpicon,
     onPress: () => NavigationService.navigate("Support"),
   },
   {
     id: "7",
     title: "Currency Preference",
-    icon: currencyPreferIcon,
+    icon:  theme !== "Dark" ? currencyPreferLight : currencyPreferIcon,
     onPress: () => NavigationService.navigate(CURRENCY_PREFERENCE_SCREEN),
   },
 ];
@@ -260,7 +265,7 @@ const IconAndLabel = ({ theme, themeColors, iconSource, title, textStyle = {} })
           height: 40,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: theme !== "Dark" ? themeColors.themeElevationColor : themeColors.themeSelection,
+          backgroundColor: theme !== "Dark" ? "#F2F2F2" : themeColors.themeSelection,
           borderRadius: 5,
         }}
       >
@@ -268,6 +273,7 @@ const IconAndLabel = ({ theme, themeColors, iconSource, title, textStyle = {} })
           source={iconSource}
           resizeMode="contain"
           style={styles.icon}
+          // tintColor={theme !== "Dark" ? colors.black : colors.white}
         />
       </View>
       <View style={{ alignItems: "center" }}>
@@ -286,13 +292,25 @@ const IconAndLabel = ({ theme, themeColors, iconSource, title, textStyle = {} })
 };
 
 const DepositWithdrawCard = ({ theme, bigImage, smallIcon, label }) => {
+  const isLight = theme !== "Dark";
   return (
     <>
-      <FastImage
-        source={bigImage}
-        style={{ height: 60, width: 60 }}
-        resizeMode="contain"
-      />
+      <View
+        style={{
+          height: 60,
+          width: 60,
+          borderRadius: 12,
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
+        }}
+      >
+        <FastImage
+          source={bigImage}
+          style={{ height: 60, width: 60 }}
+          resizeMode="contain"
+        />
+      </View>
       <View style={{ alignItems: "center" }}>
         <FastImage
           source={smallIcon}
@@ -416,12 +434,12 @@ const AnimatedCard = ({ onPress, theme, delay, children }) => {
           flex: 1,
           flexDirection: "row",
           borderWidth: 1,
-          borderColor: colors.blackFive,
+          borderColor: themeColors.border,
           borderRadius: 10,
           padding: 10,
           alignItems: "center",
           justifyContent: "space-between",
-          // backgroundColor: themeColors.themeElevationColor,
+          backgroundColor: themeColors.themeElevationColor,
         }}
       >
         {children}
@@ -433,10 +451,11 @@ const AnimatedCard = ({ onPress, theme, delay, children }) => {
 const ProfileDrawer = () => {
   const dispatch = useDispatch();
   const { colors: themeColors, theme, isDark } = useTheme();
-  const drawerColors = isDark ? themeColors : darkTheme;
-  const effectiveTheme = isDark ? theme : "Dark";
+  const drawerColors = themeColors;
+  const effectiveTheme = theme ?? (isDark ? "Dark" : "Light");
   const userData = useAppSelector((state) => state.auth.userData);
   const Data = getGeneralFeaturesData(effectiveTheme);
+  const Data2 = getSupportToolsData(effectiveTheme);
   const [refresh, setRefresh] = useState(true);
   const emailTextOpacity = useRef(new Animated.Value(0)).current;
   const emailTextTranslateY = useRef(new Animated.Value(10)).current;
@@ -638,7 +657,7 @@ const ProfileDrawer = () => {
       <View
         style={{
           flex: 1,
-          backgroundColor: isDark ? themeColors.themeElevationColor : drawerColors.background,
+          backgroundColor: themeColors.themeElevationColor,
           borderTopLeftRadius: 50,
           borderTopRightRadius: 50,
           overflow: "hidden",
