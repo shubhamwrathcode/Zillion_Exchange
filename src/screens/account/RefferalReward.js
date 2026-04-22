@@ -268,17 +268,7 @@ const RefferalReward = () => {
                 </TouchableOpacity>
               </View>
             </View>
-            {/* <FastImage
-             source={rewardBanner1}
-             resizeMode="contain"
-             style={{
-               width: Dimensions.get('window').width - 40,
-               height: 100,
-               alignSelf: 'center',
-               marginTop: 15,
-               overflow: 'hidden',
-             }}
-           /> */}
+           
 
             {/* More Referral Events */}
             <View style={styles.eventsSection}>

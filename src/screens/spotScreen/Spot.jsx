@@ -694,7 +694,6 @@ const OrderBookSection = memo(({
 OrderBookSection.displayName = "OrderBookSection";
 
 /**
- * Spot trading screen – Gatbits-style process:
  * - Pair: persisted in Redux (spotSelectedPair).
  * - Order book: always in Redux (buyOrders/sellOrders). Socket flush updates Redux; never cleared on tab blur so return shows cached data instantly (no reload/skeleton).
  * - Chart: stays mounted when blurred (unmountOnBlur: false); no refetch on return.
@@ -1034,7 +1033,6 @@ const Spot = () => {
   }, []);
 
 
-  // Gatbits-style: Order book from Redux only; skeleton only when no data. Never clear Redux on blur so return to Spot shows cached data instantly.
   const orderBookReady = !!lastSocketData || (buyOrders?.length > 0 || sellOrders?.length > 0);
   const showOrderBookSkeleton = !orderBookReady;
 
@@ -1177,7 +1175,6 @@ const Spot = () => {
     };
   }, []);
 
-  // Throttled flush for order book / recent trades. Persist to Redux (Gatbits-style) so return to Spot shows data instantly, no reload.
   const flushSocketToState = useCallback((payload) => {
     if (!payload) return;
     if (!isSpotFocusedRef.current) {
@@ -1977,7 +1974,6 @@ const Spot = () => {
     }
   }, []);
 
-  // Gatbits-style: always render full content (no focus-based wrapper) so chart + order book never unmount on tab switch
   return (
     <View style={{ flex: 1, backgroundColor: themeColors.background }}>
       <ScrollView

@@ -56,7 +56,7 @@ const OrderCreated = () => {
                 ABCDEF
               </AppText>
               <AppText type={THIRTEEN} style={styles.textContain}>
-                Seller’s Crypto is escrowed by gatbits
+                Seller’s Crypto is escrowed by Zillion
               </AppText>
             </View>
             <FastImage

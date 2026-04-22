@@ -135,7 +135,6 @@ export const newWalletIcon = require('../../assets/images/newWalletIcon.png');
 export const avatarIcon = require('../../assets/images/avatarIcon.png');
 export const giftIcon = require('../../assets/images/giftIcon.png');
 export const headPhoneIcon = require('../../assets/images/headPhoneIcon.png');
-export const banner1 = require('../../assets/images/banner1.png');
 export const homeImage1 = require('../../assets/images/homeImage1.png');
 export const homeImage2 = require('../../assets/images/homeImage2.png');
 export const homeImage3 = require('../../assets/images/homeImage3.png');
@@ -158,7 +157,6 @@ export const homeImage4Dark = require('../../assets/images/homeImageDark4.png');
 
 
 
-export const bannerDark1 = require('../../assets/images/bannerDark1.png');
 export const coinBg = require('../../assets/images/coinBg.png');
 export const memexIcon = require('../../assets/images/memexIcon.png');
 export const memexDarkIcon = require('../../assets/images/memexDark.png');
@@ -340,7 +338,6 @@ export const earining_bnr_vector = require('../../assets/images/earining_bnr_vec
 export const rising_slider = require('../../assets/images/risingslider.png');
 export const earngift_vector = require('../../assets/images/earngift_vector.png');
 export const usdtearn_vector = require('../../assets/images/usdtearn_vector.png');
-export const rewardBanner1 = require('../../assets/images/rewardbanner.png');
 export const rhombus = require('../../assets/images/rhombus.png');
 export const cancelcheck = require('../../assets/images/cancelcheck.png');
 export const successcheck = require('../../assets/images/successcheck.png');

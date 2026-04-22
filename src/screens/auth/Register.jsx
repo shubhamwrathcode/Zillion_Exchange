@@ -20,7 +20,6 @@ import KeyBoardAware from "../../shared/components/KeyboardAware";
 import { Keyboard, StyleSheet, View } from "react-native";
 import { authStyles } from "./authStyles";
 import { BASE_URL } from "../../helper/Constants";
-// import { CAPTCHA_KEY, SITE_URL } from "../../helper/Constants";
 import { showError } from "../../helper/logger";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { googleRegister, register, registerWithPhone } from "../../actions/authActions";
@@ -543,15 +542,6 @@ const Register = () => {
         </AppText>
       </View>
 
-      {/* <Recaptcha
-        ref={recaptcha}
-        siteKey={CAPTCHA_KEY}
-        baseUrl={SITE_URL}
-        size="normal"
-        theme="dark"
-        onVerify={onVerify}
-        onExpire={() => console.log("Captcha expired")}
-      /> */}
     </AppSafeAreaView>
   );
 };

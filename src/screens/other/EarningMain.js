@@ -145,16 +145,7 @@ const EarningMain = ({ packageList, theme }) => {
         backgroundColor: theme !== "Dark" ? "#F5F5F5" : "transparent",
       }}
     >
-      {/* <TouchableOpacity style={{flexDirection: "row", gap: 5, alignSelf: "flex-end", alignItems: "center"}} onPress={() => Linking.openURL('https://gatbits.com/earning')}>
-        <AppText color={YELLOW}>How it works?</AppText>
-        <FastImage
-          source={externalLinkIcon}
-          resizeMode="contain"
-          style={{ width: 10, height: 10 }}
-          tintColor={theme === "Dark" ? colors.buttonDarkBg : colors.black}
-        />
-      </TouchableOpacity> */}
-
+     
       {/* {packageList?.map((item) => {
         return (
           <> */}
