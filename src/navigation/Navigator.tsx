@@ -28,6 +28,7 @@ import {
   marketIcon,
   spotActiveIcon,
   spotIcon,
+  spotIconLight,
   trade_ic,
   wallet_ic,
 } from "../helper/ImageAssets";
@@ -461,47 +462,7 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
-const TradeStack = () => (
-  <Stack.Navigator screenOptions={options}>
-    <Stack.Screen name={routes.TRADE_SCREEN} component={Trades} />
-    {/* <Stack.Screen
-      name="P2PBottomTabNavigator"
-      component={P2PBottomTabNavigator}
-    /> */}
-    <Stack.Screen name={routes.SWAPNEXBCOIN_SCREEN} component={SwapNEXBCoin} />
-    <Stack.Screen name={routes.COIN_DETAILS_SCREEN} component={CoinDetails} />
-    <Stack.Screen
-      name={routes.COIN_DETAILS_CHART_SCREEN}
-      component={CoinDetailChart}
-    />
-  </Stack.Navigator>
-);
 
-const DrawerNavigation = () => {
-  const Drawer = createDrawerNavigator();
-  return (
-    <Drawer.Navigator
-      initialRouteName={routes.NAVIGATION_BOTTOM_TAB_STACK}
-      drawerContent={(props: any) => <ProfileDrawer {...props} />}
-      screenOptions={{
-        headerShown: false,
-        drawerType: "front", // Drawer slides over content
-        overlayColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent overlay
-      }}
-    >
-      <Drawer.Screen
-        name={routes.NAVIGATION_BOTTOM_TAB_STACK}
-        component={BottomNavigation}
-        options={{
-          drawerStyle: {
-            width: "100%",
-          },
-          sceneContainerStyle: { backgroundColor: "transparent" },
-        }}
-      />
-    </Drawer.Navigator>
-  );
-};
 
 function BottomNavigation() {
   const { colors: themeColors, isDark } = useTheme();
@@ -588,7 +549,7 @@ function BottomNavigation() {
               <View style={{ alignItems: "center", marginTop: 10 }}>
                 <FastImage
                   source={
-                    spotActiveIcon
+                    focused ? spotIconLight : spotIcon
                   }
                   style={{ width: 22, height: 22, transform: [{ scale: isDark ? 0.78 : 1 }] }}
                   resizeMode="contain"

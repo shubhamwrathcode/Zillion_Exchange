@@ -13,7 +13,7 @@ import { languages } from '../../helper/languages';
 import { setLanguages, setSelectedLanguage } from '../../slices/accountSlice';
 import { getVersion } from 'react-native-device-info';
 import { getAppVersion } from '../../actions/authActions';
-import { splasDark, splashTwo } from '../../helper/ImageAssets';
+import { splashTwo, updatedSplashDark } from '../../helper/ImageAssets';
 
 const AuthLoading = () => {
   const dispatch = useAppDispatch();
@@ -99,7 +99,7 @@ const AuthLoading = () => {
   };
 
   return (
-    <AppSafeAreaView source={theme !== 'Dark' ? splasDark : splashTwo}>
+    <AppSafeAreaView source={theme === 'Dark' ? updatedSplashDark : splashTwo}>
       <View style={commonStyles.center}>
         {/* Your logo or loader can go here */}
       </View>

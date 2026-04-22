@@ -52,7 +52,8 @@ export const searchIcon = require('../../assets/images/search_ic.png');
 export const HomeBg = require('../../assets/images/BlackBg.png');
 export const appDarkBg = require('../../assets/images/appDarkBg.png');
 export const splashTwo = require('../../assets/images/updatedSplash.png');
-export const splasDark = require('../../assets/images/updatedSplash.png');
+export const updatedSplashDark = require('../../assets/images/updatedSplashDark.png');
+export const splasDark = updatedSplashDark;
 export const loginDarkBg = require('../../assets/images/loginDarkBg.png');
 export const BANNER_IMG = require('../../assets/images/bannerImg.png');
 export const REMOVE = require('../../assets/images/remove.png');
@@ -354,6 +355,7 @@ export const stakingDrawer = require('../../assets/images/stakingDrawer.png');
 export const walletDrawerDark = require('../../assets/images/walletIconDark.png');
 export const settingsDark = require('../../assets/images/settingsDark.png');
 export const launchpad_hero_img = require('../../assets/images/launchpad_hero_img.png');
+
 
 
 
