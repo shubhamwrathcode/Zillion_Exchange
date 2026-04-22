@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import React from "react";
 import FastImage from "react-native-fast-image";
-import { folder, NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
+import { folder, NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT } from "../../helper/ImageAssets";
 import { colors } from "../../theme/colors";
 import { AppText } from "../../shared";
 
@@ -61,7 +61,7 @@ const TransactionHistory = ({ botTrades, theme }) => {
         }}
       >
         <FastImage
-          source={NO_NOTIFICATION_ICON}
+          source={theme === "Dark" ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
           style={{ width: 80, height: 80, marginBottom: 10 }}
         />
       </View>

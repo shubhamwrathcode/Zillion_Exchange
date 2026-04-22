@@ -44,6 +44,7 @@ import {
   folder,
   linkIcon,
   NO_NOTIFICATION_ICON,
+  NO_NOTIFICATION_ICON_LIGHT,
   printIcon,
   trade_btn,
   upDownIc,
@@ -1720,21 +1721,29 @@ const Spot = () => {
   const openOrdersListEmptyComponent = useMemo(
     () => (
       <View style={styles.noDataRow}>
-        <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={{ width: 80, height: 80 }} />
+        <FastImage
+          source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
+          resizeMode="contain"
+          style={{ width: 80, height: 80 }}
+        />
         {/* <AppText style={[styles.noDataText, { color: theme !== "Dark" ? colors.textGray : colors.descText }]}>
           No Open Orders
         </AppText> */}
       </View>
     ),
-    [theme]
+    [isDark, theme]
   );
   const orderHistoryListEmptyComponent = useMemo(
     () => (
       <View style={styles.noDataRow}>
-        <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={{ width: 80, height: 80 }} />
+        <FastImage
+          source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
+          resizeMode="contain"
+          style={{ width: 80, height: 80 }}
+        />
       </View>
     ),
-    [theme]
+    [isDark, theme]
   );
 
   // Format date like "27/11/2025, 11:08 PM"
@@ -2499,7 +2508,7 @@ const Spot = () => {
               ) : (
                 <View style={styles.noDataRow}>
                   <FastImage
-                    source={NO_NOTIFICATION_ICON}
+                    source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
                     resizeMode="contain"
                     style={{ width: 80, height: 80 }}
                   />
@@ -2549,7 +2558,7 @@ const Spot = () => {
               ) : (
                 <View style={styles.noDataRow}>
                   <FastImage
-                    source={NO_NOTIFICATION_ICON}
+                    source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
                     resizeMode="contain"
                     style={{ width: 80, height: 80 }}
                   />

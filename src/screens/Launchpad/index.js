@@ -28,7 +28,7 @@ import {
 } from "../../shared";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import { colors } from "../../theme/colors";
-import { launchpad_hero_img, tetherIcon, peopleIcon, defaultPic, NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
+import { launchpad_hero_img, tetherIcon, peopleIcon, defaultPic, NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT } from "../../helper/ImageAssets";
 import FastImage from "react-native-fast-image";
 import moment from "moment";
 import { IMAGE_BASE_URL } from "../../helper/Constants";
@@ -278,7 +278,7 @@ const Launchpad = () => {
   const renderEmptyState = (tab) => (
     <View style={styles.stateWrapper}>
 
-      <FastImage source={NO_NOTIFICATION_ICON} style={{ width: 80, height: 80, }} resizeMode="contain" />
+      <FastImage source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT} style={{ width: 80, height: 80, }} resizeMode="contain" />
       <AppText type={FOURTEEN} color={isDark ? themeColors.secondaryText : "#333"} style={styles.stateMessage}>No {tab} projects found.</AppText>
     </View>
   );

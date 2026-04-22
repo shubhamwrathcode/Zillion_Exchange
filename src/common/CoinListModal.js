@@ -25,7 +25,7 @@ import { AppText, BLACK, BOLD, DISCLAIMTEXT, FOURTEEN, SEMI_BOLD, TEN } from "./
 import FastImage from "react-native-fast-image";
 import { toFixedFive } from "../helper/utility";
 import { showError } from "../helper/logger";
-import { closeIcon, NO_NOTIFICATION_ICON, searchIcon, checkIcon } from "../helper/ImageAssets";
+import { closeIcon, NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT, searchIcon, checkIcon } from "../helper/ImageAssets";
 import { colors } from "../theme/colors";
 import { useTheme } from "../hooks/useTheme";
 
@@ -279,7 +279,7 @@ const CoinListModal = ({ visible, data, onSelect, onClose, disabledCoinId, selec
                   entering={FadeIn.delay(200).duration(300)}
                   style={styles.noResultContainer}
                 >
-                  <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={{ width: 60, height: 60, marginBottom: 16 }}
+                  <FastImage source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT} resizeMode="contain" style={{ width: 60, height: 60, marginBottom: 16 }}
                     tintColor={isDark ? "rgba(255,255,255,0.1)" : "#EEE"} />
                   <AppText color={themeColors.secondaryText}>No currency found</AppText>
                 </Animated.View>

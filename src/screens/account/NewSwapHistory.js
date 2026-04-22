@@ -11,7 +11,7 @@ import { colors } from "../../theme/colors";
 import { useTheme } from "../../hooks/useTheme";
 import { useAppSelector } from "../../store/hooks";
 import FastImage from "react-native-fast-image";
-import { folder, NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
+import { folder, NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT } from "../../helper/ImageAssets";
 import { getqbsHistory } from "../../actions/walletActions";
 import { useDispatch } from "react-redux";
 import NewSwapHistorySkeleton from "./NewSwapHistorySkeleton";
@@ -222,7 +222,7 @@ const NewSwapHistory = ({
       ) : (
         <View style={styles.noDataRow}>
           <FastImage
-            source={NO_NOTIFICATION_ICON}
+            source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
             resizeMode="contain"
             style={{ width: 80, height: 80 }}
           />

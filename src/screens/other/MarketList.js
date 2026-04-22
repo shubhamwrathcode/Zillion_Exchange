@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View, Dimensions } from "react-native";
 import { AppText, FOURTEEN, TWELVE } from "../../shared";
 import FastImage from "react-native-fast-image";
-import { NO_NOTIFICATION_ICON, starFillIcon, starIcon } from "../../helper/ImageAssets";
+import { NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT, starFillIcon, starIcon } from "../../helper/ImageAssets";
 import { useAppSelector } from "../../store/hooks";
 import { toFixedFive, toFixedThree } from "../../helper/utility";
 import { colors } from "../../theme/colors";
@@ -113,7 +113,7 @@ const MarketRow = React.memo(({ item, favoriteArray, onPress, onToggleFavorite }
 MarketRow.displayName = "MarketRow";
 
 const MarketList = React.memo(({ filterData, style, onPress, scrollEnabled = true }) => {
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, isDark } = useTheme();
   const dispatch = useDispatch();
   const favoriteArray = useAppSelector((state) => state.home.favoriteArray);
 
@@ -165,7 +165,11 @@ const MarketList = React.memo(({ filterData, style, onPress, scrollEnabled = tru
   const ListEmptyComponent = useMemo(
     () => (
       <View style={styles.emptyWrap}>
-        <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={styles.emptyIcon} />
+        <FastImage
+          source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
+          resizeMode="contain"
+          style={styles.emptyIcon}
+        />
         <AppText type={FOURTEEN} style={[styles.emptyText, { color: themeColors.secondaryText }]}>
           No coins found
         </AppText>

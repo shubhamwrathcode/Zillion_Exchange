@@ -30,6 +30,7 @@ import {
   doneIcon,
   folder,
   NO_NOTIFICATION_ICON,
+  NO_NOTIFICATION_ICON_LIGHT,
   uploadIcon,
 } from "../../helper/ImageAssets";
 import NavigationService from "../../navigation/NavigationService";
@@ -133,7 +134,7 @@ const TicketList = ({ userTickets, onSupportChat }) => {
   const renderEmpty = () => (
     <View style={styles.noDataRow}>
       <FastImage
-        source={NO_NOTIFICATION_ICON}
+        source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
         resizeMode="contain"
         style={{ width: 120, height: 120, opacity: isDark ? 0.6 : 1 }}
       />

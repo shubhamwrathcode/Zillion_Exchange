@@ -32,6 +32,7 @@ import {
   folder,
   futureTransferIcon,
   NO_NOTIFICATION_ICON,
+  NO_NOTIFICATION_ICON_LIGHT,
   printIcon,
   shareIcon,
   upIcon,
@@ -293,10 +294,24 @@ FuturesChartWebView.displayName = "FuturesChartWebView";
 const FuturesChartSection = memo(
   ({ chartUri, webViewReady, chartRevealed, onChartLoaded, chartRef }) => {
     const showChartSkeleton = !chartRevealed;
-    const { colors: themeColors } = useTheme();
+    const { colors: themeColors, isDark } = useTheme();
     const bg = themeColors.background;
     return (
       <View style={{ position: "relative", backgroundColor: bg, overflow: "hidden" }}>
+        {!isDark ? (
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 2,
+              backgroundColor: bg,
+              zIndex: 10,
+            }}
+          />
+        ) : null}
         {showChartSkeleton ? (
           <View style={{ width: Width, height: CHART_HEIGHT, backgroundColor: bg }} pointerEvents="none">
             <ChartSkeleton height={CHART_HEIGHT} width={Width} />
@@ -2634,7 +2649,8 @@ const Futures = () => {
                 <AppText style={[styles.assetsSectionTitle, { color: themeColors.text }]} weight={SEMI_BOLD}>
                   Assets
                 </AppText>
-                <View style={[styles.assetsCard, { backgroundColor: isDark ? "#1a1a1a" : "#F8F8F8", borderColor: isDark ? "#302F2F" : "#EEE" }]}>
+                <View style={[styles.assetsCard, { backgroundColor: isDark ? colors.themeElevationColor : "#F8F8F8",
+                   borderColor: isDark ? colors.themeElevationColor : "#EEE" }]}>
                   <AppText type={TWELVE} style={{ color: themeColors.secondaryText, marginBottom: 8 }}>
                     USDT-Perp
                   </AppText>
@@ -2703,7 +2719,10 @@ const Futures = () => {
                   <AppText
                     style={[
                       styles.bottomTabText,
-                      activePositionTab === "positions" && styles.bottomTabTextActive,
+                      activePositionTab === "positions" && {
+                        ...styles.bottomTabTextActive,
+                        color: isDark ? colors.white : colors.black,
+                      },
                     ]}
                   >
                     Positions({openPositions?.length || 0})
@@ -2719,7 +2738,10 @@ const Futures = () => {
                   <AppText
                     style={[
                       styles.bottomTabText,
-                      activePositionTab === "open" && styles.bottomTabTextActive,
+                      activePositionTab === "open" && {
+                        ...styles.bottomTabTextActive,
+                        color: isDark ? colors.white : colors.black,
+                      },
                     ]}
                   >
                     Open Orders({OpenOrders?.length || 0})
@@ -2735,7 +2757,10 @@ const Futures = () => {
                   <AppText
                     style={[
                       styles.bottomTabText,
-                      activePositionTab === "order_history" && styles.bottomTabTextActive,
+                      activePositionTab === "order_history" && {
+                        ...styles.bottomTabTextActive,
+                        color: isDark ? colors.white : colors.black,
+                      },
                     ]}
                   >
                     Order History
@@ -2751,7 +2776,10 @@ const Futures = () => {
                   <AppText
                     style={[
                       styles.bottomTabText,
-                      activePositionTab === "exercise_history" && styles.bottomTabTextActive,
+                      activePositionTab === "exercise_history" && {
+                        ...styles.bottomTabTextActive,
+                        color: isDark ? colors.white : colors.black,
+                      },
                     ]}
                   >
                     Trade History
@@ -2767,7 +2795,10 @@ const Futures = () => {
                   <AppText
                     style={[
                       styles.bottomTabText,
-                      activePositionTab === "position_history" && styles.bottomTabTextActive,
+                      activePositionTab === "position_history" && {
+                        ...styles.bottomTabTextActive,
+                        color: isDark ? colors.white : colors.black,
+                      },
                     ]}
                   >
                     Position History
@@ -2802,7 +2833,7 @@ const Futures = () => {
                       }}
                     >
                       <FastImage
-                        source={NO_NOTIFICATION_ICON}
+                        source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
                         resizeMode="contain"
                         style={{ width: 80, height: 80, marginBottom: 16 }}
                       />
@@ -2854,7 +2885,7 @@ const Futures = () => {
                         .join(" • ");
 
                       return (
-                        <View style={[styles.orderCard, { backgroundColor: isDark ? "#0f0f0f" : "#FFFFFF", borderColor: isDark ? "#1a1a1a" : "#EEE", borderTopWidth: 1 }]}>
+                        <View style={[styles.orderCard, { backgroundColor: isDark ? colors.themeElevationColor : "#FFFFFF", borderColor: isDark ? colors.themeElevationColor : "#EEE", borderTopWidth: 1 }]}>
                           <View style={styles.orderHeader}>
                             <View style={styles.headerLeft}>
                               <AppText style={[styles.symbolText, { color: themeColors.text }]}>
@@ -2960,7 +2991,7 @@ const Futures = () => {
                       }}
                     >
                       <FastImage
-                        source={NO_NOTIFICATION_ICON}
+                        source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
                         resizeMode="contain"
                         style={{ width: 80, height: 80, marginBottom: 16 }}
                       />
@@ -3119,7 +3150,7 @@ const Futures = () => {
                   ordersHistory?.length === 0 ? (
                     <View style={styles.emptyHistoryView}>
                       <FastImage
-                        source={NO_NOTIFICATION_ICON}
+                        source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
                         resizeMode="contain"
                         style={{ width: 80, height: 80, marginBottom: 16 }}
                         tintColor={themeColors.secondaryText}
@@ -3162,7 +3193,7 @@ const Futures = () => {
                 ) : activePositionTab === "exercise_history" ? (
                   tradeHistory?.length === 0 ? (
                     <View style={styles.emptyHistoryView}>
-                      <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={{ width: 80, height: 80, marginBottom: 16 }} />
+                      <FastImage source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT} resizeMode="contain" style={{ width: 80, height: 80, marginBottom: 16 }} />
                     </View>
                   ) : (
                     (tradeHistory || []).slice(0, 20).map((item, index) => (
@@ -3189,7 +3220,7 @@ const Futures = () => {
                 ) : activePositionTab === "position_history" ? (
                   closePositions?.length === 0 ? (
                     <View style={styles.emptyHistoryView}>
-                      <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={{ width: 80, height: 80, marginBottom: 16 }} />
+                      <FastImage source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT} resizeMode="contain" style={{ width: 80, height: 80, marginBottom: 16 }} />
                     </View>
                   ) : (
                     (closePositions || []).slice(0, 20).map((position, index) => (
@@ -3558,10 +3589,10 @@ const styles = StyleSheet.create({
   },
   bottomTabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: colors.buttonDarkBg,
+    borderBottomColor: colors.buttonBg,
   },
   bottomTabTextActive: {
-    color: colors.buttonDarkBg,
+    color: colors.white, // overridden at usage-site for Light theme
   },
   emptyHistoryView: {
     alignItems: "center",

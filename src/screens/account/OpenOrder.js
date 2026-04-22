@@ -17,7 +17,7 @@ import { colors } from "../../theme/colors";
 import { useTheme } from "../../hooks/useTheme";
 import { useAppSelector } from "../../store/hooks";
 import FastImage from "react-native-fast-image";
-import { NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
+import { NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT } from "../../helper/ImageAssets";
 import { useDispatch } from "react-redux";
 import { getOpenOrders } from "../../actions/walletActions";
 import moment from "moment";
@@ -227,7 +227,7 @@ const OpenOrder = ({
       ) : (
         <View style={styles.noDataRow}>
           <FastImage
-            source={NO_NOTIFICATION_ICON}
+            source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
             resizeMode="contain"
             style={{ width: 80, height: 80 }}
           />

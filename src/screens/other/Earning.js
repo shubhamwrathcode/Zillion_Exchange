@@ -29,6 +29,7 @@ import {
   earningAsset1,
   earnAsset2,
   NO_NOTIFICATION_ICON,
+  NO_NOTIFICATION_ICON_LIGHT,
   bitcoinIcon,
   tetherIcon,
   lock_ic,
@@ -547,7 +548,7 @@ const Earning = () => {
               ) : (
                 <View style={styles.planEmptyState}>
                   <FastImage
-                    source={NO_NOTIFICATION_ICON}
+                    source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
                     resizeMode="contain"
                     style={{ width: 80, height: 80 }}
                   />
@@ -749,7 +750,7 @@ const Earning = () => {
                   list.map((item) => renderAllPlansCard(item))
                 ) : (
                   <View style={styles.noData}>
-                    <FastImage source={NO_NOTIFICATION_ICON} style={{ width: 80, height: 80 }} />
+                    <FastImage source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT} style={{ width: 80, height: 80 }} />
                   </View>
                 )}
               </View>

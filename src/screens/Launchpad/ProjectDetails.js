@@ -40,7 +40,7 @@ import {
 } from "../../shared";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import { colors } from "../../theme/colors";
-import { back_ic, defaultPic, externalLinkIcon, linkIcon, NO_NOTIFICATION_ICON, tick } from "../../helper/ImageAssets";
+import { back_ic, defaultPic, externalLinkIcon, linkIcon, NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT, tick } from "../../helper/ImageAssets";
 import { IMAGE_BASE_URL } from "../../helper/Constants";
 import { showError } from "../../helper/logger";
 import { appOperation } from "../../appOperation";
@@ -795,7 +795,7 @@ const ProjectDetails = () => {
           ) : (
             <View style={styles.subscriptionEmptyContainer}>
               <FastImage
-                source={NO_NOTIFICATION_ICON}
+                source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
                 style={styles.subscriptionEmptyImage}
                 resizeMode="contain"
               />

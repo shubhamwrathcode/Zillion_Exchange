@@ -27,6 +27,7 @@ import {
   invite_ic,
   linkIcon,
   NO_NOTIFICATION_ICON,
+  NO_NOTIFICATION_ICON_LIGHT,
   peopleIcon,
   searchIcon,
   usdtearn_vector,
@@ -423,7 +424,7 @@ const RefferalReward = () => {
                 ))
               ) : (
                 <View style={styles.noDataWrap}>
-                  <FastImage source={NO_NOTIFICATION_ICON} style={{ width: 80, height: 80 }} resizeMode="contain" />
+                  <FastImage source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT} style={{ width: 80, height: 80 }} resizeMode="contain" />
                 </View>
               )}
             </View>

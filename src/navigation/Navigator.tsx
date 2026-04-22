@@ -553,7 +553,6 @@ function BottomNavigation() {
                   }
                   style={{ width: 22, height: 22, transform: [{ scale: isDark ? 0.78 : 1 }] }}
                   resizeMode="contain"
-                  tintColor={focused ? themeColors.button : themeColors.inactiveTab}
                 />
                 <AppText
                   weight={MEDIUM}

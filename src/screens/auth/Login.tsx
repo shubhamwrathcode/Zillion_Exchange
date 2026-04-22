@@ -80,8 +80,8 @@ const RenderTabBarAuth = (props: any) => {
     return state.account.languages;
   });
   const routes = [
-    { key: "first", title: checkValue(languages?.mobile) },
-    { key: "second", title: checkValue(languages?.email) },
+    { key: "first", title: checkValue(languages?.email) },
+    { key: "second", title: checkValue(languages?.mobile) },
   ];
   return (
     <View style={authStyles.tabBarMain}>
@@ -296,15 +296,15 @@ const Login = (): JSX.Element => {
   };
 
   const changeInput = (val: any) => {
+    setSignUpId(val);
     if (index === 0) {
-      let phone = Number(val);
-      setSignUpId(val);
-      let valid = isValidPhoneNumber(`+${countryCode}${phone}`);
-      setIsValid(valid);
-      console.log(valid, val, "input");
-    } else if (index === 1) {
-      setSignUpId(val);
+      // Email tab (first)
       setIsValid(validateEmail(val));
+    } else if (index === 1) {
+      // Mobile tab (second)
+      const phone = Number(val);
+      const valid = isValidPhoneNumber(`+${countryCode}${phone}`);
+      setIsValid(valid);
     }
   };
 
@@ -338,7 +338,7 @@ const Login = (): JSX.Element => {
           />
 
           <View style={authStyles.mobileContainer}>
-            {index === 0 && (
+            {index === 1 && (
               <CountrySelector
                 onSelectCountry={setCountryCode}
                 onCountry={setCountry}
@@ -348,12 +348,12 @@ const Login = (): JSX.Element => {
             <Input
               placeholder={
                 index === 0
-                  ? checkValue(languages?.place_userName)
-                  : checkValue(languages?.place_login_userName)
+                  ? checkValue(languages?.place_login_userName)
+                  : checkValue(languages?.place_userName)
               }
               value={signUpId}
               onChangeText={(text) => changeInput(text)}
-              keyboardType={index === 0 ? "numeric" : "email-address"}
+              keyboardType={index === 1 ? "numeric" : "email-address"}
               autoCapitalize="none"
               returnKeyType="next"
               onfocus={() => setShowPassField(false)}

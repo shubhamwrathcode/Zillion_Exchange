@@ -14,7 +14,7 @@ import {
 import { useTheme } from "../../hooks/useTheme";
 import KeyBoardAware from "../../shared/components/KeyboardAware";
 import { useAppSelector } from "../../store/hooks";
-import { back_ic, BACK_ICON, folder, NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
+import { back_ic, BACK_ICON, folder, NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT } from "../../helper/ImageAssets";
 import FastImage from "react-native-fast-image";
 import { useState } from "react";
 import { colors } from "../../theme/colors";
@@ -177,7 +177,7 @@ const EarningHistory = () => {
         ) : (
           <View style={styles.emptyState}>
             <FastImage
-              source={NO_NOTIFICATION_ICON}
+              source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
               resizeMode="contain"
               style={{ width: 80, height: 80 }}
             />

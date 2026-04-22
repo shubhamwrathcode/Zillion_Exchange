@@ -56,7 +56,7 @@ import {
 } from '../../actions/walletActions';
 import { getNotificationList } from '../../actions/homeActions';
 import { copyText, shortenAddress, dateFormatter } from '../../helper/utility';
-import { BACK_ICON, searchIcon, copyIcon, printIcon, upIcon, downIcon, INFO, NO_NOTIFICATION_ICON } from '../../helper/ImageAssets';
+import { BACK_ICON, searchIcon, copyIcon, printIcon, upIcon, downIcon, INFO, NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT } from '../../helper/ImageAssets';
 import { setLoading } from '../../slices/authSlice';
 import { setWalletAddress } from '../../slices/walletSlice';
 import { showError } from '../../helper/logger';
@@ -1324,7 +1324,7 @@ const DepositCoin = () => {
                                         ))}
                                     </View>
                                 ) : (
-                                    <FastImage source={NO_NOTIFICATION_ICON} style={{ width: 120, height: 80, alignSelf: 'center' }}
+                                    <FastImage source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT} style={{ width: 120, height: 80, alignSelf: 'center' }}
                                         resizeMode='contain' />
                                 )}
                             </View>

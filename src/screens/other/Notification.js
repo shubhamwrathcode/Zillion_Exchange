@@ -36,6 +36,7 @@ import {
   HomeBg,
   folder,
   NO_NOTIFICATION_ICON,
+  NO_NOTIFICATION_ICON_LIGHT,
 } from "../../helper/ImageAssets";
 import { useDispatch } from "react-redux";
 import { getNotificationList, markAsRead } from "../../actions/homeActions";
@@ -48,7 +49,7 @@ const ListEmptyComponent = () => {
   return (
     <View style={commonStyles.center}>
       <FastImage
-        source={NO_NOTIFICATION_ICON}
+        source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
         resizeMode="contain"
         style={{ width: 80, height: 80 }}
         tintColor={isDark ? themeColors.text : undefined}

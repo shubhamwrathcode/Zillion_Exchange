@@ -19,7 +19,7 @@ import {
 } from "../../shared";
 import FastImage from "react-native-fast-image";
 import LinearGradient from "react-native-linear-gradient";
-import { NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
+import { NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT } from "../../helper/ImageAssets";
 import { colors } from "../../theme/colors";
 import { useTheme } from "../../hooks/useTheme";
 import { BASE_URL } from "../../helper/Constants";
@@ -166,7 +166,7 @@ const EarningDashboard = ({
 
   const emptyList = (
     <View style={styles.emptyWrap}>
-      <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={styles.emptyIcon} />
+      <FastImage source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT} resizeMode="contain" style={styles.emptyIcon} />
       <AppText type={FOURTEEN} style={{ color: secondaryColor }}>Start investing to see your portfolio</AppText>
     </View>
   );

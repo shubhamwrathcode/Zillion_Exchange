@@ -7,7 +7,7 @@ import NavigationService from "../../navigation/NavigationService";
 import { FUTURES_SCREEN } from "../../navigation/routes";
 import { toFixedFive, toFixedThree } from "../../helper/utility";
 import FastImage from "react-native-fast-image";
-import { Coin, tetherIcon, bitcoinIcon, bnbIcon, NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
+import { Coin, tetherIcon, bitcoinIcon, bnbIcon, NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT } from "../../helper/ImageAssets";
 import { BASE_URL } from "../../helper/Constants";
 import { useTheme } from "../../hooks/useTheme";
 
@@ -26,7 +26,7 @@ const TYPE_OPTIONS = [
 ];
 
 const FuturesMarket = ({ search }) => {
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, isDark } = useTheme();
   const futuresPairData = useAppSelector((state) => state.home.futuresPairs || []) || [];
   const [quoteCurrency, setQuoteCurrency] = useState("USDT");
   const [filterType, setFilterType] = useState("All");
@@ -137,7 +137,7 @@ const FuturesMarket = ({ search }) => {
         <FuturesList data={filterFuturesData} onPress={handleNavigate} />
       ) : (
         <View style={styles.empty}>
-          <FastImage source={NO_NOTIFICATION_ICON} resizeMode="contain" style={{ width: 150, height: 150 }} />
+          <FastImage source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT} resizeMode="contain" style={{ width: 150, height: 150 }} />
           <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>
             No futures data at the moment.
           </AppText>

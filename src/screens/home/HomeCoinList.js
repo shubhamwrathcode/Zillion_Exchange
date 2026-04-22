@@ -4,6 +4,7 @@ import {
   back_ic,
   bell_ic,
   NO_NOTIFICATION_ICON,
+  NO_NOTIFICATION_ICON_LIGHT,
 } from "../../helper/ImageAssets";
 import {
   AppText,
@@ -30,16 +31,14 @@ import moment from "moment";
 import { commonStyles } from "../../theme/commonStyles";
 import { checkValue } from "../../helper/utility";
 
-const ListEmptyComponent = () => {
-
+const ListEmptyComponent = ({ theme }) => {
   return (
     <View style={commonStyles.center}>
       <FastImage
-        source={NO_NOTIFICATION_ICON}
+        source={theme === "Dark" ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
         resizeMode="contain"
         style={{ width: 80, height: 80, marginTop: 20 }}
       />
-
     </View>
   );
 };
@@ -180,7 +179,7 @@ const HomeCoinList = ({ filterData, activeTabList, hideViewMore = false }) => {
           data={notificationList}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          ListEmptyComponent={ListEmptyComponent}
+          ListEmptyComponent={() => <ListEmptyComponent theme={theme} />}
           contentContainerStyle={commonStyles.flexGrow}
           removeClippedSubviews={true}
           maxToRenderPerBatch={10}
