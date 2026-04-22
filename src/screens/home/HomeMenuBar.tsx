@@ -9,19 +9,18 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { AppText, ELEVEN } from "../../shared";
-import { colors } from "../../theme/colors";
 import { useTheme } from "../../hooks/useTheme";
 const Width = Dimensions.get("window").width;
 import {
-  convertIcon,
-  convertIconDark,
-  earningMenuDarkIcon,
-  earningMenuIcon,
-  memexDarkIcon,
-  memexIcon,
+  memeXProfile,
+  memeXProfileDark,
   moreOption,
-  rewardHubDarkIcon,
-  rewardHubIcon,
+  newHubIcon,
+  newHubIconLight,
+  stakingDrawer,
+  stakingDrawerDark,
+  swap,
+  swapLight,
 } from "../../helper/ImageAssets";
 import NavigationService from "../../navigation/NavigationService";
 import {
@@ -36,7 +35,7 @@ import { checkValue } from "../../helper/utility";
 
 // ✅ Separate component for menu item to use hooks properly
 const MenuItem = React.memo(({ item, index }: any) => {
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, isDark } = useTheme();
   const scale = useSharedValue(1);
   
   const animatedStyle = useAnimatedStyle(() => {
@@ -66,13 +65,23 @@ const MenuItem = React.memo(({ item, index }: any) => {
         key={item?.id}
         activeOpacity={0.8}
       >
-        <FastImage
-          resizeMode="contain"
-          source={item.icon}
-          tintColor={item?.id === "6" ? themeColors.text : undefined}
-          style={item?.id === '6' ? styles.iconMore : styles.icon}
-        />
-
+        <View
+          style={[
+            item?.id === "6" ? styles.iconWrapMore : styles.iconWrap,
+            {
+              backgroundColor: isDark
+                ? themeColors.themeSelection
+                : "#F6F6F6",
+            },
+          ]}
+        >
+          <FastImage
+            resizeMode="contain"
+            source={item.icon}
+            tintColor={item?.id === "6" ? themeColors.text : undefined}
+            style={item?.id === "6" ? styles.iconMore : styles.icon}
+          />
+        </View>
         <AppText style={{ color: themeColors.text }} type={ELEVEN}>
           {item?.title}
         </AppText>
@@ -90,7 +99,7 @@ const HomeMenuBar = () => {
     {
       id: "1",
       title: checkValue(languages?.memex),
-      icon: theme !== "Dark" ? memexDarkIcon : memexIcon,
+      icon: theme == "Dark" ? memeXProfileDark : memeXProfile,
       onPress: () =>
         NavigationService.navigate(MARKET_SCREEN, {
           from: "home",
@@ -100,14 +109,14 @@ const HomeMenuBar = () => {
     {
       id: "2",
       title: "Staking",
-      icon: theme !== "Dark" ? earningMenuDarkIcon : earningMenuIcon,
+      icon: theme !== "Dark" ? stakingDrawer : stakingDrawerDark,
       onPress: () =>
         NavigationService.navigate(ACCOUNT_SCREEN, { from: "home" }),
     },
     {
       id: "4",
       title: checkValue("Swap"),
-      icon: theme !== "Dark" ? convertIconDark : convertIcon,
+      icon: theme == "Dark" ? swapLight : swap,
       onPress: () => {
         NavigationService.navigate(CONVERT_SCREEN);
       },
@@ -115,7 +124,7 @@ const HomeMenuBar = () => {
     {
       id: "5",
       title: checkValue(languages?.reward),
-      icon: theme !== "Dark" ? rewardHubDarkIcon : rewardHubIcon,
+      icon: theme == "Dark" ? newHubIcon : newHubIconLight,
       onPress: () => NavigationService.navigate(INVITE_AND_EARN_SCREEN),
     },
     {
@@ -136,6 +145,7 @@ const HomeMenuBar = () => {
         data={Data}
         renderItem={renderItem}
         horizontal
+        ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
         keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
       />
@@ -152,18 +162,37 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   icon: {
-    height: 35,
-    width: 35,
-    marginBottom: 10,
+    height: 24,
+    width: 24,
   },
   iconMore: {
-    height: 28,
-    width: 28,
-    marginBottom: 16,
+    height: 18,
+    width: 18,
+  },
+  iconWrap: {
+    height: 36,
+    width: 36,
+    borderRadius: 5,
+    marginBottom: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  iconWrapMore: {
+    height: 36,
+    width: 36,
+    borderRadius: 10,
+    marginBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
   singleItem: {
-    width: Width / 4.7,
+    width: Width / 5.35,
     alignItems: "center",
+  },
+  itemSeparator: {
+    width: 8,
   },
 });
 export default HomeMenuBar;

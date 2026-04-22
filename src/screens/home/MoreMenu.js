@@ -50,6 +50,14 @@ import {
   walletDrawerDark,
   walletIcon,
   defaultPic,
+  INFERNAL_TRANSFER_Light,
+  INFERNAL_TRANSFER,
+  spotIconLight,
+  newHubIconLight,
+  alarmDark,
+  lockLight,
+  kycixonLight,
+  swapLight,
 } from "../../helper/ImageAssets";
 import { colors } from "../../theme/colors";
 import NavigationService from "../../navigation/NavigationService";
@@ -159,10 +167,10 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={isDark ? transferDarkIcon : transferIcon}
+                  source={!isDark ? INFERNAL_TRANSFER_Light : INFERNAL_TRANSFER}
                   resizeMode="contain"
                   style={styles.menuIcon}
-                  tintColor={isDark ? colors.white : colors.black}
+                  // tintColor={isDark ? colors.white : colors.black}
                 />
               </View>
               <AppText color={themeColors.text} style={{ marginTop: 5 }} type={ELEVEN}>
@@ -206,10 +214,9 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={spotIcon}
+                  source={isDark ? spotIconLight : spotIcon}
                   resizeMode="contain"
                   style={styles.menuIcon}
-                  tintColor={isDark ? colors.white : colors.black}
                 />
               </View>
               <AppText
@@ -240,8 +247,8 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={swap}
-                  tintColor={isDark ? colors.white : colors.black}
+                  source={isDark ? swapLight : swap}
+                  // tintColor={isDark ? colors.white : colors.black}
                   resizeMode="contain"
                   style={styles.menuIcon}
                 />
@@ -278,10 +285,9 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={newHubIcon}
+                  source={isDark ? newHubIcon : newHubIconLight}
                   resizeMode="contain"
                   style={styles.menuIcon}
-                  tintColor={isDark ? colors.white : colors.buttonBg}
                 />
               </View>
               <AppText color={themeColors.text} style={{ marginTop: 5 }} type={ELEVEN}>
@@ -371,10 +377,9 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={alarm}
+                  source={ isDark ? alarmDark : alarm}
                   resizeMode="contain"
                   style={styles.menuIcon}
-                  tintColor={isDark ? undefined : themeColors.text}
                 />
               </View>
               <AppText color={themeColors.text} style={{ marginTop: 5 }} type={ELEVEN}>
@@ -387,10 +392,9 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={kycixon}
+                  source={!isDark? kycixonLight : kycixon}
                   resizeMode="contain"
                   style={styles.menuIcon}
-                  tintColor={isDark ? undefined : themeColors.text}
                 />
               </View>
               <AppText color={themeColors.text} style={{ marginTop: 5 }} type={ELEVEN}>
@@ -405,10 +409,9 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={lock}
+                  source={!isDark? lockLight : lock}
                   resizeMode="contain"
                   style={styles.menuIcon}
-                  tintColor={isDark ? undefined : themeColors.text}
                 />
               </View>
               <AppText color={themeColors.text} style={{ marginTop: 5 }} type={ELEVEN}>

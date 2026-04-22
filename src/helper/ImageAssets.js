@@ -167,6 +167,7 @@ export const earningMenuIcon = require('../../assets/images/earningMenuIcon.png'
 export const earningMenuDarkIcon = require('../../assets/images/earningMenuDarkIcon.png');
 export const arbitary = require('../../assets/images/arbitary.png');
 export const swap = require('../../assets/images/swap.png');
+export const swapLight = require('../../assets/images/swapLight.png');
 export const rewardHubIcon = require('../../assets/images/rewardHubIcon.png');
 export const rewardHubDarkIcon = require('../../assets/images/rewardHubIconDark.png');
 export const rectangleIcon = require('../../assets/images/rectangleIcon.png');
@@ -216,7 +217,7 @@ export const Send_Img = require('../../assets/images/send.png');
 
 export const depositImageDark = require('../../assets/images/depositImageDark.png');
 export const withdrawImageDark = require('../../assets/images/withdrawImageDark.png');
-
+export const newHubIconLight = require('../../assets/images/newHubIconLight.png');
 
 export const subscribe = require('../../assets/images/subscribe.png');
 export const folder = require('../../assets/images/folder.png');
@@ -281,6 +282,7 @@ export const tradehistoryLight = require('../../assets/images/tradehistoryLight.
 export const swapHistoryLight = require('../../assets/images/swapHistoryLight.png');
 export const bonusHistoryLight = require('../../assets/images/bonusHistoryLight.png');
 export const INFERNAL_TRANSFER_Light = require('../../assets/images/INFERNAL_TRANSFER_Light.png');
+export const spotIconLight = require('../../assets/images/spotIconLight.png');
 
 export const tradehistory = require('../../assets/images/tradehistory.png');
 export const swapHistory = require('../../assets/images/swapHistory.png');
