@@ -60,6 +60,18 @@ import {
   swapLight,
   helpiconLight,
   currencyPreferLight,
+  launchpadDark,
+  launchpadImage,
+  profileDark,
+  spotBottomLight,
+  spotBottomDark,
+  spotActiveIcon,
+  spotlightfinalbottomtab,
+  spotdarkfinalbottomtab,
+  spotMenuIcon,
+  launchpadLight,
+  profileLight,
+  spotTradingMenu,
 } from "../../helper/ImageAssets";
 import { colors } from "../../theme/colors";
 import NavigationService from "../../navigation/NavigationService";
@@ -215,7 +227,7 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={!isDark ? spotIconLight : spotIcon}
+                  source={isDark ? spotTradingMenu : spotBottomDark}
                   resizeMode="contain"
                   style={styles.menuIcon}
                 />
@@ -301,9 +313,8 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={arbitary}
+                  source={!isDark ? launchpadDark : launchpadLight}
                   resizeMode="contain"
-                  tintColor={isDark ? colors.white : colors.black}
                   style={styles.menuIcon}
 
                 />
@@ -325,9 +336,9 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={defaultPic}
+                  source={!isDark ? profileDark : profileLight}
                   resizeMode="contain"
-                  style={[styles.menuIcon, { width: 35, height: 35 }]}
+                  style={[styles.menuIcon, { width: 30, height: 30 }]}
                 />
               </View>
               <AppText

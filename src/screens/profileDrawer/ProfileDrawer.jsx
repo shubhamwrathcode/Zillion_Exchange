@@ -218,7 +218,7 @@ const getHistoryData = (theme) => [
   {
     id: "3",
     title: "Spot Order",
-    icon: theme !== "Dark" ? tradehistoryLight : tradehistory,
+    icon: theme == "Dark" ? tradehistoryLight : tradehistory,
     onPress: () => {
       NavigationService.navigate("Trade_History");
     },
@@ -272,7 +272,7 @@ const IconAndLabel = ({ theme, themeColors, iconSource, title, textStyle = {} })
           height: 40,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: theme !== "Dark" ? "#F2F2F2" : themeColors.themeSelection,
+          backgroundColor: theme !== "Dark" ? "#F2F2F2" : "#2f313b",
           borderRadius: 5,
         }}
       >
@@ -383,7 +383,7 @@ const AnimatedMenuItem = ({ index, onPress, style, theme, children }) => {
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         activeOpacity={1}
-        style={{ alignItems: "center" }}
+        style={{ alignItems: "center", }}
       >
         {children}
       </TouchableOpacity>
@@ -394,7 +394,7 @@ const AnimatedMenuItem = ({ index, onPress, style, theme, children }) => {
 
 
 const AnimatedCard = ({ onPress, theme, delay, children }) => {
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, isDark } = useTheme();
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
   const translateY = useRef(new Animated.Value(20)).current;
@@ -446,7 +446,7 @@ const AnimatedCard = ({ onPress, theme, delay, children }) => {
           padding: 10,
           alignItems: "center",
           justifyContent: "space-between",
-          backgroundColor: themeColors.themeElevationColor,
+          backgroundColor: isDark ? '#23242a' : themeColors.themeElevationColor,
         }}
       >
         {children}
@@ -527,7 +527,7 @@ const ProfileDrawer = () => {
 
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? colors.newThemeColor : themeColors.background }]}>
       <View
         style={{ marginTop: 20, marginHorizontal: 16, marginBottom: "10%" }}
       >
@@ -665,7 +665,7 @@ const ProfileDrawer = () => {
       <View
         style={{
           flex: 1,
-          backgroundColor: themeColors.themeElevationColor,
+          backgroundColor: isDark ? '#23242a' : themeColors.themeElevationColor,
           borderTopLeftRadius: 50,
           borderTopRightRadius: 50,
           overflow: "hidden",
@@ -1005,8 +1005,6 @@ const styles = StyleSheet.create({
   singleItem: {
     width: "20%",
     gap: 8,
-    // justifyContent:"center",
-    // backgroundColor:"orange",
     alignItems: "center",
     marginTop: 20,
     height: 60,

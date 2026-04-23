@@ -287,6 +287,7 @@ export const swapHistoryLight = require('../../assets/images/swapHistoryLight.pn
 export const bonusHistoryLight = require('../../assets/images/bonusHistoryLight.png');
 export const INFERNAL_TRANSFER_Light = require('../../assets/images/INFERNAL_TRANSFER_Light.png');
 export const spotIconLight = require('../../assets/images/spotIconLight.png');
+export const spotTradingMenu = require('../../assets/images/spotTradingMenu.png');
 
 export const tradehistory = require('../../assets/images/tradehistory.png');
 export const swapHistory = require('../../assets/images/swapHistory.png');
@@ -359,6 +360,16 @@ export const stakingDrawer = require('../../assets/images/stakingDrawer.png');
 export const walletDrawerDark = require('../../assets/images/walletDrawerDark.png');
 export const settingsDark = require('../../assets/images/settingsDark.png');
 export const launchpad_hero_img = require('../../assets/images/launchpad_hero_img.png');
+export const spotlightfinalbottomtab = require('../../assets/images/spotlightfinalbottomtab.png');
+export const spotfinalbottomTab = require('../../assets/images/spotfinalbottomTab.png');
+export const spotdarkfinalbottomtab = require('../../assets/images/spotdarkfinalbottomtab.png');
+export const launchpadDark = require('../../assets/images/launchpadDark.png');
+export const profileDark = require('../../assets/images/profileDark.png');
+export const spotMenuIcon = require('../../assets/images/spotMenuIcon.png');
+export const launchpadLight = require('../../assets/images/launchpadLight.png');
+export const profileLight = require('../../assets/images/launchpadLight.png');
+
+
 
 
 

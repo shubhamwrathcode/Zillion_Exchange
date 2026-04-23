@@ -12,8 +12,9 @@ import FastImage from 'react-native-fast-image';
 import {
   back_ic,
   cancelcheck,
-  successcheck,
   pendingCheck,
+  copyIcon,
+  successcheck,
 } from '../../helper/ImageAssets';
 import NavigationService from '../../navigation/NavigationService';
 import { colors } from '../../theme/colors';
@@ -23,6 +24,7 @@ import {
   depositWithdrawColor,
   toFixedThree,
   twoFixedTwo,
+  copyText,
 } from '../../helper/utility';
 import moment from 'moment';
 import { fontFamilySemiBold } from '../../theme/typography';
@@ -61,19 +63,29 @@ const WalletHistoryDetails = () => {
 
   const textColor = themeColors.text;
   const labelColor = themeColors.secondaryText;
-
   const title = String(transaction_type || 'Transaction') || 'Wallet History';
+
+  const truncateHash = (str: string | undefined | null) => {
+    if (!str) return undefined;
+    const s = String(str);
+    if (s.length <= 8) return s;
+    return `${s.substring(0, 5)}...${s.substring(s.length - 3)}`;
+  };
 
   const Row = ({
     label,
     value,
     valueColor,
     numberOfValueLines = 1,
+    copyable = false,
+    originalValueForCopy = '',
   }: {
     label: string;
     value: string | number | undefined;
     valueColor?: string;
     numberOfValueLines?: number;
+    copyable?: boolean;
+    originalValueForCopy?: string;
   }) => (
     <View style={[styles.row, numberOfValueLines > 1 && styles.rowMultiline]}>
       <AppText
@@ -81,15 +93,32 @@ const WalletHistoryDetails = () => {
       >
         {label}
       </AppText>
-      <AppText
-        style={StyleSheet.flatten([
-          styles.value,
-          { color: valueColor ?? textColor },
-          numberOfValueLines > 1 && styles.valueMultiline,
-        ])}
-        numberOfLines={numberOfValueLines}>
-        {value != null && value !== '' ? String(value) : '---'}
-      </AppText>
+      {copyable ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', flex: 1 }}>
+          <TouchableOpacity onPress={() => copyText(originalValueForCopy)} style={{ marginRight: 8, padding: 4 }}>
+            <FastImage source={copyIcon} style={{ width: 14, height: 14 }} tintColor={labelColor} resizeMode="contain" />
+          </TouchableOpacity>
+          <AppText
+            style={StyleSheet.flatten([
+              styles.value,
+              { flex: 0, color: valueColor ?? textColor },
+              numberOfValueLines > 1 && styles.valueMultiline,
+            ])}
+            numberOfLines={numberOfValueLines}>
+            {value != null && value !== '' ? String(value) : '---'}
+          </AppText>
+        </View>
+      ) : (
+        <AppText
+          style={StyleSheet.flatten([
+            styles.value,
+            { color: valueColor ?? textColor },
+            numberOfValueLines > 1 && styles.valueMultiline,
+          ])}
+          numberOfLines={numberOfValueLines}>
+          {value != null && value !== '' ? String(value) : '---'}
+        </AppText>
+      )}
     </View>
   );
 
@@ -129,8 +158,8 @@ const WalletHistoryDetails = () => {
                 borderColor: isSuccess
                   ? colors.green
                   : isFailed
-                  ? colors.red
-                  : colors.lightYellow,
+                    ? colors.red
+                    : colors.lightYellow,
               },
             ]}>
             {isSuccess && (
@@ -162,8 +191,8 @@ const WalletHistoryDetails = () => {
                 color: isSuccess
                   ? colors.green
                   : isFailed
-                  ? colors.red
-                  : colors.lightYellow,
+                    ? colors.red
+                    : colors.lightYellow,
               },
             ])}>
             {isSuccess ? 'Success' : isFailed ? 'Failed' : status || 'Pending'}
@@ -178,8 +207,8 @@ const WalletHistoryDetails = () => {
               status && (status.toUpperCase() === 'SUCCESS' || status.toUpperCase() === 'COMPLETED')
                 ? colors.green
                 : status && status.toUpperCase() === 'REJECTED'
-                ? colors.red
-                : depositWithdrawColor(status)
+                  ? colors.red
+                  : depositWithdrawColor(status)
             }
           />
           <Row
@@ -204,6 +233,8 @@ const WalletHistoryDetails = () => {
               numberOfValueLines={2}
             />
           )}
+          <Row label="Short Name" value={String(short_name ?? '')} />
+
           {to_address != null && String(to_address) !== '' && (
             <Row
               label="To Address"
@@ -213,22 +244,23 @@ const WalletHistoryDetails = () => {
           )}
           <Row
             label="Transaction No. / Tx Hash"
-            value={transaction_number != null ? String(transaction_number) : undefined}
-            numberOfValueLines={2}
+            value={truncateHash(transaction_number as string)}
+            copyable={transaction_number != null && String(transaction_number) !== ''}
+            originalValueForCopy={String(transaction_number)}
+            numberOfValueLines={1}
           />
-          <Row label="Short Name" value={String(short_name ?? '')} />
           <Row
             label="Transaction Type"
             value={String(transaction_type ?? '')}
             valueColor={textColor}
           />
-          {(description != null && String(description) !== '') && (
+          {/* {(description != null && String(description) !== '') && (
             <Row
               label="Remarks"
               value={String(description)}
               numberOfValueLines={3}
             />
-          )}
+          )} */}
         </View>
         <AppText style={StyleSheet.flatten([styles.noMoreData, { color: labelColor }])}>
           No more data

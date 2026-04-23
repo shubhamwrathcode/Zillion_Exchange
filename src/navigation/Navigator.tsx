@@ -29,8 +29,11 @@ import {
   spotActiveIcon,
   spotBottomDark,
   spotBottomLight,
+  spotdarkfinalbottomtab,
+  spotfinalbottomTab,
   spotIcon,
   spotIconLight,
+  spotlightfinalbottomtab,
   trade_ic,
   wallet_ic,
 } from "../helper/ImageAssets";
@@ -551,11 +554,11 @@ function BottomNavigation() {
               <View style={{ alignItems: "center", marginTop: 10 }}>
                 <FastImage
                   source={
-                    !focused ? spotIconLight : spotBottomLight
+                    focused ? isDark ? spotdarkfinalbottomtab : spotlightfinalbottomtab : spotfinalbottomTab
+
                   }
                   style={{ width: 22, height: 22, transform: [{ scale: isDark ? 0.78 : 1 }] }}
                   resizeMode="contain"
-
                 />
                 <AppText
                   weight={MEDIUM}
