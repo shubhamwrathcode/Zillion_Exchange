@@ -1,4 +1,4 @@
-import { StyleSheet, View, TextInput, TouchableOpacity, FlatList, Keyboard, ScrollView } from "react-native";
+import { StyleSheet, View, TextInput, TouchableOpacity, FlatList, Keyboard, ScrollView, RefreshControl } from "react-native";
 import {
   AppSafeAreaView,
   AppText,
@@ -42,7 +42,7 @@ import NavigationService from "../../navigation/NavigationService";
 import FastImage from "react-native-fast-image";
 import { colors } from "../../theme/colors";
 import { useTheme } from "../../hooks/useTheme";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { useFocusEffect, useRoute } from "@react-navigation/native";
 import { BASE_URL } from "../../helper/Constants";
@@ -96,9 +96,29 @@ const WithdrawWallet = () => {
   const [activeAnnouncementSections, setActiveAnnouncementSections] = useState([]);
   const notificationList = useAppSelector((state) => state.home.notificationList);
 
-  const [withdrawCoinsLoading, setWithdrawCoinsLoading] = useState(() =>
-    !(routeCoin && typeof routeCoin === "object" && Object.keys(routeCoin).length > 0)
-  );
+  const [withdrawCoinsLoading, setWithdrawCoinsLoading] = useState(() => {
+    if (routeCoin && typeof routeCoin === "object" && Object.keys(routeCoin).length > 0) return false;
+    return !(withdrawActiveCoins && withdrawActiveCoins.length > 0);
+  });
+
+  const isFirstLoad = useRef(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    console.log("Pull to refresh triggered! Fetching latest withdraw data...");
+    setRefreshing(true);
+    if (withdrawFlowPhase === "selectCoin") {
+      await dispatch(getWithdrawActiveCoins());
+    } else {
+      await Promise.all([
+        dispatch(getWithdrawActiveCoins()),
+        dispatch(getUserMainWallet('main')),
+        getAllCoinsData()
+      ]);
+    }
+    setRefreshing(false);
+    console.log("Refresh Complete.");
+  }, [dispatch, withdrawFlowPhase]);
 
   const activeWithdrawChains = useMemo(
     () => getActiveWithdrawChainKeys(selectedCurrency),
@@ -139,13 +159,16 @@ const WithdrawWallet = () => {
     useCallback(() => {
       let cancelled = false;
       const onSelectStep = withdrawFlowPhase === "selectCoin";
-      if (onSelectStep) {
-        setWithdrawCoinsLoading(true);
+      if (onSelectStep && isFirstLoad.current) {
+        if (!withdrawActiveCoins || withdrawActiveCoins.length === 0) {
+          setWithdrawCoinsLoading(true);
+        }
       }
       (async () => {
         await dispatch(getWithdrawActiveCoins());
         if (!cancelled && onSelectStep) {
           setWithdrawCoinsLoading(false);
+          isFirstLoad.current = false;
         }
       })();
       return () => {
@@ -415,6 +438,8 @@ const WithdrawWallet = () => {
             isDark={isDark}
             onSelect={handleSelectCurrency}
             loading={withdrawCoinsLoading}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
           />
         </View>
       </AppSafeAreaView>
@@ -423,7 +448,7 @@ const WithdrawWallet = () => {
 
   return (
     <AppSafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
-      <KeyBoardAware>
+      <KeyBoardAware refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.text} />}>
         <View style={{ paddingHorizontal: 20 }}>
           <View style={styles.headerView}>
             <TouchableOpacity onPress={handleHeaderBack}>

@@ -191,7 +191,7 @@ const getSupportToolsData = (theme) => [
   {
     id: "6",
     title: "Help Center",
-    icon:  theme !== "Dark" ? helpiconLight : helpicon,
+    icon: theme !== "Dark" ? helpiconLight : helpicon,
     onPress: () => NavigationService.navigate("Support"),
   },
   // {
@@ -280,7 +280,7 @@ const IconAndLabel = ({ theme, themeColors, iconSource, title, textStyle = {} })
           source={iconSource}
           resizeMode="contain"
           style={styles.icon}
-          // tintColor={theme !== "Dark" ? colors.black : colors.white}
+        // tintColor={theme !== "Dark" ? colors.black : colors.white}
         />
       </View>
       <View style={{ alignItems: "center" }}>

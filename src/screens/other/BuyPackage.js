@@ -41,11 +41,11 @@ import { BASE_URL } from "../../helper/Constants";
 import NavigationService from "../../navigation/NavigationService";
 import TransferModal from "../../shared/components/TransferModal";
 
-const BuyPackage = ({}) => {
+const BuyPackage = ({ }) => {
   const route = useRoute();
   const packages = route?.params?.data;
   console.log(packages, "packages");
-  
+
   const dispatch = useDispatch();
   const WalletTypes = useAppSelector((state) => state.wallet.walletTypes);
   const theme = useAppSelector((state) => state.auth.theme);
@@ -106,318 +106,319 @@ const BuyPackage = ({}) => {
         {contentLoading ? (
           <BuyPackageSkeleton />
         ) : (
-        <View>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => NavigationService.goBack()}>
-              <FastImage
-                source={BACK_ICON}
-                style={{ width: 20, height: 20 }}
-                resizeMode="contain"
-                tintColor={theme !== "Dark" ? colors.black : colors.white}
-              />
-            </TouchableOpacity>
-            <AppText style={[styles.title, { color: theme !== "Dark" ? "#111" : "#fff" }]} weight={SEMI_BOLD}>
-              {packages?.currency} Subscribe
-            </AppText>
-          </View>
-
           <View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 20,
-                marginVertical: 20,
-              }}
-            >
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => NavigationService.goBack()}>
+                <FastImage
+                  source={BACK_ICON}
+                  style={{ width: 20, height: 20 }}
+                  resizeMode="contain"
+                  tintColor={theme !== "Dark" ? colors.black : colors.white}
+                />
+              </TouchableOpacity>
+              <AppText style={[styles.title, { color: theme !== "Dark" ? "#111" : "#fff" }]} weight={SEMI_BOLD}>
+                {packages?.currency} Subscribe
+              </AppText>
+            </View>
+
+            <View>
               <View
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
+                  flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: theme !== "Dark" ? "rgba(0,0,0,0.04)" : "transparent",
-                  borderWidth: theme !== "Dark" ? 1 : 0,
-                  borderColor: theme !== "Dark" ? "rgba(0,0,0,0.08)" : "transparent",
+                  gap: 20,
+                  marginVertical: 20,
                 }}
               >
-                <FastImage
-                  source={{ uri: BASE_URL + packages?.icon_path }}
-                  resizeMode="contain"
-                  style={{ width: 30, height: 30 }}
-                />
-              </View>
-              <AppText style={[styles.title, { color: theme !== "Dark" ? "#111" : "#fff" }]} weight={SEMI_BOLD}>
-                {packages?.currency}
-              </AppText>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 10,
-                paddingVertical: 8,
-                backgroundColor:
-                  theme !== "Dark" ? colors.whiteShadow : "transparent",
-              }}
-            >
-              {packages?.distribution?.map((item, index) => (
-                <TouchableOpacity
-                  key={item?.duration_days ?? item?._id}
-                  onPress={() => setActiveTab(item)}
+                <View
                   style={{
-                    borderWidth: 1,
-                    borderColor:
-                      activeTab === item ? colors.buttonBg : "transparent",
-                    paddingVertical: 5,
-                    paddingHorizontal: 10,
-                    borderRadius: 4,
-                    marginRight: index < (packages?.distribution?.length ?? 1) - 1 ? 8 : 0,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 14,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: theme !== "Dark" ? "rgba(0,0,0,0.04)" : "transparent",
+                    borderWidth: theme !== "Dark" ? 1 : 0,
+                    borderColor: theme !== "Dark" ? "rgba(0,0,0,0.08)" : "transparent",
                   }}
                 >
-                  <AppText
-                    type={TWELVE}
-                    weight={SEMI_BOLD}
-                    style={{color:theme !== "Dark" ? colors.black : colors.white}}
+                  <FastImage
+                    source={{ uri: BASE_URL + packages?.icon_path }}
+                    resizeMode="contain"
+                    style={{ width: 30, height: 30 }}
+                  />
+                </View>
+                <AppText style={[styles.title, { color: theme !== "Dark" ? "#111" : "#fff" }]} weight={SEMI_BOLD}>
+                  {packages?.currency}
+                </AppText>
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 10,
+                  paddingVertical: 8,
+                  // backgroundColor:
+                  //   theme !== "Dark" ? colors.whiteShadow : "transparent",
+                }}
+              >
+                {packages?.distribution?.map((item, index) => (
+                  <TouchableOpacity
+                    key={item?.duration_days ?? item?._id}
+                    onPress={() => setActiveTab(item)}
+                    style={{
+                      borderWidth: 1,
+                      borderColor:
+                        activeTab === item ? colors.buttonBg : "transparent",
+                      paddingVertical: 5,
+                      paddingHorizontal: 10,
+                      borderRadius: 4,
+                      marginRight: index < (packages?.distribution?.length ?? 1) - 1 ? 8 : 0,
+                      backgroundColor: theme !== "Dark" ? "rgba(0,0,0,0.04)" : colors.themeElevationColor,
+                    }}
                   >
-                    {item?.duration_days} D
-                  </AppText>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <View
-              style={{
-                flexDirection: "row",
-                paddingHorizontal: 10,
-                alignItems: "center",
-                gap: 5,
-                marginVertical: 5,
-              }}
-            >
-              <AppText color={DISCLAIMTEXT}>Est.Apy:</AppText>
-              <AppText color={GREEN}>{activeTab?.return_percentage}%</AppText>
-            </View>
-            <AppText
-              style={[styles.label, { marginBottom: 8 }]}
-              weight={SEMI_BOLD}
-            >
-              Payment method
-            </AppText>
+                    <AppText
+                      type={TWELVE}
+                      weight={SEMI_BOLD}
+                      style={{ color: theme !== "Dark" ? colors.black : colors.white }}
+                    >
+                      {item?.duration_days} D
+                    </AppText>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <View
+                style={{
+                  flexDirection: "row",
+                  paddingHorizontal: 10,
+                  alignItems: "center",
+                  gap: 5,
+                  marginVertical: 5,
+                }}
+              >
+                <AppText color={DISCLAIMTEXT}>Est.Apy:</AppText>
+                <AppText color={GREEN}>{activeTab?.return_percentage}%</AppText>
+              </View>
+              <AppText
+                style={[styles.label, { marginBottom: 8 }]}
+                weight={SEMI_BOLD}
+              >
+                Payment method
+              </AppText>
 
-            <EarningDropdown
-              theme={theme}
-              data={WalletTypes}
-              selected={selectedWallet}
-              onSelect={setSelectedWallet}
-            />
-
-            <AppText
-              style={[styles.label, { marginTop: 15 }]}
-              weight={SEMI_BOLD}
-            >
-              Subscription Amount
-            </AppText>
-
-            <View style={[styles.inputRow,{
-              borderColor: theme !== "Dark" ?colors.secondBorder : colors.secondaryText,
-            }]}>
-              <TextInput
-                placeholder={"Enter Subscription Amount"}
-                style={[
-                  styles.input,
-                  { color: theme !== "Dark" ? "#000" : "#fff" },
-                ]}
-                keyboardType="numeric"
-                placeholderTextColor="#888"
-                value={amount}
-                onChangeText={setAmount}
+              <EarningDropdown
+                theme={theme}
+                data={WalletTypes}
+                selected={selectedWallet}
+                onSelect={setSelectedWallet}
               />
-              <TouchableOpacity
-                onPress={() => setAmount(String(earnWalletBal))}
-                style={styles.maxBtn}
-                activeOpacity={0.7}
+
+              <AppText
+                style={[styles.label, { marginTop: 15 }]}
+                weight={SEMI_BOLD}
               >
-                <Text style={styles.maxText}>Max</Text>
-              </TouchableOpacity>
-            </View>
-            {earnWalletBal < amount && (
-              <Text style={styles.error}>Insufficient Balance</Text>
-            )}
-
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                Available Balance
-              </AppText>
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                {" "}
-                <AppText type={FOURTEEN}>{earnWalletBal || 0}</AppText>{" "}
-                {packages?.currency}
-              </AppText>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginVertical: 10,
-              }}
-            >
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                Min. Subscription Amount
-              </AppText>
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                {" "}
-                <AppText type={FOURTEEN}>
-                  {packages?.min_amount || 0}
-                </AppText>{" "}
-                {packages?.currency}
-              </AppText>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                Estimated Bonus
+                Subscription Amount
               </AppText>
 
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                {" "}
-                <AppText type={FOURTEEN}>
-                  {(parseFloat(amount || 0) * activeTab?.return_percentage) /
-                    100}
-                </AppText>{" "}
-                {packages?.currency}
-              </AppText>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginVertical: 10,
-              }}
-            >
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                Receivable Amount
-              </AppText>
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                {" "}
-                <AppText type={FOURTEEN}>
-                  {parseFloat(amount || 0) +
-                    (parseFloat(amount || 0) * activeTab?.return_percentage) /
+              <View style={[styles.inputRow, {
+                borderColor: theme !== "Dark" ? colors.secondBorder : colors.secondaryText,
+              }]}>
+                <TextInput
+                  placeholder={"Enter Subscription Amount"}
+                  style={[
+                    styles.input,
+                    { color: theme !== "Dark" ? "#000" : "#fff" },
+                  ]}
+                  keyboardType="numeric"
+                  placeholderTextColor="#888"
+                  value={amount}
+                  onChangeText={setAmount}
+                />
+                <TouchableOpacity
+                  onPress={() => setAmount(String(earnWalletBal))}
+                  style={styles.maxBtn}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.maxText}>Max</Text>
+                </TouchableOpacity>
+              </View>
+              {earnWalletBal < amount && (
+                <Text style={styles.error}>Insufficient Balance</Text>
+              )}
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  Available Balance
+                </AppText>
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  {" "}
+                  <AppText type={FOURTEEN}>{earnWalletBal || 0}</AppText>{" "}
+                  {packages?.currency}
+                </AppText>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginVertical: 10,
+                }}
+              >
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  Min. Subscription Amount
+                </AppText>
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  {" "}
+                  <AppText type={FOURTEEN}>
+                    {packages?.min_amount || 0}
+                  </AppText>{" "}
+                  {packages?.currency}
+                </AppText>
+              </View>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  Estimated Bonus
+                </AppText>
+
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  {" "}
+                  <AppText type={FOURTEEN}>
+                    {(parseFloat(amount || 0) * activeTab?.return_percentage) /
                       100}
-                </AppText>{" "}
-                {packages?.currency}
-              </AppText>
-            </View>
-
-            <AppText
-              type={FOURTEEN}
-              color={BLACK}
-              style={{ marginVertical: 20 }}
-            >
-              Interest Rule
-            </AppText>
-
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                Subscription Date
-              </AppText>
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                {new Date().toISOString().split("T")[0]}
-              </AppText>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: 10,
-              }}
-            >
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                Maturity Data
-              </AppText>
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                {addDays(new Date(), activeTab?.duration_days)}
-              </AppText>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: 10,
-              }}
-            >
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                Interest Distribution Data
-              </AppText>
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-              {addDays(new Date(), activeTab?.duration_days)}
-              </AppText>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: 10,
-              }}
-            >
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                Interest Distribution Option
-              </AppText>
-              <AppText
-                color={DISCLAIMTEXT}
-                type={TWELVE}
-                style={{ width: "50%" }}
+                  </AppText>{" "}
+                  {packages?.currency}
+                </AppText>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginVertical: 10,
+                }}
               >
-                Distribute interest at the end of each period
-              </AppText>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: 10,
-              }}
-            >
-              <AppText color={DISCLAIMTEXT} type={TWELVE}>
-                Redemption Option
-              </AppText>
-              <AppText
-                color={DISCLAIMTEXT}
-                type={TWELVE}
-                style={{ width: "50%" }}
-              >
-                Early redemption not available
-              </AppText>
-            </View>
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  Receivable Amount
+                </AppText>
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  {" "}
+                  <AppText type={FOURTEEN}>
+                    {parseFloat(amount || 0) +
+                      (parseFloat(amount || 0) * activeTab?.return_percentage) /
+                      100}
+                  </AppText>{" "}
+                  {packages?.currency}
+                </AppText>
+              </View>
 
-            {/* <Text style={styles.range}>
+              <AppText
+                type={FOURTEEN}
+                color={BLACK}
+                style={{ marginVertical: 20 }}
+              >
+                Interest Rule
+              </AppText>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  Subscription Date
+                </AppText>
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  {new Date().toISOString().split("T")[0]}
+                </AppText>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: 10,
+                }}
+              >
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  Maturity Data
+                </AppText>
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  {addDays(new Date(), activeTab?.duration_days)}
+                </AppText>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: 10,
+                }}
+              >
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  Interest Distribution Data
+                </AppText>
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  {addDays(new Date(), activeTab?.duration_days)}
+                </AppText>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: 10,
+                }}
+              >
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  Interest Distribution Option
+                </AppText>
+                <AppText
+                  color={DISCLAIMTEXT}
+                  type={TWELVE}
+                  style={{ width: "50%" }}
+                >
+                  Distribute interest at the end of each period
+                </AppText>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: 10,
+                }}
+              >
+                <AppText color={DISCLAIMTEXT} type={TWELVE}>
+                  Redemption Option
+                </AppText>
+                <AppText
+                  color={DISCLAIMTEXT}
+                  type={TWELVE}
+                  style={{ width: "50%" }}
+                >
+                  Early redemption not available
+                </AppText>
+              </View>
+
+              {/* <Text style={styles.range}>
               Minimum Amount:{" "}
               <Text style={styles.highlight}>
                 {formatToLakh(packages?.min_amount)}
@@ -456,7 +457,7 @@ const BuyPackage = ({}) => {
               </Text>
             </View> */}
 
-            {/* <TouchableOpacity
+              {/* <TouchableOpacity
                   style={styles.button}
                   disabled={
                     (earnWalletBal < packages?.min_amount ||
@@ -467,18 +468,18 @@ const BuyPackage = ({}) => {
                 >
                   <Text style={styles.buttonText}>Insufficient Balance</Text>
                 </TouchableOpacity> */}
-            <Button
-              children="Subscribe"
-              containerStyle={{ marginTop: 50 }}
-              disabled={
-                earnWalletBal < packages?.min_amount ||
-                amount > earnWalletBal ||
-                +amount < packages?.min_amount
-              }
-              onPress={() => buyEarningPackage()}
-            />
+              <Button
+                children="Subscribe"
+                containerStyle={{ marginTop: 50 }}
+                disabled={
+                  earnWalletBal < packages?.min_amount ||
+                  amount > earnWalletBal ||
+                  +amount < packages?.min_amount
+                }
+                onPress={() => buyEarningPackage()}
+              />
+            </View>
           </View>
-        </View>
         )}
       </KeyBoardAware>
       <TransferModal
@@ -532,7 +533,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     borderWidth: 1,
-    
+
     borderRadius: 8,
     // backgroundColor: colors.themeElevationColor,
     paddingRight: 12,

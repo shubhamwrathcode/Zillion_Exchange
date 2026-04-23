@@ -27,6 +27,8 @@ import {
   homeIcon,
   marketIcon,
   spotActiveIcon,
+  spotBottomDark,
+  spotBottomLight,
   spotIcon,
   spotIconLight,
   trade_ic,
@@ -549,10 +551,11 @@ function BottomNavigation() {
               <View style={{ alignItems: "center", marginTop: 10 }}>
                 <FastImage
                   source={
-                    focused ? spotIconLight : spotIcon
+                    !focused ? spotIconLight : spotBottomLight
                   }
                   style={{ width: 22, height: 22, transform: [{ scale: isDark ? 0.78 : 1 }] }}
                   resizeMode="contain"
+
                 />
                 <AppText
                   weight={MEDIUM}

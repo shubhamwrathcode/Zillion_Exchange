@@ -1,4 +1,4 @@
-import { StyleSheet, View, Dimensions, Animated } from "react-native";
+import { StyleSheet, View, Dimensions, Animated, RefreshControl } from "react-native";
 import { AppSafeAreaView } from "../../shared";
 import KeyBoardAware from "../../shared/components/KeyboardAware";
 import MarketHeader from "./MarketHeader";
@@ -120,6 +120,26 @@ const Market = () => {
 
   const [activeTab, setActiveTab] = useState("Spot");
   const [search, setSearch] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    console.log("Pull to refresh triggered! Fetching latest market data...");
+    setRefreshing(true);
+    if (isLoggedIn) {
+      dispatch(getFavoriteArray());
+    }
+    if (subscribeToMarket) {
+      if (unsubscribeFromMarket) unsubscribeFromMarket();
+      subscribeToMarket();
+    }
+    if (activeTab === "Futures" && futureSocketService.getIsConnected()) {
+      futureSocketService.emit("message", { message: "futures", userId: userData?._id ?? "" });
+    }
+    setTimeout(() => {
+      setRefreshing(false);
+      console.log("Refresh Complete.");
+    }, 1000);
+  }, [isLoggedIn, dispatch, subscribeToMarket, unsubscribeFromMarket, activeTab, userData?._id]);
 
   useEffect(() => {
     if (route?.params?.tab) {
@@ -206,7 +226,7 @@ const Market = () => {
 
   return (
     <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
-      <KeyBoardAware>
+      <KeyBoardAware refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.text} />}>
         <MarketHeader
           activeTab={activeTab}
           setActiveTab={setActiveTab}

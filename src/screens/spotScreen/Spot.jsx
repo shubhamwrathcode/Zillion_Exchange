@@ -846,6 +846,7 @@ const Spot = () => {
 
 
   const lastChartPairRef = useRef(null);
+  const lastChartThemeRef = useRef(theme);
 
   // Sync Redux to local + chart when spotSelectedPair changes. Chart loads only when Spot is focused (no heavy load in background).
   // When pair changes: clear order book so skeleton shows until new pair's data loads (prevents showing previous pair's data).
@@ -869,16 +870,19 @@ const Spot = () => {
       setRecentTrades([]);
     }
 
-    if (lastChartPairRef.current === newKey) return;
-    lastChartPairRef.current = newKey;
+    if (lastChartPairRef.current === newKey && lastChartThemeRef.current === theme) return;
 
-    if (webview.current && initialLoadDone) {
+    if (lastChartThemeRef.current === theme && webview.current && initialLoadDone) {
+      lastChartPairRef.current = newKey;
       changeSymbolChart(newKey);
     } else {
+      lastChartPairRef.current = newKey;
+      lastChartThemeRef.current = theme;
       setWebViewReady(false);
+      setChartRevealed(false);
       setChartUri(`${chartBaseUrl}${newKey}`);
     }
-  }, [spotSelectedPair?.base_currency, spotSelectedPair?.quote_currency, chartBaseUrl, initialLoadDone]);
+  }, [spotSelectedPair?.base_currency, spotSelectedPair?.quote_currency, chartBaseUrl, initialLoadDone, theme]);
 
   // Manual change (TradingDataModal): dispatch to Redux - sync effect will handle rest
   // Clear order book so we don't show previous pair's data; new data will replace when socket responds

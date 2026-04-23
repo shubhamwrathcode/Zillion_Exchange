@@ -58,6 +58,8 @@ import {
   lockLight,
   kycixonLight,
   swapLight,
+  helpiconLight,
+  currencyPreferLight,
 } from "../../helper/ImageAssets";
 import { colors } from "../../theme/colors";
 import NavigationService from "../../navigation/NavigationService";
@@ -151,9 +153,8 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={isDark ? walletDrawerDark : walletIcon}
+                  source={!isDark ? walletDrawerDark : walletIcon}
                   resizeMode="contain"
-                  tintColor={isDark ? colors.white : colors.black}
                   style={[styles.menuIcon, {}]}
                 />
               </View>
@@ -170,7 +171,7 @@ const MoreMenu = () => {
                   source={!isDark ? INFERNAL_TRANSFER_Light : INFERNAL_TRANSFER}
                   resizeMode="contain"
                   style={styles.menuIcon}
-                  // tintColor={isDark ? colors.white : colors.black}
+                // tintColor={isDark ? colors.white : colors.black}
                 />
               </View>
               <AppText color={themeColors.text} style={{ marginTop: 5 }} type={ELEVEN}>
@@ -214,7 +215,7 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={isDark ? spotIconLight : spotIcon}
+                  source={!isDark ? spotIconLight : spotIcon}
                   resizeMode="contain"
                   style={styles.menuIcon}
                 />
@@ -340,10 +341,10 @@ const MoreMenu = () => {
             <View style={{ alignItems: "center" }}>
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={currencyPreferIcon}
+                  source={!isDark ? currencyPreferLight : currencyPreferIcon}
                   resizeMode="contain"
                   style={styles.menuIcon}
-                  tintColor={isDark ? undefined : themeColors.text}
+                // tintColor={isDark ? undefined : themeColors.text}
                 />
               </View>
               <AppText
@@ -377,7 +378,7 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={ isDark ? alarmDark : alarm}
+                  source={isDark ? alarmDark : alarm}
                   resizeMode="contain"
                   style={styles.menuIcon}
                 />
@@ -392,7 +393,7 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={!isDark? kycixonLight : kycixon}
+                  source={!isDark ? kycixonLight : kycixon}
                   resizeMode="contain"
                   style={styles.menuIcon}
                 />
@@ -409,7 +410,7 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={!isDark? lockLight : lock}
+                  source={!isDark ? lockLight : lock}
                   resizeMode="contain"
                   style={styles.menuIcon}
                 />
@@ -424,10 +425,9 @@ const MoreMenu = () => {
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage
-                  source={helpicon}
+                  source={!isDark ? helpiconLight : helpicon}
                   resizeMode="contain"
                   style={styles.menuIcon}
-                  tintColor={isDark ? undefined : themeColors.text}
                 />
               </View>
               <AppText color={themeColors.text} style={{ marginTop: 5 }} type={ELEVEN}>

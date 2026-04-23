@@ -147,7 +147,12 @@ export const IDENTITY_CARD = require('../../assets/images/identityCard.png');
 export const DEMO_USER = require('../../assets/images/demoUser.png');
 export const passkey_login = require('../../assets/images/passkey_login.png');
 export const Reminder = require('../../assets/images/Reminder.png');
+export const spotBottomLight = require('../../assets/images/spotBottomLight.png');
+export const spotBottomDark = require('../../assets/images/spotBottomDark.png');
 export const DISPLAY_PIC = require('../../assets/images/display.png');
+
+
+
 
 export const homeImage1Dark = require('../../assets/images/homeImageDark1.png');
 export const homeImage2Dark = require('../../assets/images/homeImageDark2.png');
@@ -351,7 +356,7 @@ export const memeXProfile = require('../../assets/images/memeXProfile.png');
 export const memeXProfileDark = require('../../assets/images/memeXProfileDark.png');
 export const stakingDrawerDark = require('../../assets/images/stakingDrawerDark.png');
 export const stakingDrawer = require('../../assets/images/stakingDrawer.png');
-export const walletDrawerDark = require('../../assets/images/walletIconDark.png');
+export const walletDrawerDark = require('../../assets/images/walletDrawerDark.png');
 export const settingsDark = require('../../assets/images/settingsDark.png');
 export const launchpad_hero_img = require('../../assets/images/launchpad_hero_img.png');
 

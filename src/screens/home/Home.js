@@ -19,6 +19,7 @@ import {
   View,
   StatusBar,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import HomeSlider from "./HomeSlider";
 import HomeSliderSkeleton from "./HomeSliderSkeleton";
@@ -106,9 +107,7 @@ const Home = () => {
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    // Dispatch Redux actions to initialize data
-    // dispatch(getBannerList());
+  const fetchHomeData = useCallback(() => {
     dispatch(getCoinList());
     dispatch(getWalletType());
     dispatch(getUserWallet(""));
@@ -120,11 +119,24 @@ const Home = () => {
     dispatch(getUserFuturesWallet("futures"));
     dispatch(getUserOptionsWallet("options"));
     dispatch(getFavoriteArray());
-    // dispatch(getTradeHistory());
-    // dispatch(getWalletHistory());
-    // dispatch(getFavorites());
     dispatch(getNotificationList());
-  }, []);
+  }, [dispatch]);
+
+  useEffect(() => {
+    fetchHomeData();
+  }, [fetchHomeData]);
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    console.log("Pull to refresh triggered! Fetching latest home data...");
+    setRefreshing(true);
+    fetchHomeData();
+    setTimeout(() => {
+      setRefreshing(false);
+      console.log("Refresh Complete.");
+    }, 1000);
+  }, [fetchHomeData]);
 
   // useEffect(() => {
   //   console.log(CheckCurrent,userData?.version, "version");
@@ -136,7 +148,7 @@ const Home = () => {
 
   return (
     <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
-      <KeyBoardAware style={commonStyles.zeroPadding}>
+      <KeyBoardAware style={commonStyles.zeroPadding} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.text} />}>
         <View>
           <HeaderTop />
         </View>

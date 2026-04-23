@@ -530,7 +530,7 @@ const Register = () => {
             style={{ width: 25, height: 25 }}
           />
         </TouchableOpacityView>
-        <AppText color={LIGHTGREY} type={TEN} style={{ color: themeColors.textGrey }}>
+        <AppText type={TEN} style={{ color: themeColors.secondaryText }}>
           By signing up, I agree to Zillion Exchange user{" "}
           <AppText style={{ color: colors.buttonBg, textDecorationLine: 'underline' }} type={TEN} onPress={() => {
             NavigationService.navigate(CMS_SCREEN, {

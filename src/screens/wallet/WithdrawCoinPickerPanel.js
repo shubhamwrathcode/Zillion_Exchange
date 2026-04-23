@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Vibration,
   View,
+  RefreshControl,
 } from "react-native";
 import { AppText, FOURTEEN, RED, SEMI_BOLD, TEN, TWELVE, TWENTY } from "../../shared";
 import FastImage from "react-native-fast-image";
@@ -130,7 +131,7 @@ const WithdrawCoinPickerSkeleton = () => (
 );
 
 /** DepositCoin-style list (search + A–Z) embedded in WithdrawWallet select step */
-const WithdrawCoinPickerPanel = ({ coins, onSelect, loading }) => {
+const WithdrawCoinPickerPanel = ({ coins, onSelect, loading, refreshing, onRefresh }) => {
   const { colors: themeColors, isDark } = useTheme();
   const [searchPair, setSearchPair] = useState("");
   const [railScrollLetter, setRailScrollLetter] = useState(null);
@@ -379,6 +380,7 @@ const WithdrawCoinPickerPanel = ({ coins, onSelect, loading }) => {
 
       <View style={styles.selectCoinListRow}>
         <FlatList
+          refreshControl={onRefresh ? <RefreshControl refreshing={refreshing || false} onRefresh={onRefresh} tintColor={themeColors.text} /> : undefined}
           ref={coinFlatListRef}
           data={sortedCoins}
           keyExtractor={(row, index) =>

@@ -3,7 +3,6 @@ import { Dimensions, FlatList, StyleSheet, View } from "react-native";
 import FastImage from "react-native-fast-image";
 import TouchableOpacityView from "../../shared/components/TouchableOpacityView";
 import Animated, {
-  FadeInRight,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
@@ -37,7 +36,7 @@ import { checkValue } from "../../helper/utility";
 const MenuItem = React.memo(({ item, index }: any) => {
   const { colors: themeColors, isDark } = useTheme();
   const scale = useSharedValue(1);
-  
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scale.value }],
@@ -54,7 +53,6 @@ const MenuItem = React.memo(({ item, index }: any) => {
 
   return (
     <Animated.View
-      entering={FadeInRight.duration(400).delay(index * 100)}
       style={animatedStyle}
     >
       <TouchableOpacityView
@@ -140,16 +138,13 @@ const HomeMenuBar = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={Data}
-        renderItem={renderItem}
-        horizontal
-        ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
-        keyExtractor={(item) => item.id}
-        showsHorizontalScrollIndicator={false}
-      />
-    
+    <View style={[styles.container, { justifyContent: "space-around", paddingHorizontal: 10 }]}>
+      {Data.map((item, index) => (
+        <React.Fragment key={item.id}>
+          {renderItem({ item, index })}
+        </React.Fragment>
+      ))}
+
     </View>
   );
 };
@@ -162,8 +157,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   icon: {
-    height: 24,
-    width: 24,
+    height: 18,
+    width: 18,
   },
   iconMore: {
     height: 18,
@@ -188,8 +183,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   singleItem: {
-    width: Width / 5.35,
     alignItems: "center",
+    width: (Width - 40) / 5, // Split screen width among 5 items evenly
   },
   itemSeparator: {
     width: 8,

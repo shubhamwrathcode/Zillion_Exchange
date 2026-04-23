@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from "react-native";
 import {
   AppSafeAreaView,
@@ -129,21 +130,63 @@ const Earning = () => {
   }, []);
   const [list, setList] = useState([]);
   const [value, setValue] = useState("");
-  const [contentLoading, setContentLoading] = useState(true);
+  const [contentLoading, setContentLoading] = useState(() => {
+    return !(packageList && packageList.length > 0);
+  });
+
+  const isFirstLoad = useRef(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    console.log("Pull to refresh triggered! Fetching latest Earning data...");
+    setRefreshing(true);
+    await Promise.all([
+      dispatch(getPackageList()),
+      dispatch(getUserPayList()),
+      dispatch(getEarningPortfolio()),
+      dispatch(getEarningPortfolioSummary()),
+      dispatch(getSubscribedPackageList())
+    ]);
+    setRefreshing(false);
+    console.log("Refresh Complete.");
+  }, [dispatch]);
 
   useFocusEffect(
     useCallback(() => {
+      let cancelled = false;
       if (route.params?.initialTab === 1) setActiveTab(1);
       if (route.params?.initialTab === 2) setActiveTab(2);
-      setContentLoading(true);
-      // Loader tab tak dikhao jab tak packageList (coin cards) ka data na aa jaye
-      dispatch(getPackageList())
-        .then(() => setContentLoading(false))
-        .catch(() => setContentLoading(false));
-      dispatch(getUserPayList());
-      dispatch(getEarningPortfolio());
-      dispatch(getEarningPortfolioSummary());
-      dispatch(getSubscribedPackageList());
+
+      if (isFirstLoad.current) {
+        if (!packageList || packageList.length === 0) {
+          setContentLoading(true);
+        }
+      }
+
+      const fetchAll = async () => {
+        try {
+          await Promise.all([
+            dispatch(getPackageList()),
+            dispatch(getUserPayList()),
+            dispatch(getEarningPortfolio()),
+            dispatch(getEarningPortfolioSummary()),
+            dispatch(getSubscribedPackageList())
+          ]);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          if (!cancelled) {
+            setContentLoading(false);
+            isFirstLoad.current = false;
+          }
+        }
+      };
+
+      fetchAll();
+
+      return () => {
+        cancelled = true;
+      };
     }, [dispatch, route.params?.initialTab])
   );
 
@@ -362,7 +405,7 @@ const Earning = () => {
 
   return (
     <AppSafeAreaView style={[styles.safeArea, { backgroundColor: themeColors.background }]}>
-      <KeyBoardAware style={styles.keyboardAware} containerStyle={styles.keyboardAwareContent}>
+      <KeyBoardAware style={styles.keyboardAware} containerStyle={styles.keyboardAwareContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.text} />}>
         <View style={styles.earningContentWrap}>
           {/* Top bar: title + Portfolio & History icons (like web) */}
           <View style={styles.topBar}>

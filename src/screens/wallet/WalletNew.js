@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from "react-native";
 import {
   AppSafeAreaView,
@@ -144,39 +145,54 @@ const WalletNew = () => {
     withdrawSheet.current?.open();
   };
 
-  const noGlobalLoader = { useGlobalLoader: false };
+  const noGlobalLoader = useMemo(() => ({ useGlobalLoader: false }), []);
+  const [refreshing, setRefreshing] = useState(false);
+  const isFirstLoad = useRef(true);
+
+  const fetchWalletData = useCallback(() => {
+    dispatch(getUserPortfolio("", noGlobalLoader));
+    dispatch(getUserPortfolioMain("main", noGlobalLoader));
+    dispatch(getUserPortfolioSpot("spot", noGlobalLoader));
+    dispatch(getUserPortfolioSwap("swap", noGlobalLoader));
+    dispatch(getUserPortfolioEarning("earning", noGlobalLoader));
+    dispatch(getUserPortfolioArbitrage("arbitrage", noGlobalLoader));
+    dispatch(getUserPortfolioFutures("futures", noGlobalLoader));
+    dispatch(getUserPortfolioOptions("options", noGlobalLoader));
+    dispatch(getUserWallet(""));
+    dispatch(getUserMainWallet("main"));
+    dispatch(getUserSpotWallet("spot"));
+    dispatch(getUserSwapWallet("swap"));
+    dispatch(getUserEarningWallet("earning"));
+    dispatch(getUserArbitrageWallet("arbitrage"));
+    dispatch(getUserFuturesWallet("futures"));
+    dispatch(getUserOptionsWallet("options"));
+  }, [dispatch, noGlobalLoader]);
 
   useFocusEffect(
     useCallback(() => {
-      setContentLoading(true);
-      dispatch(getUserPortfolio("", noGlobalLoader));
-      dispatch(getUserPortfolioMain("main", noGlobalLoader));
-      dispatch(getUserPortfolioSpot("spot", noGlobalLoader));
-      dispatch(getUserPortfolioSwap("swap", noGlobalLoader));
-      dispatch(getUserPortfolioEarning("earning", noGlobalLoader));
-      dispatch(getUserPortfolioArbitrage("arbitrage", noGlobalLoader));
-      dispatch(getUserPortfolioFutures("futures", noGlobalLoader));
-      dispatch(getUserPortfolioOptions("options", noGlobalLoader));
-      dispatch(getUserWallet(""));
-      dispatch(getUserMainWallet("main"));
-      dispatch(getUserSpotWallet("spot"));
-      dispatch(getUserSwapWallet("swap"));
-      dispatch(getUserEarningWallet("earning"));
-      dispatch(getUserArbitrageWallet("arbitrage"));
-      dispatch(getUserFuturesWallet("futures"));
-      dispatch(getUserOptionsWallet("options"));
-      const t = setTimeout(() => setContentLoading(false), 1500);
-      return () => clearTimeout(t);
-    }, [dispatch, activeTab])
-
-
-
-
+      if (isFirstLoad.current) {
+        setContentLoading(true);
+        fetchWalletData();
+        const t = setTimeout(() => setContentLoading(false), 300);
+        isFirstLoad.current = false;
+        return () => clearTimeout(t);
+      }
+    }, [fetchWalletData])
   );
+
+  const onRefresh = useCallback(() => {
+    console.log("Pull to refresh triggered! Fetching latest data...");
+    setRefreshing(true);
+    fetchWalletData();
+    setTimeout(() => {
+      setRefreshing(false);
+      console.log("Refresh Complete.");
+    }, 1000); // Give 1s for refresh UI experience
+  }, [fetchWalletData]);
 
   return (
     <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
-      <KeyBoardAware>
+      <KeyBoardAware refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.text} />}>
         <WalletHeader
           activeTab={activeTab}
           setActiveTab={setActiveTab}

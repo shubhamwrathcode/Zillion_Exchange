@@ -12,6 +12,7 @@ import {
     PanResponder,
     Platform,
     Vibration,
+    RefreshControl,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import {
@@ -290,7 +291,27 @@ const DepositCoin = () => {
     const [showMoreDetailsModal, setShowMoreDetailsModal] = useState(false);
     const [showDepositDetailsModal, setShowDepositDetailsModal] = useState(false);
     const [showDepositConfirmedModal, setShowDepositConfirmedModal] = useState(false);
-    const [selectCoinListLoading, setSelectCoinListLoading] = useState(true);
+    const [selectCoinListLoading, setSelectCoinListLoading] = useState(() => {
+        return !(depositActiveCoins && depositActiveCoins.length > 0);
+    });
+
+    const isFirstLoad = useRef(true);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = useCallback(async () => {
+        console.log("Pull to refresh triggered! Fetching latest Deposit data...");
+        setRefreshing(true);
+        if (depositFlowPhase === 'selectCoin') {
+            await dispatch(getDepositActiveCoins(null));
+        } else {
+            await Promise.all([
+                dispatch(getDepositActiveCoins(null)),
+                dispatch(getDepositHistory(0, 5))
+            ]);
+        }
+        setRefreshing(false);
+        console.log("Refresh Complete.");
+    }, [dispatch, depositFlowPhase]);
 
     useFocusEffect(
         useCallback(() => {
@@ -300,11 +321,18 @@ const DepositCoin = () => {
                     cancelled = true;
                 };
             }
-            setSelectCoinListLoading(true);
+            
+            if (isFirstLoad.current) {
+                if (!depositActiveCoins || depositActiveCoins.length === 0) {
+                    setSelectCoinListLoading(true);
+                }
+            }
+
             (async () => {
                 await dispatch(getDepositActiveCoins(null));
                 if (!cancelled) {
                     setSelectCoinListLoading(false);
+                    isFirstLoad.current = false;
                 }
             })();
             return () => {
@@ -951,6 +979,7 @@ const DepositCoin = () => {
                         </View>
                         <View style={styles.selectCoinListRow}>
                             <FlatList
+                                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.text} />}
                                 ref={coinFlatListRef}
                                 data={sortedSelectCoins}
                                 keyExtractor={(item, index) =>
@@ -1067,7 +1096,7 @@ const DepositCoin = () => {
                     </View>
                 )
             ) : (
-                <KeyBoardAware>
+                <KeyBoardAware refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.text} />}>
                     <View style={styles.container}>
                         <ScrollView showsVerticalScrollIndicator={false}>
                             <View style={[styles.section, styles.selectedSection]}>
@@ -1887,7 +1916,7 @@ const styles = StyleSheet.create({
     },
     helpText: {
         marginTop: 10,
-        textAlign:"left"
+        textAlign: "left"
     },
     faqSection: {
         marginTop: 20,

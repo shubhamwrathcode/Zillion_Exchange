@@ -1037,24 +1037,28 @@ const Futures = () => {
   };
 
   const lastChartPairRef = useRef(null);
+  const lastChartThemeRef = useRef(theme);
 
   // Update Chart URL when theme or coin changes
   useEffect(() => {
     if (!selectedCoin?.short_name || !selectedCoin?.margin_asset) return;
 
     const pair = `${selectedCoin.short_name}_${selectedCoin.margin_asset}`;
-    if (lastChartPairRef.current === pair) return;
-    lastChartPairRef.current = pair;
+    const url = `${CHART_BASE_URL}${pair}`;
 
-    if (webview.current && initialLoadDone) {
+    if (lastChartPairRef.current === pair && lastChartThemeRef.current === theme) return;
+
+    if (lastChartThemeRef.current === theme && webview.current && initialLoadDone) {
+      lastChartPairRef.current = pair;
       changeSymbolChart(pair);
     } else {
+      lastChartPairRef.current = pair;
+      lastChartThemeRef.current = theme;
       setWebViewReady(false);
       setChartRevealed(false);
-      const url = `${CHART_BASE_URL}${pair}`;
       setChartUri(url);
     }
-  }, [selectedCoin?.short_name, selectedCoin?.margin_asset, theme, initialLoadDone, changeSymbolChart]);
+  }, [selectedCoin?.short_name, selectedCoin?.margin_asset, theme, initialLoadDone, changeSymbolChart, CHART_BASE_URL]);
 
   const onChartLoaded = useCallback(() => {
     if (chartReadyDelayRef.current) clearTimeout(chartReadyDelayRef.current);
