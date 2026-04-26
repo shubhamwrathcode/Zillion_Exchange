@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
-  SafeAreaView,
   View,
   Text,
   StyleSheet,
@@ -8,8 +7,10 @@ import {
   ScrollView,
   StatusBar,
 } from "react-native";
+import { AppSafeAreaView } from "../../shared";
+import { useTheme } from "../../hooks/useTheme";
 import FastImage from "react-native-fast-image";
-import { BACK_ICON, folder } from "../../helper/ImageAssets";
+import { BACK_ICON, folder, NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT } from "../../helper/ImageAssets";
 import NavigationService from "../../navigation/NavigationService";
 import { useAppSelector } from "../../store/hooks";
 import { useDispatch } from "react-redux";
@@ -71,36 +72,36 @@ const formatPair = (item) => {
   return "--";
 };
 
-const getSideColor = (side) => {
-  if (!side) return colors.white;
+const getSideColor = (side, themeColors) => {
+  if (!side) return themeColors.text;
   const normalized = side.toString().toLowerCase();
   if (normalized.includes("buy") || normalized.includes("long")) {
-    return colors.green;
+    return themeColors.green;
   }
   if (normalized.includes("sell") || normalized.includes("short")) {
-    return colors.red;
+    return themeColors.red;
   }
-  return colors.white;
+  return themeColors.text;
 };
 
-const getStatusColor = (status, fallback = colors.white) => {
-  if (!status) return fallback;
+const getStatusColor = (status, themeColors) => {
+  if (!status) return themeColors.text;
   const normalized = status.toString().toLowerCase();
   if (
     normalized.includes("filled") ||
     normalized.includes("success") ||
     normalized.includes("completed")
   ) {
-    return colors.green;
+    return themeColors.green;
   }
   if (
     normalized.includes("cancel") ||
     normalized.includes("reject") ||
     normalized.includes("fail")
   ) {
-    return colors.red;
+    return themeColors.red;
   }
-  return fallback;
+  return themeColors.text;
 };
 
 const getItemKey = (item, index) =>
@@ -111,164 +112,164 @@ const getItemKey = (item, index) =>
   item?.position_id ??
   `${index}`;
 
-  const renderOpenOrderCard = (order, onCancel, selectedCoin) => {
-    const pricePrecision = (data) => {
-      if (typeof (data) === "number") {
-          return parseFloat(data?.toFixed(selectedCoin?.price_precision));
-      } else {
-          return data;
-      }
-  };
-    const side = order.side;
-    const type = order.type;
-  
-    const quantity = order.quantity;
-    const filled = order.filledQty ?? 0;
-    const price = order.price;
-  
-    const avgPrice = order.avgFillPrice || "---";
-  
-    const reduceOnly = order.reduceOnly ? "Yes" : "No";
-    const postOnly = order.postOnly ? "Yes" : "No";
-  
-    // Trigger Condition Logic (same as website)
-    let triggerCondition = "---";
-    if (order.isSL && order.positionSide) {
-      triggerCondition =
-        order.positionSide === "LONG"
-          ? `<= ${pricePrecision(order.price)}`
-          : `>= ${pricePrecision(order.price)}`;
-    } else if (order.isTP && order.positionSide) {
-      triggerCondition =
-        order.positionSide === "LONG"
-          ? `>= ${pricePrecision(order.price)}`
-          : `<= ${pricePrecision(order.price)}`;
+const renderOpenOrderCard = (order, onCancel, selectedCoin, themeColors, styles) => {
+  const pricePrecision = (data) => {
+    if (typeof (data) === "number") {
+      return parseFloat(data?.toFixed(selectedCoin?.price_precision));
+    } else {
+      return data;
     }
-  
-    // TP/SL
-    const tpSl =
-      order.isTP
-        ? pricePrecision(order.takeProfitPnl)
-        : order.isSL
+  };
+  const side = order.side;
+  const type = order.type;
+
+  const quantity = order.quantity;
+  const filled = order.filledQty ?? 0;
+  const price = order.price;
+
+  const avgPrice = order.avgFillPrice || "---";
+
+  const reduceOnly = order.reduceOnly ? "Yes" : "No";
+  const postOnly = order.postOnly ? "Yes" : "No";
+
+  // Trigger Condition Logic (same as website)
+  let triggerCondition = "---";
+  if (order.isSL && order.positionSide) {
+    triggerCondition =
+      order.positionSide === "LONG"
+        ? `<= ${pricePrecision(order.price)}`
+        : `>= ${pricePrecision(order.price)}`;
+  } else if (order.isTP && order.positionSide) {
+    triggerCondition =
+      order.positionSide === "LONG"
+        ? `>= ${pricePrecision(order.price)}`
+        : `<= ${pricePrecision(order.price)}`;
+  }
+
+  // TP/SL
+  const tpSl =
+    order.isTP
+      ? pricePrecision(order.takeProfitPnl)
+      : order.isSL
         ? pricePrecision(order.stopLossPnl)
         : "---";
-  
-    const tif = order.timeInForce || "GTC";
-    const orderId = order.orderId;
-    const time = order.createdAt;
-  
-    return (
-      <>
-        {/* Header */}
-        <View style={styles.orderHeader}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.symbolText}>{order.symbol}</Text>
-            <View style={styles.perpBadge}>
-              <Text style={styles.perpText}>Perp</Text>
-            </View>
-          </View>
-          <Text style={styles.timeText}>{formatDate(time)}</Text>
-        </View>
-  
-        {/* Type + Side */}
-        <View style={styles.typeRow}>
-          <Text style={[styles.typeText, { color: getSideColor(side) }]}>
-            {`${type} / ${side}`}
-          </Text>
-        </View>
-  
-        {/* Data Rows — website fields */}
-        <View style={styles.infoRow}>
-          <View style={styles.labels}>
-            <Text style={styles.label}>Price</Text>
-            <Text style={styles.label}>Average</Text>
-            <Text style={styles.label}>Amount</Text>
-            <Text style={styles.label}>Filled</Text>
-            <Text style={styles.label}>Reduce Only</Text>
-            <Text style={styles.label}>Post Only</Text>
-            <Text style={styles.label}>Trigger</Text>
-            <Text style={styles.label}>TP/SL</Text>
-            <Text style={styles.label}>TIF</Text>
-          </View>
-  
-          <View style={styles.values}>
-            <Text style={styles.value}>
-              {order.isTP || order.isSL ? "---" : pricePrecision(price)}
-            </Text>
-  
-            <Text style={styles.value}>{avgPrice}</Text>
-  
-            <Text style={styles.value}>
-              {quantity} {order.baseCurrency}
-            </Text>
-  
-            <Text style={styles.value}>
-              {filled} {order.baseCurrency}
-            </Text>
-  
-            <Text style={styles.value}>{reduceOnly}</Text>
-  
-            <Text style={styles.value}>{postOnly}</Text>
-  
-            <Text style={styles.value}>{triggerCondition}</Text>
-  
-            <Text
-              style={[
-                styles.value,
-                {
-                  color: order.isTP
-                    ? colors.green
-                    : order.isSL
-                    ? colors.red
-                    : colors.white,
-                },
-              ]}
-            >
-              {tpSl}
-            </Text>
-  
-            <Text style={styles.value}>{tif}</Text>
-          </View>
-        </View>
-  
-        {/* Cancel Button */}
-        {onCancel && orderId && (
-          <View
-            style={{
-              marginTop: 12,
-              flexDirection: "row",
-              justifyContent: "flex-end",
-            }}
-          >
-            <TouchableOpacity
-              style={{
-                backgroundColor: colors.red + "20",
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                borderRadius: 6,
-                borderWidth: 1,
-                borderColor: colors.red,
-              }}
-              onPress={() => onCancel(orderId)}
-            >
-              <Text
-                style={{
-                  color: colors.red,
-                  fontSize: 12,
-                  fontWeight: "600",
-                }}
-              >
-                Cancel
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </>
-    );
-  };
-  
 
-const renderOrderHistoryCard = (order) => {
+  const tif = order.timeInForce || "GTC";
+  const orderId = order.orderId;
+  const time = order.createdAt;
+
+  return (
+    <>
+      {/* Header */}
+      <View style={styles.orderHeader}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.symbolText}>{order.symbol}</Text>
+          <View style={styles.perpBadge}>
+            <Text style={styles.perpText}>Perp</Text>
+          </View>
+        </View>
+        <Text style={styles.timeText}>{formatDate(time)}</Text>
+      </View>
+
+      {/* Type + Side */}
+      <View style={styles.typeRow}>
+        <Text style={[styles.typeText, { color: getSideColor(side, themeColors) }]}>
+          {`${type} / ${side}`}
+        </Text>
+      </View>
+
+      {/* Data Rows — website fields */}
+      <View style={styles.infoRow}>
+        <View style={styles.labels}>
+          <Text style={styles.label}>Price</Text>
+          <Text style={styles.label}>Average</Text>
+          <Text style={styles.label}>Amount</Text>
+          <Text style={styles.label}>Filled</Text>
+          <Text style={styles.label}>Reduce Only</Text>
+          <Text style={styles.label}>Post Only</Text>
+          <Text style={styles.label}>Trigger</Text>
+          <Text style={styles.label}>TP/SL</Text>
+          <Text style={styles.label}>TIF</Text>
+        </View>
+
+        <View style={styles.values}>
+          <Text style={styles.value}>
+            {order.isTP || order.isSL ? "---" : pricePrecision(price)}
+          </Text>
+
+          <Text style={styles.value}>{avgPrice}</Text>
+
+          <Text style={styles.value}>
+            {quantity} {order.baseCurrency}
+          </Text>
+
+          <Text style={styles.value}>
+            {filled} {order.baseCurrency}
+          </Text>
+
+          <Text style={styles.value}>{reduceOnly}</Text>
+
+          <Text style={styles.value}>{postOnly}</Text>
+
+          <Text style={styles.value}>{triggerCondition}</Text>
+
+          <Text
+            style={[
+              styles.value,
+              {
+                color: order.isTP
+                  ? themeColors.green
+                  : order.isSL
+                    ? themeColors.red
+                    : themeColors.text,
+              },
+            ]}
+          >
+            {tpSl}
+          </Text>
+
+          <Text style={styles.value}>{tif}</Text>
+        </View>
+      </View>
+
+      {/* Cancel Button */}
+      {onCancel && orderId && (
+        <View
+          style={{
+            marginTop: 12,
+            flexDirection: "row",
+            justifyContent: "flex-end",
+          }}
+        >
+          <TouchableOpacity
+            style={{
+              backgroundColor: themeColors.red + "20",
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              borderRadius: 6,
+              borderWidth: 1,
+              borderColor: themeColors.red,
+            }}
+            onPress={() => onCancel(orderId)}
+          >
+            <Text
+              style={{
+                color: themeColors.red,
+                fontSize: 12,
+                fontWeight: "600",
+              }}
+            >
+              Cancel
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </>
+  );
+};
+
+
+const renderOrderHistoryCard = (order, themeColors, styles) => {
   // WEBSITE EXACT FIELD MAPPING
   const createdAt = order?.createdAt
     ? new Date(order.createdAt)
@@ -286,8 +287,8 @@ const renderOrderHistoryCard = (order) => {
     order?.side === "LONG"
       ? "Buy"
       : order?.side === "SHORT"
-      ? "Sell"
-      : order?.side || "--";
+        ? "Sell"
+        : order?.side || "--";
 
   const price = order?.price ? toFixedFive(order.price) : "---";
 
@@ -332,7 +333,7 @@ const renderOrderHistoryCard = (order) => {
         <Text
           style={[
             styles.typeText,
-            { color: getSideColor(side === "Buy" ? "buy" : "sell") },
+            { color: getSideColor(side === "Buy" ? "buy" : "sell", themeColors) },
           ]}
         >
           {`${type} / ${side}`}
@@ -362,7 +363,7 @@ const renderOrderHistoryCard = (order) => {
           <Text
             style={[
               styles.value,
-              { color: getStatusColor(status, colors.white) },
+              { color: getStatusColor(status, themeColors) },
             ]}
           >
             {status}
@@ -377,7 +378,7 @@ const renderOrderHistoryCard = (order) => {
 };
 
 
-const renderPositionCard = (pos) => {
+const renderPositionCard = (pos, themeColors, styles) => {
   const side = pos?.side;
   const leverage = pos?.leverage;
   const size =
@@ -399,7 +400,7 @@ const renderPositionCard = (pos) => {
       {/* Header */}
       <View style={styles.orderHeader}>
         <View style={styles.headerLeft}>
-          <Text style={[styles.symbolText, { color: getSideColor(side) }]}>
+          <Text style={[styles.symbolText, { color: getSideColor(side, themeColors) }]}>
             {pos.symbol}
           </Text>
           <View style={styles.perpBadge}>
@@ -430,7 +431,7 @@ const renderPositionCard = (pos) => {
           <Text
             style={[
               styles.value,
-              { color: pnl >= 0 ? colors.green : colors.red },
+              { color: pnl >= 0 ? themeColors.green : themeColors.red },
             ]}
           >
             {toFixedFive(pnl)}
@@ -452,15 +453,15 @@ const renderPositionCard = (pos) => {
 };
 
 
-const renderTradeCard = (trade) => {
+const renderTradeCard = (trade, themeColors, styles) => {
   // EXACT WEBSITE DATA MAPPING
   const createdAt = trade?.createdAt;
   const dateObj = createdAt ? new Date(createdAt) : null;
 
   const timeValue = dateObj
     ? `${dateObj.toISOString().split("T")[0]} ${dateObj
-        .toTimeString()
-        .split(" ")[0]}`
+      .toTimeString()
+      .split(" ")[0]}`
     : "--";
 
   const symbol = trade?.symbol || "--";
@@ -471,8 +472,8 @@ const renderTradeCard = (trade) => {
     trade?.side === "LONG"
       ? "BUY"
       : trade?.side === "SHORT"
-      ? "SELL"
-      : trade?.side;
+        ? "SELL"
+        : trade?.side;
 
   const price = trade?.price ?? "--";
   const quantity = trade?.quantity ?? "--";
@@ -498,7 +499,7 @@ const renderTradeCard = (trade) => {
         <Text
           style={[
             styles.typeText,
-            { color: getSideColor(side === "BUY" ? "buy" : "sell") },
+            { color: getSideColor(side === "BUY" ? "buy" : "sell", themeColors) },
           ]}
         >
           {`${type} / ${side}`}
@@ -525,10 +526,13 @@ const renderTradeCard = (trade) => {
 
 
 export default function FutureOrderHistory() {
+  const { colors: themeColors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(themeColors), [themeColors]);
+
   const { selectedCoin } = useRoute().params;
   const dispatch = useDispatch();
   const { futureOrders, futurePositions } = useAppSelector(
-    (state) => state.home 
+    (state) => state.home
   );
   const [activeTab, setActiveTab] = useState(0);
   const [openOrders, setOpenOrders] = useState(futureOrders?.openOrders ?? []);
@@ -554,7 +558,7 @@ export default function FutureOrderHistory() {
       }
 
       // ====== API call ======
-      const result = await appOperation.customer?.cancelFutureOrder({orderId: orderId});
+      const result = await appOperation.customer?.cancelFutureOrder({ orderId: orderId });
 
       if (!result?.success) {
         showError(result?.message || "Failed to cancel order.");
@@ -568,7 +572,7 @@ export default function FutureOrderHistory() {
         return id !== orderId;
       });
       setOpenOrders(updatedOrders);
-      
+
       // Update Redux store
       dispatch(
         setFutureOrders({
@@ -597,10 +601,10 @@ export default function FutureOrderHistory() {
 
   const datasets = [openOrders, orderHistory, positionHistory, tradeHistory];
   const renderers = [
-    (item) => renderOpenOrderCard(item, cancelFutureOrder, selectedCoin),
-    renderOrderHistoryCard,
-    renderPositionCard,
-    renderTradeCard,
+    (item) => renderOpenOrderCard(item, cancelFutureOrder, selectedCoin, themeColors, styles),
+    (item) => renderOrderHistoryCard(item, themeColors, styles),
+    (item) => renderPositionCard(item, themeColors, styles),
+    (item) => renderTradeCard(item, themeColors, styles),
   ];
 
   const activeData = datasets[activeTab] ?? [];
@@ -613,11 +617,11 @@ export default function FutureOrderHistory() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <AppSafeAreaView style={styles.container}>
       <StatusBar
-        barStyle="light-content"
+        barStyle={isDark ? "light-content" : "dark-content"}
         translucent={false}
-        backgroundColor={colors.newThemeColor}
+        backgroundColor={themeColors.background}
       />
 
       {/* Header */}
@@ -629,7 +633,7 @@ export default function FutureOrderHistory() {
           <FastImage
             source={BACK_ICON}
             style={{ width: 22, height: 22 }}
-            tintColor={"#FFFFFF"}
+            tintColor={themeColors.text}
             resizeMode="contain"
           />
         </TouchableOpacity>
@@ -644,29 +648,29 @@ export default function FutureOrderHistory() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabsRow}
         >
-        {tabs.map((tab, index) => (
-          <TouchableOpacity
-            key={tab.id}
-            style={[styles.tabItem, activeTab === index && styles.tabItemActive]}
-            onPress={() => setActiveTab(index)}
-          >
-            <Text
-              style={[
-                styles.tabTextInactive,
-                activeTab === index && styles.tabTextActive,
-              ]}
+          {tabs.map((tab, index) => (
+            <TouchableOpacity
+              key={tab.id}
+              style={[styles.tabItem, activeTab === index && styles.tabItemActive]}
+              onPress={() => setActiveTab(index)}
             >
-              {tab.title}
-            </Text>
-            {/* <View style={[activeTab === index && styles.underline]} /> */}
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.tabTextInactive,
+                  activeTab === index && styles.tabTextActive,
+                ]}
+              >
+                {tab.title}
+              </Text>
+              {/* <View style={[activeTab === index && styles.underline]} /> */}
+            </TouchableOpacity>
+          ))}
         </ScrollView>
       </View>
 
       <View style={styles.separator} />
 
-      <ScrollView 
+      <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={[
           styles.listContainer,
@@ -676,9 +680,9 @@ export default function FutureOrderHistory() {
         {activeData.length === 0 ? (
           <View style={styles.emptyState}>
             <FastImage
-              source={folder}
+              source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
               resizeMode="contain"
-              style={{ width: 80, height: 80, marginBottom: 16 }}
+              style={{ width: 80, height: 80, marginTop: 50 }}
             />
             {/* <Text style={styles.emptyText}>{emptyMessages[activeTab]}</Text> */}
           </View>
@@ -691,14 +695,14 @@ export default function FutureOrderHistory() {
         )}
         {activeData.length > 0 && <View style={{ height: 32 }} />}
       </ScrollView>
-    </SafeAreaView>
+    </AppSafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0b0b0b",
+    backgroundColor: themeColors.background,
   },
   header: {
     height: 56,
@@ -706,7 +710,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    backgroundColor: "#0b0b0b",
+    backgroundColor: themeColors.background,
   },
   backBtn: {
     width: 36,
@@ -716,12 +720,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    color: "#FFFFFF",
+    color: themeColors.text,
     fontWeight: "700",
   },
   tabsRow: {
     paddingHorizontal: 14,
-    backgroundColor: "#0b0b0b",
+    backgroundColor: themeColors.background,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -734,24 +738,24 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   tabTextActive: {
-    color: "#FFD34A",
+    color: colors.buttonBg,
     fontWeight: "700",
     fontSize: 16,
   },
   tabTextInactive: {
-    color: "#9aa0a6",
+    color: themeColors.secondaryText,
     fontSize: 15,
   },
   underline: {
     height: 3,
-    backgroundColor: "#FFD34A",
+    backgroundColor: colors.buttonDarkBg,
     width: "100%",
     marginTop: 6,
     borderRadius: 2,
   },
   separator: {
     height: 1,
-    backgroundColor: "#111111",
+    backgroundColor: themeColors.border,
     marginTop: 6,
   },
   listContainer: {
@@ -760,12 +764,12 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   orderCard: {
-    backgroundColor: "#0f0f0f",
+    backgroundColor: themeColors.themeElevationColor,
     borderRadius: 6,
     padding: 14,
     marginBottom: 12,
     borderTopWidth: 1,
-    borderTopColor: "#1a1a1a",
+    borderTopColor: themeColors.border,
   },
   orderHeader: {
     flexDirection: "row",
@@ -778,23 +782,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   symbolText: {
-    color: "#FFFFFF",
+    color: themeColors.text,
     fontSize: 18,
     fontWeight: "700",
     marginRight: 8,
   },
   perpBadge: {
-    backgroundColor: "#2b2b2b",
+    backgroundColor: themeColors.themeSelection,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
   },
   perpText: {
-    color: "#c7c7c7",
+    color: themeColors.secondaryText,
     fontSize: 11,
   },
   timeText: {
-    color: "#77797a",
+    color: themeColors.secondaryText,
     fontSize: 13,
   },
   typeRow: {
@@ -819,12 +823,12 @@ const styles = StyleSheet.create({
     minWidth: 140,
   },
   label: {
-    color: "#5c5c5c",
+    color: themeColors.secondaryText,
     fontSize: 14,
     marginBottom: 10,
   },
   value: {
-    color: "#FFFFFF",
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 6,
@@ -836,7 +840,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   emptyText: {
-    color: "#9aa0a6",
+    color: themeColors.secondaryText,
     fontSize: 15,
   },
 });

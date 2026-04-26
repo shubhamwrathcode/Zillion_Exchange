@@ -24,6 +24,7 @@ import {Button} from './Button';
 import {AppText, BOLD, FIFTEEN, MEDIUM, NORMAL, YELLOW} from './AppText';
 import NavigationService from '../navigation/NavigationService';
 import {HOME_SCREEN} from '../navigation/routes';
+import { useTheme } from '../hooks/useTheme';
 
 interface InputProps extends TextInputProps {
   value?: string;
@@ -36,12 +37,12 @@ interface InputProps extends TextInputProps {
   otpText?: string;
   title?: string;
   mainContainer?: ViewStyle;
-  onFocus?: boolean;
   cancelBtn?: boolean;
   searchContainStyle?: ViewStyle;
   sheetDownButton?:boolean;
-  sheetDownPress?:void;
+  sheetDownPress?: () => void;
   theme?: string;
+  assignRef?: any;
 }
 
 const SearchInput = ({
@@ -72,22 +73,28 @@ const SearchInput = ({
   ...props
 }: InputProps) => {
   const [focus, setFocus] = useState(true);
+  const { colors: themeColors, isDark } = useTheme();
 
   return (
     <View style={(styles.mainViewStyle, [containerStyle])}>
-      <View style={[styles.container, {marginLeft: 10,...searchContainStyle, borderColor: theme === "Dark" ? "#FFFFFF33" : "#00000033"}]}>
+      <View style={[styles.container, { 
+        marginLeft: 10, 
+        backgroundColor: themeColors.card,
+        borderColor: themeColors.border,
+        ...searchContainStyle,
+      }]}>
         <FastImage
           source={searchIcon}
           resizeMode="contain"
           style={styles.searchIcon}
-          tintColor={'#595757'}
+          tintColor={themeColors.secondaryText}
         />
         <TextInput
           {...props}
           placeholder={placeholder}
-          placeholderTextColor={'#595757'}
+          placeholderTextColor={themeColors.secondaryText}
           autoCorrect={false}
-          style={[styles.inputF, inputStyle, {color: theme !== "Dark" ? colors.black : colors.white}]}
+          style={[styles.inputF, inputStyle, {color: themeColors.text}]}
           value={value}
           onChangeText={onChangeText}
           onEndEditing={onEndEditing}
@@ -140,7 +147,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     height: 40,
     borderWidth: borderWidth,
-    // borderColor: '#00000033',
     borderRadius: 25,
     backgroundColor: colors.themeElevationColor,
     flexDirection: 'row',

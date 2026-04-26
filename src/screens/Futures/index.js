@@ -2653,8 +2653,10 @@ const Futures = () => {
                 <AppText style={[styles.assetsSectionTitle, { color: themeColors.text }]} weight={SEMI_BOLD}>
                   Assets
                 </AppText>
-                <View style={[styles.assetsCard, { backgroundColor: isDark ? colors.themeElevationColor : "#F8F8F8",
-                   borderColor: isDark ? colors.themeElevationColor : "#EEE" }]}>
+                <View style={[styles.assetsCard, {
+                  backgroundColor: isDark ? colors.themeElevationColor : "#F8F8F8",
+                  borderColor: isDark ? colors.themeElevationColor : "#EEE"
+                }]}>
                   <AppText type={TWELVE} style={{ color: themeColors.secondaryText, marginBottom: 8 }}>
                     USDT-Perp
                   </AppText>
@@ -3163,7 +3165,7 @@ const Futures = () => {
                   ) : (
                     <>
                       {(ordersHistory || []).slice(0, 20).map((order, index) => (
-                        <View key={order?.orderId || index} style={[styles.orderCard, { backgroundColor: isDark ? "#0f0f0f" : "#FFFFFF", borderColor: isDark ? "#1a1a1a" : "#EEE", borderTopWidth: 1 }]}>
+                        <View key={order?.orderId || index} style={[styles.orderCard, { backgroundColor: isDark ? colors.themeElevationColor : "#FFFFFF", borderColor: isDark ? "#1a1a1a" : "#EEE", borderTopWidth: 1 }]}>
                           <View style={styles.orderHeader}>
                             <View style={styles.headerLeft}>
                               <AppText style={[styles.symbolText, { color: themeColors.text }]}>{formatOrderPair(order)}</AppText>
@@ -3201,7 +3203,7 @@ const Futures = () => {
                     </View>
                   ) : (
                     (tradeHistory || []).slice(0, 20).map((item, index) => (
-                      <View key={item?.tradeId || index} style={[styles.orderCard, { backgroundColor: isDark ? "#0f0f0f" : "#FFFFFF", borderColor: isDark ? "#1a1a1a" : "#EEE", borderTopWidth: 1 }]}>
+                      <View key={item?.tradeId || index} style={[styles.orderCard, { backgroundColor: isDark ? colors.themeElevationColor : "#FFFFFF", borderColor: isDark ? "#1a1a1a" : "#EEE", borderTopWidth: 1 }]}>
                         <View style={styles.orderHeader}>
                           <AppText style={[styles.symbolText, { color: themeColors.text }]}>{formatOrderPair(item)}</AppText>
                           <AppText style={[styles.timeText, { color: themeColors.secondaryText }]}>{formatOrderDate(item?.time ?? item?.createdAt)}</AppText>
@@ -3228,7 +3230,7 @@ const Futures = () => {
                     </View>
                   ) : (
                     (closePositions || []).slice(0, 20).map((position, index) => (
-                      <View key={position?._id || index} style={[styles.orderCard, { backgroundColor: isDark ? "#0f0f0f" : "#FFFFFF", borderColor: isDark ? "#1a1a1a" : "#EEE", borderTopWidth: 1 }]}>
+                      <View key={position?._id || index} style={[styles.orderCard, { backgroundColor: isDark ? colors.themeElevationColor : "#FFFFFF", borderColor: isDark ? "#1a1a1a" : "#EEE", borderTopWidth: 1 }]}>
                         <View style={styles.orderHeader}>
                           <AppText style={[styles.symbolText, { color: themeColors.text }]}>{formatOrderPair(position)}</AppText>
                           <AppText style={[styles.timeText, { color: themeColors.secondaryText }]}>{formatOrderDate(position?.closedAt ?? position?.updatedAt)}</AppText>

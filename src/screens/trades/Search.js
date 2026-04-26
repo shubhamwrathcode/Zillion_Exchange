@@ -11,6 +11,7 @@ import {
   SearchInput,
 } from '../../shared';
 import {useAppSelector} from '../../store/hooks';
+import {useTheme} from '../../hooks/useTheme';
 import {CoinCardProps, CoinDataProps} from '../../helper/types';
 import {BASE_URL, placeHolderText} from '../../helper/Constants';
 import {ImageBackground, Platform, StyleSheet, View} from 'react-native';
@@ -27,6 +28,7 @@ import { SpinnerSecond } from '../../shared/components/SpinnerSecond';
 import { colors } from '../../theme/colors';
 
 const Search = () => {
+  const { colors: themeColors, isDark } = useTheme();
   const hotCoins = useAppSelector(state => state.home.coinPairs);
   const theme = useAppSelector(state => state.auth.theme);
   const currency = useAppSelector(state => state.home.currency);
@@ -97,23 +99,23 @@ const Search = () => {
   // };
 
   return (
-    <AppSafeAreaView style={{backgroundColor: colors.newThemeColor}}>
+    <AppSafeAreaView style={{backgroundColor: themeColors.background}}>
       {/* <ImageBackground  source={HomeBg} style={styles.imgBg} > */}
       <SearchInput
-      cancelBtn={true}
+        cancelBtn={true}
         value={value}
-        theme={theme}
+        theme={isDark ? "Dark" : "Light"}
         onChangeText={setValue}
         placeholder={placeHolderText.search}
         autoCapitalize="none"
         returnKeyType="done"
         onSubmitEditing={() => getData()}
         // onFocus={true}
-        containerStyle={{paddingTop: Platform.OS === 'ios' ? 25 : 0, paddingHorizontal: 5, }}
+        containerStyle={{paddingTop: Platform.OS === 'ios' ? 25 : 0, paddingHorizontal: 5, backgroundColor: themeColors.background}}
         inputStyle={{}}
       />
       <KeyBoardAware>
-        <AppText weight={SEMI_BOLD} type={SIXTEEN} style={styles.text}>
+        <AppText weight={SEMI_BOLD} type={SIXTEEN} style={[styles.text, { color: themeColors.text }]}>
           {checkValue(languages?.top_search)}
         </AppText>
         {/* {list?.map((item: CoinDataProps, index: number) => {
@@ -124,7 +126,6 @@ const Search = () => {
       <SpinnerSecond />
     {/* </ImageBackground> */}
     </AppSafeAreaView>
-
   );
 };
 
