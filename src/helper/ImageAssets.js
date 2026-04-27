@@ -368,6 +368,30 @@ export const profileDark = require('../../assets/images/profileDark.png');
 export const spotMenuIcon = require('../../assets/images/spotMenuIcon.png');
 export const launchpadLight = require('../../assets/images/launchpadLight.png');
 export const profileLight = require('../../assets/images/launchpadLight.png');
+export const airdrop_bnr_img = require('../../assets/images/airdrop_bnr_img.png');
+export const bonusbg = require('../../assets/images/bonusbg.png');
+export const airdrophero_bg = require('../../assets/images/airdrophero_bg.jpg');
+export const tokenlock = require('../../assets/images/tokenlock.png');
+
+
+export const airdrop_stats_icon = require('../../assets/images/airdrop_stats_icon.png');
+export const airdrop_stats_icon2 = require('../../assets/images/airdrop_stats_icon2.png');
+export const airdrop_stats_icon3 = require('../../assets/images/airdrop_stats_icon3.png');
+export const airdrop_stats_icon4 = require('../../assets/images/airdrop_stats_icon4.png');
+export const airdropLight = require('../../assets/images/airdropLight.png');
+export const airdropDark= require('../../assets/images/airdropDark.png');
+export const earngift_vector1= require('../../assets/images/earngift_vector1.png');
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -469,9 +469,11 @@ export const getTransactionHistory =
   export const getReferralList = (data:any) => async (dispatch: AppDispatch) => {
      dispatch(setLoading(true));
     try {
-      const response: any = await appOperation.customer.get_referral_list(data);
+      const response: any = await appOperation.customer.get_my_referral_tree();
       if (response?.success) {
-          dispatch(setReferralList(response?.data));
+          const d = response?.data;
+          const items = Array.isArray(d?.items) ? d.items : Array.isArray(d) ? d : [];
+          dispatch(setReferralList(items));
       }
     } catch (e) {
       logger(e);

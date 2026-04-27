@@ -13,17 +13,19 @@ const Width = Dimensions.get("window").width;
 import {
   memeXProfile,
   memeXProfileDark,
+  giftIc,
   moreOption,
   newHubIcon,
   newHubIconLight,
-  stakingDrawer,
-  stakingDrawerDark,
   swap,
   swapLight,
+  airdropLight,
+  airdropDark,
 } from "../../helper/ImageAssets";
 import NavigationService from "../../navigation/NavigationService";
 import {
   ACCOUNT_SCREEN,
+  AIRDROP_SCREEN,
   CONVERT_SCREEN,
   INVITE_AND_EARN_SCREEN,
   MARKET_SCREEN,
@@ -106,10 +108,10 @@ const HomeMenuBar = () => {
     },
     {
       id: "2",
-      title: "Staking",
-      icon: theme !== "Dark" ? stakingDrawer : stakingDrawerDark,
+      title: "Airdrop",
+      icon: theme == "Dark" ? airdropLight : airdropDark,
       onPress: () =>
-        NavigationService.navigate(ACCOUNT_SCREEN, { from: "home" }),
+        NavigationService.navigate(AIRDROP_SCREEN, { from: "home" }),
     },
     {
       id: "4",

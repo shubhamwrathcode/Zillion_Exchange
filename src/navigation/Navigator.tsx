@@ -157,6 +157,7 @@ import OptionsHistory from "../screens/Options/OptionsHistory";
 import AllEndedProjects from "../screens/Launchpad/AllEndedProjects";
 import TicketScreen from "../screens/supportSreen/TicketScreen";
 import { useTheme } from "../hooks/useTheme";
+import AirDropScreen from "../screens/airdrop/AirDropScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -396,6 +397,7 @@ const MyAuthLoadingStack = () => {
       <Stack.Screen name={"WebLink"} component={WebLink} />
       <Stack.Screen name={routes.INVITE_AND_EARN_SCREEN} component={RefferalReward} />
       <Stack.Screen name={routes.REFFERAL_TREE} component={ReferralTree} />
+      <Stack.Screen name={routes.AIRDROP_SCREEN} component={AirDropScreen} />
       <Stack.Screen name={'Trade_History'} component={TradeHistory} />
       <Stack.Screen name={'Interanl_Trade_History'} component={InternalWalletHistory} />
       <Stack.Screen name={'Open_Order'} component={OpenOrder} />

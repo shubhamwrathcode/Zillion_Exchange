@@ -311,6 +311,23 @@ export default (appOperation: AppOperation) => ({
     appOperation.get('user/favorite-list', undefined, undefined, CUSTOMER_TYPE),
   add_to_favorite: (data: AddToFavoriteProps) =>
     appOperation.post('user/favorite-coin', data, CUSTOMER_TYPE),
+
+  // ============================================================================
+  // AirDrop (same as web AirDrop page)
+  // ============================================================================
+  /** Same as web: GET /v1/user/getOtherSettings */
+  get_other_settings: () =>
+    appOperation.get('user/getOtherSettings', undefined, undefined, CUSTOMER_TYPE),
+  /** Same as web: GET /v1/user/referral-reward-status */
+  get_referral_reward_status: () =>
+    appOperation.get('user/referral-reward-status', undefined, undefined, CUSTOMER_TYPE),
+  /** Same as web: POST /v1/user/complete-referral-social-task body { taskNumber } */
+  complete_referral_social_task: (taskNumber: number) =>
+    appOperation.post(
+      'user/complete-referral-social-task',
+      { taskNumber: Number(taskNumber) },
+      CUSTOMER_TYPE,
+    ),
   past_orders: (data: PastOrdersProps) =>
     appOperation.post('exchange/past-order', data, CUSTOMER_TYPE),
   open_orders: (data: OpenOrdersProps) =>
@@ -450,9 +467,33 @@ export default (appOperation: AppOperation) => ({
       undefined,
       CUSTOMER_TYPE,
     ),
+    // Referral
+    // - `referral_user_list` is the legacy list (often masked)
+    // - `my-referral-tree` matches web "Referral History" (includes user object)
     get_referral_list: () =>
     appOperation.get(
       `user/referral_user_list`,
+      undefined,
+      undefined,
+      CUSTOMER_TYPE,
+    ),
+    get_my_referral_tree: () =>
+    appOperation.get(
+      `user/my-referral-tree`,
+      undefined,
+      undefined,
+      CUSTOMER_TYPE,
+    ),
+    get_my_referral_earnings: () =>
+    appOperation.get(
+      `user/my-referral-earnings`,
+      undefined,
+      undefined,
+      CUSTOMER_TYPE,
+    ),
+    get_referral_children: (parentId: string) =>
+    appOperation.get(
+      `user/referral-children?parentId=${encodeURIComponent(String(parentId ?? ""))}`,
       undefined,
       undefined,
       CUSTOMER_TYPE,
