@@ -158,6 +158,7 @@ import AllEndedProjects from "../screens/Launchpad/AllEndedProjects";
 import TicketScreen from "../screens/supportSreen/TicketScreen";
 import { useTheme } from "../hooks/useTheme";
 import AirDropScreen from "../screens/airdrop/AirDropScreen";
+import AirdropHistoryScreen from "../screens/airdrop/AirdropHistoryScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -203,6 +204,7 @@ const MyAuthLoadingStack = () => {
         component={Notification}
       />
       <Stack.Screen name={routes.SEARCH_SCREEN} component={Search} />
+      <Stack.Screen name={routes.AIRDROP_HISTORY_SCREEN} component={AirdropHistoryScreen} />
 
       <Stack.Screen
         name={routes.NOTIFICATION_SETTINGS_SCREEN}

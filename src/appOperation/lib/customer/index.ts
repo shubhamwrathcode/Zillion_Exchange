@@ -498,6 +498,22 @@ export default (appOperation: AppOperation) => ({
       undefined,
       CUSTOMER_TYPE,
     ),
+
+    // Airdrop / Referral release history (Airdrop History page)
+    get_referral_release_history: (page: number, limit: number) =>
+    appOperation.get(
+      `user/referral-release-history?page=${Number(page) || 1}&limit=${Number(limit) || 20}`,
+      undefined,
+      undefined,
+      CUSTOMER_TYPE,
+    ),
+    get_referral_vesting_status: () =>
+    appOperation.get(
+      `user/referral-vesting-status`,
+      undefined,
+      undefined,
+      CUSTOMER_TYPE,
+    ),
   Staking_Home: () =>
     appOperation.get(
       'staking/availabe_staking',

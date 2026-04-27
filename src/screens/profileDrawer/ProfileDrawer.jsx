@@ -84,6 +84,8 @@ import {
   infernalTransferLight,
   bonusHistoryLight,
   INFERNAL_TRANSFER_Light,
+  airdropDark,
+  airdropLight,
 } from "../../helper/ImageAssets";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import { AppText, BLACK, DISCLAIMTEXT, ELEVEN, THIRTEEN, TWELVE, YELLOW } from "../../shared";
@@ -107,6 +109,7 @@ import {
   SECURITY,
   SETTING_SCREEN_New,
   TWO_FACTOR_AUTHENTICATION,
+  AIRDROP_HISTORY_SCREEN,
   WALLET_WITHDRAW_SCREEN,
   WITHDRAW_Coin_SCREEN,
 } from "../../navigation/routes";
@@ -240,6 +243,12 @@ const getHistoryData = (theme) => [
     title: "Bonus History",
     icon: theme !== "Dark" ? bonusHistoryLight : transactionhis,
     onPress: () => NavigationService.navigate("Admin_Trade"),
+  },
+  {
+    id: "6",
+    title: "Airdrop History",
+    icon: theme !== "Dark" ? airdropDark : airdropLight,
+    onPress: () => NavigationService.navigate(AIRDROP_HISTORY_SCREEN),
   },
 ];
 
