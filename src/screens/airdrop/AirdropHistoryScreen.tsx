@@ -11,7 +11,7 @@ import FastImage from "react-native-fast-image";
 import moment from "moment";
 import Modal from "react-native-modal";
 import { appOperation } from "../../appOperation";
-import { back_ic } from "../../helper/ImageAssets";
+import { back_ic, NO_NOTIFICATION_ICON } from "../../helper/ImageAssets";
 import { useTheme } from "../../hooks/useTheme";
 import NavigationService from "../../navigation/NavigationService";
 import { AIRDROP_SCREEN } from "../../navigation/routes";
