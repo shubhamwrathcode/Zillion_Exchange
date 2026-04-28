@@ -30,13 +30,8 @@ import {
   TWELVE,
 } from "../../shared";
 import {
-  welcomeBg,
-  welcomeBg2,
-  Logo,
   back_ic,
   googleIcon,
-  closeIcon,
-  PASSKEY_VERIFY,
   passkey_login,
 } from "../../helper/ImageAssets";
 import {
@@ -196,7 +191,8 @@ const Login = (): JSX.Element => {
       console.log("Google tokens:", tokens);
 
       let data = {
-        Token: tokens?.accessToken || tokens?.idToken || (account as any)?.idToken,
+        // Backend should verify Google `idToken` (OIDC). Keep accessToken as fallback only.
+        Token: tokens?.idToken || (account as any)?.idToken || tokens?.accessToken,
         type: 'google',
       };
 

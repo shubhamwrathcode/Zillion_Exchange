@@ -109,12 +109,28 @@ export class AppOperation {
         .then(response => {
           clearTimeout(timeoutId);
           let status = response.status;
+          const contentType = response.headers?.get?.('content-type') || '';
           if (response.ok) {
             return response
               .text()
               .then(responseData => {
-                let jsonData: any = JSON.parse(responseData);
-                resolve({ ...jsonData, code: status });
+                // Some proxies / WAFs return HTML error pages even with 200.
+                // Only parse JSON when the response looks like JSON.
+                if (
+                  contentType.includes('application/json') ||
+                  contentType.includes('text/json') ||
+                  /^\s*[\[{]/.test(responseData)
+                ) {
+                  const jsonData: any = JSON.parse(responseData || '{}');
+                  resolve({ ...jsonData, code: status });
+                  return;
+                }
+
+                const preview = String(responseData || '')
+                  .replace(/\s+/g, ' ')
+                  .slice(0, 300);
+                console.warn('[API] Non-JSON success response:', status, contentType, preview);
+                reject({ code: status, message: 'Unexpected non-JSON response from server.', raw: preview });
               })
               .catch(errorResponse =>
                 Promise.reject({ code: status, data: errorResponse }),
@@ -124,9 +140,23 @@ export class AppOperation {
           return response
             .text()
             .then(errorResponse => {
-              const errData = { code: status, ...JSON.parse(errorResponse || '{}') };
-              console.warn('[API] Error response:', status, JSON.stringify(errData));
-              reject(errData);
+              // Server may return HTML on errors (502/503/404 pages).
+              if (
+                contentType.includes('application/json') ||
+                contentType.includes('text/json') ||
+                /^\s*[\[{]/.test(errorResponse)
+              ) {
+                const errData = { code: status, ...JSON.parse(errorResponse || '{}') };
+                console.warn('[API] Error response:', status, JSON.stringify(errData));
+                reject(errData);
+                return;
+              }
+
+              const preview = String(errorResponse || '')
+                .replace(/\s+/g, ' ')
+                .slice(0, 300);
+              console.warn('[API] Non-JSON error response:', status, contentType, preview);
+              reject({ code: status, message: 'Server returned non-JSON error response.', raw: preview });
             });
         })
         .catch(error => {

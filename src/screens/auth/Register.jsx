@@ -245,7 +245,8 @@ const Register = () => {
       console.log("Google tokens:", tokens);
 
       let data = {
-        Token: tokens?.accessToken || tokens?.idToken || account?.idToken,
+        // Backend should verify Google `idToken` (OIDC). Keep accessToken as fallback only.
+        Token: tokens?.idToken || account?.idToken || tokens?.accessToken,
         type: 'google',
         referral_code: referCode || '',
       };
