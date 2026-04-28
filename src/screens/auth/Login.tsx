@@ -65,6 +65,7 @@ import {
   GoogleSignin,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
+import { ensureGoogleSigninConfigured } from "../../helper/googleSignIn";
 import { CountrySelector } from "../../shared/components/CountrySelector";
 import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
@@ -158,12 +159,7 @@ const Login = (): JSX.Element => {
   // Configure native Google Sign-In once
   useEffect(() => {
     try {
-      GoogleSignin.configure({
-        webClientId:
-          "181209853085-4biots3iul9k7ag9qudhirgj3olapj4n.apps.googleusercontent.com",
-        offlineAccess: true,
-        forceCodeForRefreshToken: true,
-      });
+      ensureGoogleSigninConfigured();
     } catch (e) {
       console.warn("GoogleSignin.configure error", e);
     }
@@ -200,7 +196,7 @@ const Login = (): JSX.Element => {
       console.log("Google tokens:", tokens);
 
       let data = {
-        Token: tokens?.accessToken || account?.data?.idToken,
+        Token: tokens?.accessToken || tokens?.idToken || (account as any)?.idToken,
         type: 'google',
       };
 

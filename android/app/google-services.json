@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "3827966986",
+    "project_id": "zillion-1d143",
+    "storage_bucket": "zillion-1d143.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3827966986:android:062ab5867f6c42a32fabf3",
+        "android_client_info": {
+          "package_name": "com.zillionexchange"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "3827966986-64u7tbb2eqo9vebnipupto01tvav2u2t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zillionexchange",
+            "certificate_hash": "8ac2c5aca3633d040ea35e09c5654b664b805d0a"
+          }
+        },
+        {
+          "client_id": "3827966986-thu28igd48m07c4hc99rd2ske5us0fur.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zillionexchange",
+            "certificate_hash": "8216898c956fc22f841bfb878cb19a5325506e14"
+          }
+        },
+        {
+          "client_id": "3827966986-hgo9fq0oo96v56be6ppl256mguo5o8kb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOld4vmlLcRDXQOC3sPUf9GgT3JVL88-8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "3827966986-hgo9fq0oo96v56be6ppl256mguo5o8kb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
