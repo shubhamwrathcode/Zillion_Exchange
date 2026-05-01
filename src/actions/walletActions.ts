@@ -1,5 +1,5 @@
 import {appOperation} from '../appOperation';
-import {logger, showError} from '../helper/logger';
+import {logger, showError, showSuccess} from '../helper/logger';
 import {
   GenerateAddressProps,
   WithdrawCurrencyProps,
@@ -916,18 +916,24 @@ if (response?.data?.deposit_status === 'ACTIVE') {
     }
   };
 
+  /**
+   * Per-user earning payout rows (EarningBalance table).
+   * Current backend returns **404** for `GET /v1/earning/user-payout-list` (route not registered).
+   * Calling it only spammed `[API] Non-JSON error response` and did not populate data.
+   * When the backend exposes this route, restore the fetch below using `appOperation.customer.user_payout_list()`.
+   */
   export const getUserPayList = () => async (dispatch: AppDispatch) => {
-    dispatch(setLoading(true));
-    try {
-      const response: any = await appOperation.customer.user_payout_list();
-      if (response.success) {
-        dispatch(setUserPayoutList(response?.data));
-      }
-    } catch (e) {
-      logger(e);
-    } finally {
-      dispatch(setLoading(false));
-    }
+    dispatch(setUserPayoutList([]));
+    // try {
+    //   dispatch(setLoading(true));
+    //   const response: any = await appOperation.customer.user_payout_list();
+    //   if (response.success) dispatch(setUserPayoutList(response?.data ?? []));
+    // } catch (e) {
+    //   logger(e);
+    //   dispatch(setUserPayoutList([]));
+    // } finally {
+    //   dispatch(setLoading(false));
+    // }
   };
 
   export const getEarningPortfolio = () => async (dispatch: AppDispatch) => {
@@ -955,25 +961,138 @@ if (response?.data?.deposit_status === 'ACTIVE') {
     }
   };
 
+  /** Same as web `Earning/index.js` — backend may send mixed casing or alternate cancel strings. */
+  const normalizeSubscriptionStatus = (status: unknown) =>
+    String(status ?? '')
+      .trim()
+      .toUpperCase();
+
+  const isCancelledSubscriptionStatus = (status: unknown) => {
+    const s = normalizeSubscriptionStatus(status);
+    return s === 'CANCELLED' || s === 'CANCELED' || s.includes('CANCEL');
+  };
+
+  /** Backend may return a bare array or paginated wrapper — normalize to rows[]. */
+  const normalizeSubscribedPackageRows = (raw: unknown): any[] => {
+    if (Array.isArray(raw)) return raw;
+    if (raw == null || typeof raw !== 'object') return [];
+    const o = raw as Record<string, unknown>;
+    if (Array.isArray(o.list)) return o.list as any[];
+    if (Array.isArray(o.data)) return o.data as any[];
+    if (Array.isArray(o.items)) return o.items as any[];
+    if (Array.isArray(o.records)) return o.records as any[];
+    if (Array.isArray(o.subscriptions)) return o.subscriptions as any[];
+    if (Array.isArray(o.rows)) return o.rows as any[];
+    return [];
+  };
+
   export const getSubscribedPackageList = () => async (dispatch: AppDispatch) => {
     dispatch(setLoading(true));
     try {
-      const response: any = await appOperation.customer.subscribed_packageList();
+      /** Same query string shape as web (`skip`/`limit`); use limit 10 to match web pagination if needed. */
+      const response: any = await appOperation.customer.subscribed_packageList(0, 10);
+      const raw = response?.data ?? response?.result ?? response;
+      const data = normalizeSubscribedPackageRows(raw);
+
+      if (__DEV__) {
+        const rawObj = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : null;
+        console.log('[Earning] subscribed-package-list response:', {
+          success: response?.success,
+          httpCode: response?.code,
+          message: response?.message,
+          normalizedRowCount: data.length,
+          rawDataWasArray: Array.isArray(response?.data),
+          rawTopKeys: rawObj ? Object.keys(rawObj).slice(0, 15) : [],
+          distinctStatuses: [...new Set(data.map((r: { status?: string }) => String(r?.status ?? '')))].filter(Boolean).slice(0, 12),
+        });
+      }
+
       if (response.success) {
-        let completedPackage = response?.data?.filter((item: { status: string; }) => item?.status === "COMPLETED")
-        let activePackage = response?.data?.filter((item: { status: string; }) => item?.status === "ACTIVE")
-        let cancelledPackage = response?.data?.filter((item: { status: string; }) => item?.status === "CANCELLED")
+        const completedPackage = data.filter(
+          (item: { status?: string }) => normalizeSubscriptionStatus(item?.status) === 'COMPLETED',
+        );
+        const activePackage = data.filter(
+          (item: { status?: string }) => normalizeSubscriptionStatus(item?.status) === 'ACTIVE',
+        );
+        const cancelledPackage = data.filter((item: { status?: string }) =>
+          isCancelledSubscriptionStatus(item?.status),
+        );
+        if (__DEV__) {
+          console.log('[Earning] subscribed split:', {
+            active: activePackage.length,
+            completed: completedPackage.length,
+            cancelled: cancelledPackage.length,
+          });
+        }
         dispatch(setSubscribedActivePackages(activePackage));
         dispatch(setSubscribedCompletePackages(completedPackage));
         dispatch(setSubscribedCancelPackages(cancelledPackage));
+      } else if (__DEV__) {
+        console.warn('[Earning] subscribed-package-list skipped dispatch — success was not true');
       }
     } catch (e) {
       logger(e);
+      if (__DEV__) {
+        console.warn('[Earning] subscribed-package-list threw:', e);
+      }
     } finally {
       dispatch(setLoading(false));
     }
   };
 
+  /** Web `AuthService.cancelEarningSubscription` — refresh lists like web after success */
+  export const cancelEarningSubscription =
+    (stakingId: string, currency?: string) => async (dispatch: AppDispatch) => {
+      dispatch(setLoading(true));
+      try {
+        const response: any = await appOperation.customer.cancel_earning_subscription(stakingId);
+        if (response?.success) {
+          const d = response?.data || {};
+          let msg = response?.message || 'Plan cancelled successfully.';
+          if (d.refundAmount != null && currency) {
+            const amt =
+              typeof d.refundAmount === 'object' && (d.refundAmount as any)?.$numberDecimal != null
+                ? parseFloat((d.refundAmount as any).$numberDecimal)
+                : Number(d.refundAmount);
+            if (Number.isFinite(amt)) {
+              msg += ` Refund: ${amt.toLocaleString(undefined, { maximumFractionDigits: 9 })} ${currency}.`;
+            }
+          }
+          showSuccess(msg);
+          await dispatch(getSubscribedPackageList());
+          await dispatch(getEarningPortfolio());
+          await dispatch(getEarningPortfolioSummary());
+        } else {
+          showError(response?.message || 'Could not cancel this plan.');
+        }
+      } catch (e: any) {
+        logger(e);
+        showError(e?.message || 'Could not cancel this plan.');
+      } finally {
+        dispatch(setLoading(false));
+      }
+    };
+
+  /** Web `AuthService.getPerDayPayoutHistory` — used by Earning payout modal */
+  export async function fetchPerDayPayoutHistory(userId: string, stakingId: string) {
+    try {
+      const response: any = await appOperation.customer.get_per_day_payout_history(userId, stakingId);
+      if (response?.success) {
+        const raw = response?.data?.payout_history || [];
+        const sorted = [...raw].sort(
+          (a: any, b: any) => (Number(a?.day) || 0) - (Number(b?.day) || 0),
+        );
+        return { ok: true as const, list: sorted, message: undefined as string | undefined };
+      }
+      return {
+        ok: false as const,
+        list: [] as any[],
+        message: response?.message || 'Could not load payout history.',
+      };
+    } catch (e: any) {
+      return { ok: false as const, list: [] as any[], message: e?.message || 'Could not load payout history.' };
+    }
+  }
 
   export const getWalletBalance = (fromWallet: any, currencyId: any) => async (dispatch: AppDispatch) => {
     dispatch(setLoading(true));

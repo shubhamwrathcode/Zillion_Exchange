@@ -1,4 +1,6 @@
 import {
+  ActivityIndicator,
+  Alert,
   Animated,
   Platform,
   StyleSheet,
@@ -49,11 +51,11 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFocusEffect, useRoute } from "@react-navigation/native";
 import {
+  cancelEarningSubscription,
   getEarningPortfolio,
   getEarningPortfolioSummary,
   getPackageList,
   getSubscribedPackageList,
-  getUserPayList,
 } from "../../actions/walletActions";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "../../store/hooks";
@@ -63,6 +65,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setTheme } from "../../slices/authSlice";
 import { BASE_URL, IMAGE_BASE_URL } from "../../helper/Constants";
 import NavigationService from "../../navigation/NavigationService";
+import { EARNING_PAYOUT_HISTORY_SCREEN } from "../../navigation/routes";
 import { useTheme } from "../../hooks/useTheme";
 import { toFixedFive } from "../../helper/utility";
 import moment from "moment";
@@ -71,6 +74,7 @@ import LinearGradient from "react-native-linear-gradient";
 import { Screen } from "../../theme/dimens";
 import CustomDots from "../home/CustomDots";
 import EarningDashboard from "./EarningDashboard";
+import { showError } from "../../helper/logger";
 
 const formatNum = (val, decimals = 2) => {
   if (val == null || val === undefined) return "0.00";
@@ -79,6 +83,28 @@ const formatNum = (val, decimals = 2) => {
     : Number(val);
   if (isNaN(n)) return "0.00";
   return n.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+};
+
+/** Same field resolution as web `readStakingMoney` — supports `$numberDecimal` or plain numbers. */
+const readStakingMoney = (item, ...keys) => {
+  for (const k of keys) {
+    const v = item?.[k];
+    if (v == null) continue;
+    if (typeof v === "object" && v?.$numberDecimal != null) {
+      const n = parseFloat(v.$numberDecimal);
+      if (Number.isFinite(n)) return n;
+    } else {
+      const n = parseFloat(typeof v === "number" ? v : String(v));
+      if (Number.isFinite(n)) return n;
+    }
+  }
+  return null;
+};
+
+const formatWalletTypeLabel = (wt) => {
+  const w = String(wt || "").trim();
+  if (!w) return "";
+  return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
 };
 
 const CARD_GAP = 10;
@@ -114,9 +140,10 @@ const Earning = () => {
   const earningPortfolioSummary = useAppSelector(
     (state) => state.wallet.earningPortfolioSummary
   );
+  const userData = useAppSelector((state) => state.auth.userData);
 
   const [activeTab, setActiveTab] = useState(0); // 0 = Earning, 1 = Earning Dashboard, 2 = Recent Plans
-  const [planTab, setPlanTab] = useState("Active"); // Active | Completed (for Recent Plans)
+  const [planTab, setPlanTab] = useState("Active"); // Active | Completed | Cancel (Recent Plans)
   const [activeSections, setActiveSections] = useState([]);
   const [expandedPlanKeys, setExpandedPlanKeys] = useState(new Set()); // All Plans card expand/collapse
   const planAnimValuesRef = useRef({}); // key -> Animated.Value(0|1) for open/close animation
@@ -137,12 +164,13 @@ const Earning = () => {
   const isFirstLoad = useRef(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [cancellingId, setCancellingId] = useState(null);
+
   const onRefresh = useCallback(async () => {
     console.log("Pull to refresh triggered! Fetching latest Earning data...");
     setRefreshing(true);
     await Promise.all([
       dispatch(getPackageList()),
-      dispatch(getUserPayList()),
       dispatch(getEarningPortfolio()),
       dispatch(getEarningPortfolioSummary()),
       dispatch(getSubscribedPackageList())
@@ -167,7 +195,6 @@ const Earning = () => {
         try {
           await Promise.all([
             dispatch(getPackageList()),
-            dispatch(getUserPayList()),
             dispatch(getEarningPortfolio()),
             dispatch(getEarningPortfolioSummary()),
             dispatch(getSubscribedPackageList())
@@ -333,6 +360,53 @@ const Earning = () => {
   };
 
   const onPressSubscribe = (item) => () => NavigationService.navigate("BuyPackage", { data: item });
+
+  const confirmCancelPlan = useCallback(
+    (item) => {
+      const stakingId = item?._id;
+      if (!stakingId) {
+        showError("Unable to cancel. Please try again.");
+        return;
+      }
+      Alert.alert(
+        "Cancel plan",
+        "Cancel this active earning plan? A cancellation fee may apply; the remaining balance will be refunded per platform rules.",
+        [
+          { text: "No", style: "cancel" },
+          {
+            text: "Yes, cancel",
+            style: "destructive",
+            onPress: async () => {
+              setCancellingId(stakingId);
+              try {
+                await dispatch(cancelEarningSubscription(stakingId, item?.currency));
+              } finally {
+                setCancellingId(null);
+              }
+            },
+          },
+        ]
+      );
+    },
+    [dispatch]
+  );
+
+  const goToPayoutHistory = useCallback(
+    (item) => {
+      const stakingId = item?._id;
+      const uid = userData?._id ?? userData?.user_id ?? userData?.userId;
+      if (!stakingId) {
+        showError("Unable to open payout history.");
+        return;
+      }
+      if (!uid) {
+        showError("Please log in again.");
+        return;
+      }
+      NavigationService.navigate(EARNING_PAYOUT_HISTORY_SCREEN, { subscription: item });
+    },
+    [userData]
+  );
 
   // All Plans card: icon + currency, APR, Duration, collapse caret. Card press = Subscribe (BuyPackage).
   const renderAllPlansCard = (item) => {
@@ -514,14 +588,128 @@ const Earning = () => {
                     Completed
                   </AppText>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.planTab, planTab === "Cancel" && styles.planTabActive]}
+                  onPress={() => setPlanTab("Cancel")}
+                >
+                  <AppText
+                    type={FOURTEEN}
+                    weight={SEMI_BOLD}
+                    style={[styles.planTabLabel, { color: planTab === "Cancel" ? colors.buttonBg : themeColors.secondaryText }]}
+                  >
+                    Cancel
+                  </AppText>
+                </TouchableOpacity>
               </View>
-              {(planTab === "Active" ? subscribedActivePackages : subscribedCompletePackages)?.length > 0 ? (
+              {(() => {
+                const planList =
+                  planTab === "Active"
+                    ? subscribedActivePackages
+                    : planTab === "Completed"
+                      ? subscribedCompletePackages
+                      : subscribedCancelPackages;
+                if (!planList?.length) {
+                  return (
+                    <View style={styles.planEmptyState}>
+                      <FastImage
+                        source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
+                        resizeMode="contain"
+                        style={{ width: 80, height: 80 }}
+                      />
+                    </View>
+                  );
+                }
+                return (
                 <ScrollView
                   style={styles.planScroll}
                   contentContainerStyle={styles.planScrollContent}
                   showsVerticalScrollIndicator={false}
                 >
-                  {(planTab === "Active" ? subscribedActivePackages : subscribedCompletePackages).map((item, index) => (
+                  {planList.map((item, index) => {
+                    if (planTab === "Cancel") {
+                      const refundN = readStakingMoney(item, "refund_amount", "refundAmount");
+                      const feeN = readStakingMoney(item, "cancel_fee_amount", "fee_amount", "feeAmount", "cancelFeeAmount");
+                      const feePctN = readStakingMoney(item, "cancel_fee_percent", "fee_percent", "feePercent", "cancelFeePercent");
+                      const invested = readStakingMoney(item, "invested_amount") ?? 0;
+                      return (
+                        <View key={item?._id || index} style={[styles.planCard, { backgroundColor: themeColors.themeElevationColor }]}>
+                          <View style={styles.planCardRow}>
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Currency</AppText>
+                            <AppText type={ELEVEN} weight={SEMI_BOLD} color={themeColors.text}>{item?.currency}</AppText>
+                          </View>
+                          <View style={styles.planCardRow}>
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Deducted From</AppText>
+                            <AppText type={ELEVEN} style={{ color: colors.buttonBg }}>
+                              {formatWalletTypeLabel(item?.wallet_type)} Wallet
+                            </AppText>
+                          </View>
+                          <View style={styles.planCardRow}>
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Duration</AppText>
+                            <AppText type={ELEVEN} color={themeColors.text}>{item?.duration_days} days</AppText>
+                          </View>
+                          <View style={styles.planCardRow}>
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Start Date</AppText>
+                            <AppText type={ELEVEN} color={themeColors.text}>
+                              {item?.start_date ? moment(item.start_date).format("YYYY-MM-DD") : "—"}
+                            </AppText>
+                          </View>
+                          <View style={styles.planCardRow}>
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Mature Date</AppText>
+                            <AppText type={ELEVEN} color={themeColors.text}>
+                              {item?.end_date ? moment(item.end_date).format("YYYY-MM-DD") : "—"}
+                            </AppText>
+                          </View>
+                          <View style={styles.planCardRow}>
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Subscription Amount</AppText>
+                            <AppText type={ELEVEN} color={themeColors.text}>
+                              {toFixedFive(invested)} {item?.currency}
+                            </AppText>
+                          </View>
+                          <View style={styles.planCardRow}>
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Cancel fee %</AppText>
+                            <AppText type={ELEVEN} color={themeColors.text}>
+                              {feePctN != null ? `${formatNum(feePctN, 2)}%` : "—"}
+                            </AppText>
+                          </View>
+                          <View style={styles.planCardRow}>
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Cancel fee</AppText>
+                            <AppText type={ELEVEN} color={themeColors.text}>
+                              {feeN != null ? `${toFixedFive(feeN)} ${item?.currency}` : "—"}
+                            </AppText>
+                          </View>
+                          <View style={styles.planCardRow}>
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Refund Amount</AppText>
+                            <AppText type={ELEVEN} style={{ color: YELLOW }}>
+                              {refundN != null ? `${toFixedFive(refundN)} ${item?.currency}` : "—"}
+                            </AppText>
+                          </View>
+                          <View style={styles.planCardRow}>
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Status</AppText>
+                            <AppText type={ELEVEN} style={{ color: colors.buttonBg }}>
+                              {item?.status}
+                            </AppText>
+                          </View>
+                          <View style={[styles.planCardRow, styles.planCardActionsRow, styles.planCardRowLast]}>
+                            <TouchableOpacity
+                              onPress={() => goToPayoutHistory(item)}
+                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              style={styles.planViewLinkBtn}
+                              activeOpacity={0.7}
+                            >
+                              <AppText type={ELEVEN} weight={SEMI_BOLD} style={styles.planViewLinkText}>
+                                View
+                              </AppText>
+                            </TouchableOpacity>
+                            <View style={{ width: 24 }} />
+                          </View>
+                        </View>
+                      );
+                    }
+
+                    const invested = readStakingMoney(item, "invested_amount") ?? 0;
+                    const expected = readStakingMoney(item, "expected_return") ?? 0;
+                    const bonus = Math.max(0, expected - invested);
+                    return (
                     <View key={item?._id || index} style={[styles.planCard, { backgroundColor: themeColors.themeElevationColor }]}>
                       <View style={styles.planCardRow}>
                         <AppText type={ELEVEN} color={themeColors.secondaryText}>Currency</AppText>
@@ -533,8 +721,8 @@ const Earning = () => {
                         </AppText>
                         <AppText type={ELEVEN} style={{ color: colors.buttonBg }}>
                           {planTab === "Active"
-                            ? (item?.wallet_type || "")?.toUpperCase()
-                            : (item?.credited_wallet_type || "")?.toUpperCase()}{" "}
+                            ? formatWalletTypeLabel(item?.wallet_type)
+                            : formatWalletTypeLabel(item?.credited_wallet_type)}{" "}
                           Wallet
                         </AppText>
                       </View>
@@ -545,30 +733,25 @@ const Earning = () => {
                       <View style={styles.planCardRow}>
                         <AppText type={ELEVEN} color={themeColors.secondaryText}>Start Date</AppText>
                         <AppText type={ELEVEN} color={themeColors.text}>
-                          {moment(item?.start_date).format("YYYY-MM-DD")}
+                          {item?.start_date ? moment(item.start_date).format("YYYY-MM-DD") : "—"}
                         </AppText>
                       </View>
                       <View style={styles.planCardRow}>
                         <AppText type={ELEVEN} color={themeColors.secondaryText}>Mature Date</AppText>
                         <AppText type={ELEVEN} color={themeColors.text}>
-                          {moment(item?.end_date).format("YYYY-MM-DD")}
+                          {item?.end_date ? moment(item.end_date).format("YYYY-MM-DD") : "—"}
                         </AppText>
                       </View>
                       <View style={styles.planCardRow}>
                         <AppText type={ELEVEN} color={themeColors.secondaryText}>Subscription Amount</AppText>
                         <AppText type={ELEVEN} color={themeColors.text}>
-                          {toFixedFive(Number(item?.invested_amount?.$numberDecimal || 0))} {item?.currency}
+                          {toFixedFive(invested)} {item?.currency}
                         </AppText>
                       </View>
                       <View style={styles.planCardRow}>
                         <AppText type={ELEVEN} color={themeColors.secondaryText}>Bonus Amount</AppText>
                         <AppText type={ELEVEN} color={YELLOW}>
-                          +{toFixedFive(
-                            Number(
-                              (item?.expected_return?.$numberDecimal || 0) -
-                              (item?.invested_amount?.$numberDecimal || 0)
-                            )
-                          )}
+                          +{toFixedFive(bonus)}
                         </AppText>
                       </View>
                       <View style={styles.planCardRow}>
@@ -576,27 +759,51 @@ const Earning = () => {
                           {planTab === "Active" ? "Receivable Amount" : "Received Amount"}
                         </AppText>
                         <AppText type={ELEVEN} color={themeColors.text}>
-                          {toFixedFive(Number(item?.expected_return?.$numberDecimal || 0))} {item?.currency}
+                          {toFixedFive(expected)} {item?.currency}
                         </AppText>
                       </View>
-                      <View style={[styles.planCardRow, styles.planCardRowLast]}>
+                      <View style={styles.planCardRow}>
                         <AppText type={ELEVEN} color={themeColors.secondaryText}>Status</AppText>
                         <AppText type={ELEVEN} style={{ color: colors.buttonBg }}>
                           {item?.status}
                         </AppText>
                       </View>
+                      <View style={[styles.planCardRow, styles.planCardActionsRow, styles.planCardRowLast]}>
+                        <TouchableOpacity
+                          onPress={() => goToPayoutHistory(item)}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          style={styles.planViewLinkBtn}
+                          activeOpacity={0.7}
+                        >
+                          <AppText type={ELEVEN} weight={SEMI_BOLD} style={styles.planViewLinkText}>
+                            View
+                          </AppText>
+                        </TouchableOpacity>
+                        {planTab === "Active" ? (
+                          <TouchableOpacity
+                            disabled={cancellingId === item._id}
+                            onPress={() => confirmCancelPlan(item)}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            style={styles.planCancelBtnWrap}
+                          >
+                            {cancellingId === item._id ? (
+                              <ActivityIndicator size="small" color="#E53935" />
+                            ) : (
+                              <AppText type={ELEVEN} weight={SEMI_BOLD} style={styles.planCancelBtnLabel}>
+                                Cancel
+                              </AppText>
+                            )}
+                          </TouchableOpacity>
+                        ) : (
+                          <View style={{ minWidth: 72 }} />
+                        )}
+                      </View>
                     </View>
-                  ))}
+                    );
+                  })}
                 </ScrollView>
-              ) : (
-                <View style={styles.planEmptyState}>
-                  <FastImage
-                    source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT}
-                    resizeMode="contain"
-                    style={{ width: 80, height: 80 }}
-                  />
-                </View>
-              )}
+                );
+              })()}
             </View>
           ) : activeTab === 1 ? (
             <EarningDashboard
@@ -853,8 +1060,10 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.dividerColor || "#3A3A3A",
   },
   planTab: {
+    flex: 1,
+    alignItems: "center",
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     marginBottom: -1,
   },
   planTabLabel: { fontSize: 15 },
@@ -878,6 +1087,36 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(255,255,255,0.06)",
   },
   planCardRowLast: { borderBottomWidth: 0 },
+  planCardActionsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 0,
+  },
+  planCancelBtnWrap: {
+    borderWidth: 1,
+    borderColor: "#E53935",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    minWidth: 88,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  planCancelBtnLabel: {
+    color: "#E53935",
+  },
+  /** Distinct from primary blue + Cancel red — reads as a tappable “View” control */
+  planViewLinkBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 2,
+  },
+  planViewLinkText: {
+    color: colors.green,
+    textDecorationLine: "underline",
+    textDecorationColor: colors.green,
+  },
   planEmptyState: {
     minHeight: 400,
     justifyContent: "center",

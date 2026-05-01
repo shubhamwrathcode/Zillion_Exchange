@@ -116,6 +116,7 @@ export const WALLET_WITHDRAW_SCREEN = "WALLET_WITHDRAW_SCREEN";
 export const WITHDRAW_Coin_SCREEN = "WITHDRAW_Coin_SCREEN";
 export const AIRDROP_SCREEN = "AIRDROP_SCREEN";
 export const AIRDROP_HISTORY_SCREEN = "AIRDROP_HISTORY_SCREEN";
+export const EARNING_PAYOUT_HISTORY_SCREEN = "EARNING_PAYOUT_HISTORY_SCREEN";
 // export const EARING_SCREEN
 export const ARBITORY_SCREEN = 'ArbitoryBot'
 export const Dashboard_Inner = 'DashboardInnder'

@@ -244,11 +244,27 @@ export default (appOperation: AppOperation) => ({
           undefined,
           CUSTOMER_TYPE,
         ),
-      subscribed_packageList: () =>
+      /** Same as web `AuthService.subscribedPackageList`: backend expects skip/limit query params. */
+      subscribed_packageList: (skip = 0, limit = 500) =>
         appOperation.get(
-          `earning/subscribed-package-list`,
+          `earning/subscribed-package-list?skip=${skip}&limit=${limit}`,
           undefined,
           undefined,
+          CUSTOMER_TYPE,
+        ),
+      /** Web `AuthService.cancelEarningSubscription` — GET with stakingId query */
+      cancel_earning_subscription: (stakingId: string) =>
+        appOperation.get(
+          `earning/cancel-subscription?stakingId=${encodeURIComponent(stakingId)}`,
+          undefined,
+          undefined,
+          CUSTOMER_TYPE,
+        ),
+      /** Web `AuthService.getPerDayPayoutHistory` — POST { userId, stakingId } */
+      get_per_day_payout_history: (userId: string, stakingId: string) =>
+        appOperation.post(
+          'earning/get-per-day-payout-history',
+          { userId, stakingId },
           CUSTOMER_TYPE,
         ),
       get_wallet_balance: (fromWallet: any,currencyId: any) =>

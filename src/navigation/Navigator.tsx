@@ -144,6 +144,7 @@ import NewSwapHistory from "../screens/account/NewSwapHistory";
 import AdminTradeHistory from "../screens/account/AdminTradeHistory";
 import InternalWalletHistory from "../screens/account/InternalWalletHistory";
 import BuyPackage from "../screens/other/BuyPackage";
+import EarningPayoutHistoryScreen from "../screens/other/EarningPayoutHistoryScreen";
 import EarningPortfolio from "../screens/other/EarningPortfolio";
 import Futures from "../screens/Futures/index";
 import Launchpad from "../screens/Launchpad";
@@ -408,6 +409,10 @@ const MyAuthLoadingStack = () => {
       <Stack.Screen name={'Admin_Trade'} component={AdminTradeHistory} />
       <Stack.Screen name={'Ticket_Screen'} component={TicketScreen} />
       <Stack.Screen name={'BuyPackage'} component={BuyPackage} />
+      <Stack.Screen
+        name={routes.EARNING_PAYOUT_HISTORY_SCREEN}
+        component={EarningPayoutHistoryScreen}
+      />
       {/* <Stack.Screen name={'EarningHistory'} component={EarningHistory} /> */}
       <Stack.Screen name={'EarningPortfolio'} component={EarningPortfolio} />
       <Stack.Screen name={'Launchpad'} component={Launchpad} />

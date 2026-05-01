@@ -27,6 +27,23 @@ import {Passkey} from 'react-native-passkey';
 import {PASSKEY_RP_ID} from '../helper/Constants';
 import {socketService} from '../services/socket/SocketService';
 
+const redactToken = (token: any) => {
+  if (token == null) return token;
+  const s = String(token);
+  if (s.length <= 12) return '[redacted]';
+  return `${s.slice(0, 6)}…${s.slice(-6)}`;
+};
+
+const safeAuthPayload = (data: any) => {
+  if (!data || typeof data !== 'object') return data;
+  return {
+    ...data,
+    Token: data?.Token != null ? redactToken(data.Token) : data?.Token,
+    token: data?.token != null ? redactToken(data.token) : data?.token,
+    password: data?.password != null ? '[redacted]' : data?.password,
+  };
+};
+
 export const sendOtp =
   (data: SendOtpRegistrationProps, setDisbaleBtn = (p0: boolean) => {}, setTimer = (p0: number) => {}) =>
   async (dispatch: AppDispatch) => {
@@ -38,7 +55,7 @@ export const sendOtp =
         setDisbaleBtn(true);
         setTimer(60);
       }
-    } catch (e: any) {
+    } catch (e: any) { 
       logger(e);
       showError(e?.message);
     } finally {
@@ -144,6 +161,7 @@ export const register =
   (data: RegistrationProps, setData = () => {}, setVerifyToken = (_: boolean) => {}, handleClearCaptcha = () => {}) => async (dispatch: AppDispatch) => {
     try {
       dispatch(setLoading(true));
+      console.log('[third-party-signup] API payload:', JSON.stringify(safeAuthPayload(data), null, 2));
       const response: any = await appOperation.guest.register_google(data);
       console.log('[third-party-signup] API response:', JSON.stringify(response, null, 2));
       if (!response.success) {
@@ -230,7 +248,9 @@ export const login = (data: LoginProps & { token?: string }) => async (dispatch:
 export const googleLogin = (data: any) => async (dispatch: AppDispatch) => {
   try {
     dispatch(setLoading(true));
+    console.log('[third-party-login] API payload:', JSON.stringify(safeAuthPayload(data), null, 2));
     const response: any = await appOperation.guest.google_login(data);
+    console.log('[third-party-login] API response:', JSON.stringify(response, null, 2));
     if (!response.success) {
       showError(response.message);
     } else {
@@ -265,6 +285,7 @@ export const googleLogin = (data: any) => async (dispatch: AppDispatch) => {
       }
     }
   } catch (e: any) {
+    console.log('[third-party-login] API error:', e?.message ?? e, e?.response ?? '');
     logger(e);
     showError(e?.message);
     if (e?.code == 403) {

@@ -98,6 +98,9 @@ export class AppOperation {
       if (url.includes('submit-kyc')) {
         console.log('[KYC API] URL:', uri);
       }
+      if (__DEV__ && url.includes('subscribed-package-list')) {
+        console.log('[Earning] subscribed-package-list URL:', uri);
+      }
 
       // AbortController for timeout — some Android phones hang indefinitely on poor networks
       const controller = new AbortController();
