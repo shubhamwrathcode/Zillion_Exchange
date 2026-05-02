@@ -1,5 +1,9 @@
 import {AppOperation} from '../..';
 import {
+  GUEST_THIRD_PARTY_LOGIN_PATH,
+  GUEST_THIRD_PARTY_SIGNUP_PATH,
+} from '../../../helper/Constants';
+import {
   ForgotPasswordProps,
   LoginProps,
   RegistrationProps,
@@ -14,13 +18,13 @@ export default (appOperation: AppOperation) => ({
   register_email: (data: RegistrationProps) =>
     appOperation.post('user/register-email', data, GUEST_TYPE),
   register_google: (data: RegistrationProps) =>
-    appOperation.post('user/third-party-signup', data, GUEST_TYPE),
+    appOperation.post(GUEST_THIRD_PARTY_SIGNUP_PATH, data, GUEST_TYPE),
   register_phone: (data: RegistrationProps) =>
     appOperation.post('user/register-phone', data, GUEST_TYPE),
   login: (data: LoginProps) =>
     appOperation.post('user/login', data, GUEST_TYPE),
   google_login: (data: LoginProps) =>
-    appOperation.post('user/third-party-login', data, GUEST_TYPE),
+    appOperation.post(GUEST_THIRD_PARTY_LOGIN_PATH, data, GUEST_TYPE),
   forgot: (data: ForgotPasswordProps) =>
     appOperation.post('user/forgot_password', data, GUEST_TYPE),
   /** Same as web /account-verification flow: verify OTP after register */

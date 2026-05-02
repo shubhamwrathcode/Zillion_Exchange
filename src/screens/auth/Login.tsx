@@ -191,8 +191,12 @@ const Login = (): JSX.Element => {
       console.log("Google tokens:", tokens);
 
       let data = {
-        // Backend should verify Google `idToken` (OIDC). Keep accessToken as fallback only.
-        Token: tokens?.idToken || (account as any)?.idToken || tokens?.accessToken,
+        // Same as web AuthService.googleLogin: Token = OAuth access_token; fallback idToken on iOS.
+        Token:
+          tokens?.accessToken ||
+          tokens?.idToken ||
+          (account as any)?.data?.idToken ||
+          (account as any)?.idToken,
         type: 'google',
       };
 

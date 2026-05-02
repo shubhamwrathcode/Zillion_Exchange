@@ -3,34 +3,28 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
   AppSafeAreaView,
   AppText,
   Button,
   Input,
+  Toolbar,
   SEMI_BOLD,
   FOURTEEN,
   TEN,
   TWELVE,
-  MEDIUM,
-  FIFTEEN,
-  SIXTEEN,
 } from '../../shared';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../hooks/useTheme';
 import FastImage from 'react-native-fast-image';
 import TouchableOpacityView from '../../shared/components/TouchableOpacityView';
-import { back_ic, SHARE_NEW_ICON, eye_open_icon, eye_close_icon } from '../../helper/ImageAssets';
+import { SHARE_NEW_ICON } from '../../helper/ImageAssets';
 import {
   sendSecurityOtp,
   changePassword,
-  getPasskeyList,
-  verifySecurityPasskey,
 } from '../../actions/accountActions';
 import { showError } from '../../helper/logger';
 import { VerificationOptionsSheet } from '../../shared/components/VerificationOptionsSheet';
@@ -50,12 +44,13 @@ const maskPhone = (phone: string | number) => {
   return '****' + cleaned.slice(-4);
 };
 
+type VerifyMethodOption = { value: string; label: string; description: string };
+
 const ChangePassword = () => {
-  const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
   const userData = useAppSelector((state: any) => state.auth.userData);
   const isLoading = useAppSelector((state: any) => state.auth.isLoading);
-  const theme = useAppSelector((state: any) => state.auth.theme);
+  const { colors: themeColors } = useTheme();
 
   const emailId = userData?.emailId ?? userData?.email_id ?? '';
   const profileMobile = userData?.mobileNumber ?? userData?.mobile_number ?? '';
@@ -69,17 +64,13 @@ const ChangePassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [verifyMethod, setVerifyMethod] = useState('');
-  const [availableMethods, setAvailableMethods] = useState<any[]>([]);
+  const [availableMethods, setAvailableMethods] = useState<VerifyMethodOption[]>([]);
   const [optionsSheetVisible, setOptionsSheetVisible] = useState(false);
   const optionsSheetRef = useRef<any>(null);
 
-  const isDark = theme === 'Dark';
-  const textPrimary = isDark ? colors.white : colors.black;
-  const textSecondary = isDark ? 'rgba(255,255,255,0.6)' : '#666';
-
   // Available methods setup
   useEffect(() => {
-    const methods: any[] = [];
+    const methods: VerifyMethodOption[] = [];
     if (userData?.hasPasskey) methods.push({ value: 'passkey', label: 'Passkey', description: 'Use fingerprint or Face ID' });
     if ((userData?.['2fa'] ?? 0) === 2) methods.push({ value: 'totp', label: 'Google Authenticator', description: 'Use your authenticator app' });
     if (emailId) methods.push({ value: 'email', label: 'Email OTP', description: `Send code to ${maskEmail(emailId)}` });
@@ -173,15 +164,16 @@ const ChangePassword = () => {
   };
 
   return (
-    <AppSafeAreaView style={{ flex: 1, backgroundColor: colors.newThemeColor }}>
+    <AppSafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <FastImage source={back_ic} style={styles.backIcon} tintColor={colors.white} resizeMode="contain" />
-          </TouchableOpacity>
-          <AppText weight={SEMI_BOLD} type={SIXTEEN} color={colors.white} style={{ right: 10 }}>Change Password</AppText>
-          <View></View>
-        </View>
+        <Toolbar
+          isSecond
+          title="Change Password"
+          style={{ width: '100%' }}
+          isCommit={false}
+          isStake={false}
+          isLogin={false}
+        />
 
         <ScrollView
           style={styles.scroll}
@@ -189,10 +181,10 @@ const ChangePassword = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <AppText weight={SEMI_BOLD} type={FOURTEEN} color={colors.white} style={styles.sectionTitle}>
+          <AppText weight={SEMI_BOLD} type={FOURTEEN} style={[styles.sectionTitle, { color: themeColors.text }]}>
             {getVerifyTitle()}
           </AppText>
-          <AppText type={TEN} color={textSecondary} style={styles.sectionDesc}>
+          <AppText type={TEN} style={[styles.sectionDesc, { color: themeColors.secondaryText }]}>
             {getVerifyDesc()}
           </AppText>
 
@@ -215,10 +207,10 @@ const ChangePassword = () => {
             <TouchableOpacityView onPress={() => {
               optionsSheetRef.current?.open();
             }} style={styles.switchWrap}>
-              <AppText type={TWELVE} color={colors.buttonBg} style={{ fontWeight: '500' }}>Switch to Another Verification Option</AppText>
+              <AppText type={TWELVE} style={{ fontWeight: '500', color: themeColors.button }}>Switch to Another Verification Option</AppText>
               <FastImage source={SHARE_NEW_ICON}
                 style={{ width: 14, height: 14, marginLeft: 5 }}
-                resizeMode="contain" tintColor={colors.buttonBg} />
+                resizeMode="contain" tintColor={themeColors.button} />
             </TouchableOpacityView>
           )}
 
@@ -236,16 +228,16 @@ const ChangePassword = () => {
 
           <View style={styles.requirementsBox}>
             <View style={styles.reqRow}>
-              <View style={[styles.dot, { backgroundColor: requirements.length ? colors.green : '#ff4d4d' }]} />
-              <AppText type={TEN} color={requirements.length ? colors.green : '#ff4d4d'}>8-30 characters</AppText>
+              <View style={[styles.dot, { backgroundColor: requirements.length ? themeColors.green : themeColors.red }]} />
+              <AppText type={TEN} style={{ color: requirements.length ? themeColors.green : themeColors.red }}>8-30 characters</AppText>
             </View>
             <View style={styles.reqRow}>
-              <View style={[styles.dot, { backgroundColor: requirements.complex ? colors.green : '#ff4d4d' }]} />
-              <AppText type={TEN} color={requirements.complex ? colors.green : '#ff4d4d'}>At least one uppercase, lowercase, and number.</AppText>
+              <View style={[styles.dot, { backgroundColor: requirements.complex ? themeColors.green : themeColors.red }]} />
+              <AppText type={TEN} style={{ color: requirements.complex ? themeColors.green : themeColors.red }}>At least one uppercase, lowercase, and number.</AppText>
             </View>
             <View style={styles.reqRow}>
-              <View style={[styles.dot, { backgroundColor: requirements.spaces ? colors.green : '#ff4d4d' }]} />
-              <AppText type={TEN} color={requirements.spaces ? colors.green : '#ff4d4d'}>Does not contain any spaces.</AppText>
+              <View style={[styles.dot, { backgroundColor: requirements.spaces ? themeColors.green : themeColors.red }]} />
+              <AppText type={TEN} style={{ color: requirements.spaces ? themeColors.green : themeColors.red }}>Does not contain any spaces.</AppText>
             </View>
           </View>
 
@@ -264,7 +256,6 @@ const ChangePassword = () => {
             onPress={handleSubmit}
             loading={isLoading}
             containerStyle={styles.submitBtn}
-            titleStyle={{ color: colors.black, fontWeight: '700' }}
             disabled={!otp && verifyMethod !== 'totp' && verifyMethod !== 'passkey'}
           />
         </ScrollView>
@@ -272,9 +263,8 @@ const ChangePassword = () => {
 
       <VerificationOptionsSheet
         sheetRef={optionsSheetRef}
-        options={availableMethods}
+        options={availableMethods as any}
         onSelect={handleOptionsSelect}
-        borderClr={isDark ? colors.dividerColor : colors.secondBorder}
       />
       <SpinnerSecond />
     </AppSafeAreaView>
@@ -282,15 +272,6 @@ const ChangePassword = () => {
 };
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    justifyContent: "space-between",
-  },
-  backBtn: { padding: 4 },
-  backIcon: { width: 20, height: 20, resizeMode: "contain" },
   scroll: { flex: 1 },
   scrollContent: { padding: 20, paddingBottom: 40 },
   sectionTitle: { fontSize: 18, marginBottom: 5 },
@@ -318,7 +299,6 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     marginTop: 20,
-    backgroundColor: '#dbdbdb',
     borderRadius: 30,
     height: 55,
   },

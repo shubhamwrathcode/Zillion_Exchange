@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
-import { Animated, Dimensions, StyleSheet, TouchableOpacity, View, ScrollView, FlatList, useWindowDimensions } from "react-native";
+import { Animated, Dimensions, StyleSheet, TouchableOpacity, View, ScrollView, FlatList } from "react-native";
 import {
   AppSafeAreaView,
   AppText,
@@ -198,9 +198,14 @@ const KycRejected = ({ onVerifyPress }) => {
 
 
 
-const KycDue = ({ onVerifyPress, screenWidth }) => {
+const KYC_DUE_REQUIREMENTS = [
+  "ID Document",
+  "Tax Document",
+  "Live Selfie (Camera Required)",
+];
+
+const KycDue = ({ onVerifyPress }) => {
   const { colors: themeColors } = useTheme();
-  const isSmallScreen = screenWidth < 380;
   return (
     <View style={[styles.kycCard, { backgroundColor: themeColors.card, borderColor: themeColors.border, borderWidth: 1 }]}>
       <AppText type={FIFTEEN} weight={SEMI_BOLD} style={[styles.kycCardTitle, { color: themeColors.text }]}>KYC</AppText>
@@ -208,29 +213,21 @@ const KycDue = ({ onVerifyPress, screenWidth }) => {
         Finish your KYC in just a few minutes and enjoy a seamless experience. Submit your basic details once and get instant access to withdrawals, rewards, and every feature without any delays or limitations.
       </AppText>
       <AppText type={THIRTEEN} weight={SEMI_BOLD} style={[styles.kycRequirementsSubtitle, { color: themeColors.text }]}>KYC Verification Requirements</AppText>
-      <View style={[styles.kycRequirementsRow, isSmallScreen && styles.kycRequirementsRowColumn]}>
-        <View style={styles.kycRequirementsList}>
-          <View style={styles.requirementItem}>
-            <FastImage source={NEW_STAR} resizeMode="contain" style={styles.starIcon} tintColor={colors.starColor} />
-            <AppText type={THIRTEEN} weight={NORMAL} style={[styles.requirementText, { color: themeColors.secondaryText }]}>ID Document</AppText>
-          </View>
-          <View style={styles.requirementItem}>
-            <FastImage source={NEW_STAR} resizeMode="contain" style={styles.starIcon} tintColor={colors.starColor} />
-            <AppText type={THIRTEEN} weight={NORMAL} style={[styles.requirementText, { color: themeColors.secondaryText }]}>Tax Document</AppText>
-          </View>
-          <View style={styles.requirementItem}>
-            <FastImage source={NEW_STAR} resizeMode="contain" style={styles.starIcon} tintColor={colors.starColor} />
-            <AppText type={THIRTEEN} weight={NORMAL} style={[styles.requirementText, { color: themeColors.secondaryText }]}>Live Selfie (Camera Required)</AppText>
-          </View>
+      {/* Full-width column avoids row+flex collapsing label width on Android; illustration below list */}
+      <View style={styles.kycRequirementsColumn}>
+        <View style={styles.kycRequirementsItems}>
+          {KYC_DUE_REQUIREMENTS.map((label) => (
+            <View key={label} style={styles.requirementItem}>
+              <FastImage source={NEW_STAR} resizeMode="contain" style={styles.starIcon} tintColor={colors.starColor} />
+              <AppText type={THIRTEEN} weight={NORMAL} style={{ color: themeColors.secondaryText, flexShrink: 1 }}>
+                {label}
+              </AppText>
+            </View>
+          ))}
         </View>
-        {!isSmallScreen && (
-          <FastImage source={KYC_THEME} resizeMode="contain" style={styles.kycThemeIcon} />
-        )}
+        <FastImage source={KYC_THEME} resizeMode="contain" style={styles.kycThemeIllustration} />
       </View>
       <Button children="Verify" onPress={onVerifyPress} containerStyle={styles.verifyButton} />
-      {isSmallScreen && (
-        <FastImage source={KYC_THEME} resizeMode="contain" style={styles.kycThemeIconSmall} />
-      )}
     </View>
   );
 };
@@ -284,8 +281,14 @@ const KycStatus = () => {
   const { colors: themeColors, isDark } = useTheme();
   const userData = useAppSelector((state) => state.auth.userData);
   const dispatch = useAppDispatch();
-  const { width: screenWidth } = useWindowDimensions();
-  const kycVerified = userData?.kycVerified != null ? Number(userData.kycVerified) : 0;
+  const rawKyc =
+    userData?.kycVerified != null && userData?.kycVerified !== ""
+      ? userData.kycVerified
+      : userData?.kyc_verified != null && userData?.kyc_verified !== ""
+        ? userData.kyc_verified
+        : null;
+  const kycVerified =
+    rawKyc != null && rawKyc !== "" && !Number.isNaN(Number(rawKyc)) ? Number(rawKyc) : 0;
 
   const [idDocStatus, setIdDocStatus] = useState(null);
   const [taxDocStatus, setTaxDocStatus] = useState(null);
@@ -335,7 +338,7 @@ const KycStatus = () => {
       }
     })();
     return () => { mounted = false; };
-  }, [dispatch, userData?.kycVerified]);
+  }, [dispatch, userData?.kycVerified, userData?.kyc_verified]);
 
   const getRejectReason = (docType) => {
     const doc = documentsToResubmit.find((d) => d.type === docType);
@@ -402,14 +405,17 @@ const KycStatus = () => {
 
   const kycStatusView = () => {
     switch (kycVerified) {
-      case 0: return <KycDue onVerifyPress={openVerifyModal} screenWidth={screenWidth} />;
+      case 0: return <KycDue onVerifyPress={openVerifyModal} />;
       case 1: return <KycPending idDocStatus={idDocStatus} taxDocStatus={taxDocStatus} selfieStatus={selfieStatus} submittedIdDocType={submittedIdDocType} submittedTaxDocType={submittedTaxDocType} />;
       case 2: return <KycCompleted />;
       case 3: return <KycRejected onVerifyPress={openVerifyModal} />;
       case 4: return <KycPending idDocStatus={idDocStatus} taxDocStatus={taxDocStatus} selfieStatus={selfieStatus} submittedIdDocType={submittedIdDocType} submittedTaxDocType={submittedTaxDocType} showResubmitButton onResubmitPress={openResubmitModal} />;
-      default: return <KycDue onVerifyPress={openVerifyModal} screenWidth={screenWidth} />;
+      default: return <KycDue onVerifyPress={openVerifyModal} />;
     }
   };
+
+  /** Pending / resubmit need getKycStatus() doc fields; "due" (0) and others can render real copy immediately so requirements are never hidden behind skeleton. */
+  const showTopCardSkeleton = contentLoading && (kycVerified === 1 || kycVerified === 4);
 
   return (
     <AppSafeAreaView style={{ backgroundColor: themeColors.background, flex: 1 }}>
@@ -417,7 +423,7 @@ const KycStatus = () => {
         <ScrollView style={styles.mainScroll} contentContainerStyle={styles.mainScrollContent} showsVerticalScrollIndicator={false} bounces={false}>
           <KycStepHeader title={kycVerified === 2 ? "KYC Verified" : "KYC Verification"} theme={isDark ? "Dark" : "Light"} />
           <View style={styles.sectionWrapper}>
-            {contentLoading ? <KycStatusSkeleton /> : kycStatusView()}
+            {showTopCardSkeleton ? <KycStatusSkeleton /> : kycStatusView()}
             <View style={[styles.kycSectionCard, { backgroundColor: themeColors.card, borderColor: themeColors.border, borderWidth: 1 }]}>
               <AppText type={FIFTEEN} weight={SEMI_BOLD} style={[styles.kycSectionCardTitle, { color: themeColors.text }]}>Account Benefits</AppText>
               {renderBenefitsTable()}
@@ -461,11 +467,9 @@ const styles = StyleSheet.create({
   kycCardTitle: { marginBottom: 10 },
   kycCardDesc: { lineHeight: 18, marginBottom: 14 },
   kycRequirementsSubtitle: { marginBottom: 12 },
-  kycRequirementsRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
-  kycRequirementsRowColumn: { flexDirection: "column" },
-  kycRequirementsList: { flex: 1, marginBottom: 16 },
-  kycThemeIcon: { width: 100, height: 76, marginLeft: 12 },
-  kycThemeIconSmall: { width: 120, height: 90, alignSelf: "center", marginTop: 12 },
+  kycRequirementsColumn: { width: "100%" },
+  kycRequirementsItems: { width: "100%", marginBottom: 8 },
+  kycThemeIllustration: { width: 120, height: 90, alignSelf: "center", marginBottom: 8 },
   kycSectionCard: { borderRadius: 16, padding: 14, marginBottom: 14 },
   kycSectionCardTitle: { marginBottom: 8 },
   benefitsTableWrap: {},
@@ -492,7 +496,6 @@ const styles = StyleSheet.create({
   kycPendingIllustrationSide: { width: 72, height: 72, marginLeft: 12 },
   kycPendingResubmitButton: { marginTop: 16, width: "100%" },
   starIcon: { width: 14, height: 14, marginRight: 8 },
-  requirementText: { flex: 1 },
   verifyButton: { width: "100%", marginTop: 4 },
   benefitsStar: { width: 10, height: 10, marginRight: 6 },
   faqListWrap: {},

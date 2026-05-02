@@ -44,6 +44,25 @@ const safeAuthPayload = (data: any) => {
   };
 };
 
+/** Prefer API JSON `message` (e.g. "Account already created…") over generic hints. */
+const FETCH_PLACEHOLDER_MSG = new Set([
+  'Server returned non-JSON error response.',
+  'Unexpected non-JSON response from server.',
+]);
+
+const guestSocialApiUserMessage = (e: any, mode: 'signup' | 'login') => {
+  const m = e?.message;
+  if (typeof m === 'string' && m.trim() && !FETCH_PLACEHOLDER_MSG.has(m)) {
+    return m;
+  }
+  if (e?.code === 404) {
+    return mode === 'signup'
+      ? 'Google sign-up is not available on the server yet. Please register with email or phone, or ask your team to add POST /v1/user/third-party-signup.'
+      : 'Google sign-in is not available on the server yet. Please log in with email or phone, or ask your team to add POST /v1/user/third-party-login.';
+  }
+  return (typeof m === 'string' && m.trim()) || 'Something went wrong';
+};
+
 export const sendOtp =
   (data: SendOtpRegistrationProps, setDisbaleBtn = (p0: boolean) => {}, setTimer = (p0: number) => {}) =>
   async (dispatch: AppDispatch) => {
@@ -178,7 +197,7 @@ export const register =
     } catch (e: any) {
       console.log('[third-party-signup] API error:', e?.message ?? e, e?.response ?? '');
       logger(e);
-      showError(e?.message);
+      showError(guestSocialApiUserMessage(e, 'signup'));
       handleClearCaptcha();
     } finally {
       dispatch(setLoading(false));
@@ -258,11 +277,14 @@ export const googleLogin = (data: any) => async (dispatch: AppDispatch) => {
       const no2Fa = d?.['2fa'] === 0;
       const webShape = d?.requiresVerification === true;
 
+      const loginSuccessMsg = response?.message || 'Login successful.';
+
       if (no2Fa && !webShape) {
         appOperation.setCustomerToken(d?.token);
         await AsyncStorage.setItem(USER_TOKEN_KEY, d?.token);
         socketService.reconnectWithToken(d?.token ?? null);
         await dispatch(getUserProfile());
+        showSuccess(loginSuccessMsg);
         NavigationService.resetToMainApp(NAVIGATION_BOTTOM_TAB_STACK);
       } else if (webShape || (d?.['2fa'] && d?.['2fa'] !== 0)) {
         dispatch(setUserData(d));
@@ -281,13 +303,14 @@ export const googleLogin = (data: any) => async (dispatch: AppDispatch) => {
         await AsyncStorage.setItem(USER_TOKEN_KEY, d?.token);
         socketService.reconnectWithToken(d?.token ?? null);
         await dispatch(getUserProfile());
+        showSuccess(loginSuccessMsg);
         NavigationService.resetToMainApp(NAVIGATION_BOTTOM_TAB_STACK);
       }
     }
   } catch (e: any) {
     console.log('[third-party-login] API error:', e?.message ?? e, e?.response ?? '');
     logger(e);
-    showError(e?.message);
+    showError(guestSocialApiUserMessage(e, 'login'));
     if (e?.code == 403) {
       appOperation.setCustomerToken(e?.data);
       NavigationService.navigate(REGISTER_SCREEN, {myToken: true});

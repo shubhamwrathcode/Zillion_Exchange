@@ -53,13 +53,19 @@ export class AppOperation {
 
     // Ensure no double slashes between base_url and root_path or url
     const baseUrl = this.base_url.endsWith('/') ? this.base_url.slice(0, -1) : this.base_url;
+    const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+
+    // Web (AuthService.signupwithGoogle / googleLogin) uses baseUrl + "user/third-party-*"
+    // → POST https://host/user/third-party-signup — no /v1/ segment. Mobile must match or the API returns 404.
+    const guestSocialPathsNoV1 = ['user/third-party-signup', 'user/third-party-login'];
 
     if (url.startsWith('api/')) {
       uri = `${baseUrl}/${url}`;
+    } else if (guestSocialPathsNoV1.includes(cleanUrl)) {
+      uri = `${baseUrl}/${cleanUrl}`;
     } else {
       const rootPath = this.root_path.startsWith('/') ? this.root_path : `/${this.root_path}`;
       const cleanRootPath = rootPath.endsWith('/') ? rootPath : `${rootPath}/`;
-      const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
       uri = `${baseUrl}${cleanRootPath}${cleanUrl}`;
     }
 

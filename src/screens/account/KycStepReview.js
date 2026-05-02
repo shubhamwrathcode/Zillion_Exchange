@@ -123,7 +123,7 @@ const KycStepReview = () => {
         </ScrollView>
         <View style={styles.footer}>
           <TouchableOpacity onPress={onSubmitPress} style={[styles.submitBtn, { backgroundColor: themeColors.button }]} activeOpacity={0.85}>
-            <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: isDark ? colors.black : colors.white }}>Submit KYC</AppText>
+            <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: isDark ? colors.white : colors.white }}>Submit KYC</AppText>
           </TouchableOpacity>
         </View>
       </KeyBoardAware>

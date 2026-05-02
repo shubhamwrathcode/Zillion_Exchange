@@ -244,9 +244,12 @@ const Register = () => {
       const tokens = await GoogleSignin.getTokens();
       console.log("Google tokens:", tokens);
 
+      const idFromAccount =
+        account?.data?.idToken || account?.idToken || account?.data?.id_token;
       let data = {
-        // Backend should verify Google `idToken` (OIDC). Keep accessToken as fallback only.
-        Token: tokens?.idToken || account?.idToken || tokens?.accessToken,
+        // Same as web AuthService.signupwithGoogle: Token = OAuth access_token (not idToken JWT).
+        // iOS may omit accessToken; then fall back to idToken from getTokens() / account.
+        Token: tokens?.accessToken || tokens?.idToken || idFromAccount,
         type: 'google',
         referral_code: referCode || '',
       };

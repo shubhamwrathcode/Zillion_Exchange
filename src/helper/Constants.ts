@@ -3,8 +3,15 @@ export const FCM_TOKEN_KEY = 'FCM_TOKEN_KEY';
 export const APP_THEME = 'APP_THEME';
 export const SELECTED_LANGUAGE = 'SELECTED_LANGUAGE';
 /** API origin (no `/api` segment). Paths are built as `${BASE_URL}v1/...` in AppOperation — same as web. */
-export const BASE_URL = 'https://backend.zillion.wrathcode.com/';
-export const IMAGE_BASE_URL = 'https://backend.zillion.wrathcode.com/';
+export const BASE_URL = 'https://backend.zillionexchange.com/';
+export const IMAGE_BASE_URL = 'https://backend.zillionexchange.com/';
+
+/**
+ * Guest social auth path segments. AppOperation builds the final URL to match web `AuthService`:
+ * POST `${BASE_URL}user/third-party-signup` (no `/v1/` — same as zillion_exchange_web).
+ */
+export const GUEST_THIRD_PARTY_SIGNUP_PATH = 'user/third-party-signup';
+export const GUEST_THIRD_PARTY_LOGIN_PATH = 'user/third-party-login';
 // export const BASE_URL = 'http://3.110.173.10:3008/';
 
 // For passkey testing with backend on localhost:5001 use one of:
