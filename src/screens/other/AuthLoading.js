@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { BackHandler, Linking, Modal, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { BackHandler, Linking, Modal, Platform, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import NavigationService from '../../navigation/NavigationService';
 import { NAVIGATION_AUTH_STACK } from '../../navigation/routes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BASE_URL, SELECTED_LANGUAGE, USER_TOKEN_KEY } from '../../helper/Constants';
+import { APK_BASE_URL, BASE_URL, SELECTED_LANGUAGE, USER_TOKEN_KEY } from '../../helper/Constants';
 import { commonStyles } from '../../theme/commonStyles';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { AppSafeAreaView } from '../../shared';
@@ -21,31 +21,35 @@ const AuthLoading = () => {
   const [CheckCurrent] = useState(getVersion());
   const appVersion = useAppSelector((state) => state.auth.appVersion);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [versionCheckDone, setVersionCheckDone] = useState(false);
+  const proceededRef = useRef(false);
 
-  // --- CORRECTED LOGIC ---
-
-  // Effect 1: Fetch the app version from the API when the component mounts.
-  // The empty dependency array [] ensures this runs only once.
+  // 1) Fetch server version (silent — no full-screen loader on splash).
   useEffect(() => {
-    // dispatch(getAppVersion());
-  }, []);
+    dispatch(getAppVersion({ silent: true })).finally(() => {
+      setVersionCheckDone(true);
+    });
+  }, [dispatch]);
 
-  // Effect 2: Run the version check logic ONLY when the appVersion from the store changes.
+  // 2) After fetch settles: force-update if server `version` !== installed build; else continue boot.
   useEffect(() => {
-    // Add a guard clause to ensure we don't check an empty/initial value.
-    // if (appVersion && appVersion.version) {
-    //   console.log(`Checking versions: Current=${CheckCurrent}, Required=${appVersion.version}`);
-      
-    //   if (CheckCurrent !== appVersion.version) {
-    //     setShowUpdateModal(true);
-    //   } else {
-    //     checkUserLogin();
-    //     checkLanguage();
-    //   }
-    // }
+    if (!versionCheckDone || proceededRef.current) return;
+
+    const serverVersion =
+      appVersion && typeof appVersion === 'object' && appVersion.version != null
+        ? String(appVersion.version).trim()
+        : null;
+    const current = String(CheckCurrent || '').trim();
+
+    if (serverVersion && current !== serverVersion) {
+      setShowUpdateModal(true);
+      return;
+    }
+
+    proceededRef.current = true;
     checkUserLogin();
     checkLanguage();
-  }, [appVersion]); // This effect now correctly depends on the appVersion object.
+  }, [versionCheckDone, appVersion, CheckCurrent]);
 
 
   const success = () => {
@@ -86,17 +90,40 @@ const AuthLoading = () => {
   };
 
   const downloadApk = () => {
-    if (appVersion?.apk) {
-        const apkDownloadUrl = BASE_URL + appVersion.apk;
-        Linking.openURL(apkDownloadUrl).catch((error) => {
-          console.error("Error opening download link:", error);
-        });
+    const v = appVersion && typeof appVersion === 'object' ? appVersion : null;
+    if (!v) return;
+    /** API: `data.apk` = relative path (e.g. `apk/apk-xxx.apk`) or full URL — boss: tap Update → latest APK download */
+    const raw = v.apk || v.download_url || v.android_url;
+    const iosUrl = v.ios_url || v.app_store_url || v.ios_link;
+    if (Platform.OS === 'ios' && iosUrl) {
+      console.log('[AuthLoading] iOS update URL:', iosUrl);
+      Linking.openURL(iosUrl).catch((e) => console.error(e));
+      return;
     }
+    if (!raw) return;
+    const baseForApk =
+      APK_BASE_URL != null && String(APK_BASE_URL).trim() !== ''
+        ? String(APK_BASE_URL).replace(/\/$/, '')
+        : String(BASE_URL).replace(/\/$/, '');
+    const url = String(raw).startsWith('http')
+      ? String(raw)
+      : `${baseForApk}/${String(raw).replace(/^\//, '')}`;
+    console.log('[AuthLoading] APK download URL (Update tapped):', url);
+    Linking.openURL(url).catch((error) => {
+      console.error('Error opening download link:', error);
+    });
   };
 
   const exitApp = () => {
     BackHandler.exitApp();
   };
+
+  // Block Android back while update modal is open (force update).
+  useEffect(() => {
+    if (!showUpdateModal) return undefined;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => sub.remove();
+  }, [showUpdateModal]);
 
   return (
     <AppSafeAreaView source={theme === 'Dark' ? updatedSplashDark : splashTwo}>
@@ -104,19 +131,25 @@ const AuthLoading = () => {
         {/* Your logo or loader can go here */}
       </View>
       
-      <Modal transparent={true} visible={showUpdateModal} animationType="fade" statusBarTranslucent>
+      <Modal
+        transparent
+        visible={showUpdateModal}
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => {}}
+      >
         <View style={styles.fullScreen}>
           <View style={styles.modalBox}>
-            <Text style={styles.title}>Update Required 🚀</Text>
+            <Text style={styles.title}>Update required</Text>
             <Text style={styles.message}>
-              A new version of the app is available.{"\n\n"}
-              This update includes important security fixes, stability
-              improvements, and exciting new features.{"\n\n"}
-              You must update to continue using the app.
+              Your version ({CheckCurrent}) does not match the latest release ({appVersion?.version ?? ''}).{"\n\n"}
+              {Platform.OS === 'ios'
+                ? 'Tap Update to open the App Store and install the latest build.'
+                : 'Tap Update — the latest APK will download (link from server).'}
             </Text>
             <View style={styles.actions}>
               <TouchableOpacity style={styles.updateBtn} onPress={downloadApk}>
-                <Text style={styles.updateText}>Update Now</Text>
+                <Text style={styles.updateText}>{Platform.OS === 'ios' ? 'Update' : 'Update (download APK)'}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.exitBtn} onPress={exitApp}>
                 <Text style={styles.exitText}>Exit App</Text>

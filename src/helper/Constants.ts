@@ -7,6 +7,16 @@ export const BASE_URL = 'https://backend.zillionexchange.com/';
 export const IMAGE_BASE_URL = 'https://backend.zillionexchange.com/';
 
 /**
+ * Optional origin for relative `apk` paths from `user/getApk`. Leave empty to use `BASE_URL`.
+ * Set this if APKs are served from another host/CDN while the API stays on `BASE_URL`.
+ * The API can also return a full `https://…` URL in `data.apk` — that is used as-is.
+ */
+export const APK_BASE_URL = '';
+
+/** Spot / futures chart WebView host (no trailing slash). Same paths as before: `/chart/{theme}/`, `/futures-chart/{theme}/`. */
+export const CHART_WEB_ORIGIN = 'https://zillionexchange.com';
+
+/**
  * Guest social auth path segments. AppOperation builds the final URL to match web `AuthService`:
  * POST `${BASE_URL}user/third-party-signup` (no `/v1/` — same as zillion_exchange_web).
  */

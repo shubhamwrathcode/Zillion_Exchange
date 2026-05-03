@@ -32,9 +32,9 @@ const SOCIAL_DEFAULT_LABELS: Record<number, string> = {
 };
 
 const SOCIAL_LINK_FALLBACK: Record<number, string> = {
-  1: "https://x.com",
-  2: "https://t.me/+VD32TwJiXQMyY2E1",
-  3: "https://www.instagram.com",
+  1: "https://x.com/Zillion_exc",
+  2: "https://t.me/zillionexc",
+  3: "https://www.instagram.com/zillion_exc?utm_source=qr&igsh=MXZsOHlxejgzbmppaQ==",
 };
 
 const stepNumBg = ["#FF4FA3", "#3FA9FF", "#36D399"];

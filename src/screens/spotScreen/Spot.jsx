@@ -74,7 +74,7 @@ import {
 } from "../../shared";
 import PercentQuickSelect from "../../shared/components/PercentQuickSelect";
 import ReactNativeModal from "react-native-modal";
-import { BASE_URL, placeHolderText, titleText } from "../../helper/Constants";
+import { BASE_URL, CHART_WEB_ORIGIN, placeHolderText, titleText } from "../../helper/Constants";
 import {
   setBuyOrders,
   setCoinData,
@@ -799,12 +799,17 @@ const Spot = () => {
   );
 
   const chartBaseUrl = useMemo(
-    () => `https://zillion.wrathcode.com/chart/${theme === "Dark" ? "dark" : "light"}/`,
+    () => `${CHART_WEB_ORIGIN}/chart/${theme === "Dark" ? "dark" : "light"}/`,
     [theme]
   );
   const [chartUri, setChartUri] = useState("");
   const [initialLoadDone, setInitialLoadDone] = useState(false);
-  // console.log(chartUri, "chartBaseUrl");
+
+  useEffect(() => {
+    if (chartUri) {
+      console.log("[Spot] chart URL:", chartUri);
+    }
+  }, [chartUri]);
 
   const onChartLoaded = useCallback(() => {
     if (webViewReadyFallbackRef.current) {

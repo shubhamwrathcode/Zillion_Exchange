@@ -37,6 +37,7 @@ import {
   shareIcon,
   upIcon,
 } from "../../helper/ImageAssets";
+import { CHART_WEB_ORIGIN } from "../../helper/Constants";
 import { useAppSelector } from "../../store/hooks";
 import {
   multiply,
@@ -689,7 +690,7 @@ const Futures = () => {
   const reconnectIntervalRef = useRef(null);
 
   // Updated base URL for mobile chart (web: same chart base)
-  const CHART_BASE_URL = isDark ? "https://zillion.wrathcode.com/futures-chart/dark/" : "https://zillion.wrathcode.com/futures-chart/light/";
+  const CHART_BASE_URL = isDark ? `${CHART_WEB_ORIGIN}/futures-chart/dark/` : `${CHART_WEB_ORIGIN}/futures-chart/light/`;
   const [chartUri, setChartUri] = useState("");
   const [webViewReady, setWebViewReady] = useState(false);
   const [chartRevealed, setChartRevealed] = useState(false);

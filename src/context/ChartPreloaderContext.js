@@ -40,6 +40,7 @@ import React, {
 import { Dimensions, View } from 'react-native';
 import WebView from 'react-native-webview';
 import { useAppSelector } from '../store/hooks';
+import { CHART_WEB_ORIGIN } from '../helper/Constants';
 import { colors } from '../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -50,9 +51,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SPOT_DEFAULT_PAIR = 'BTC_USDT';
 const FUTURES_DEFAULT_PAIR = 'BTC_USDT';
 
-const SPOT_BASE_DARK = 'https://zillion.wrathcode.com/chart/dark/';
-const SPOT_BASE_LIGHT = 'https://zillion.wrathcode.com/chart/light/';
-const FUTURES_BASE = 'https://zillion.wrathcode.com/futures-chart/dark/';
+const SPOT_BASE_DARK = `${CHART_WEB_ORIGIN}/chart/dark/`;
+const SPOT_BASE_LIGHT = `${CHART_WEB_ORIGIN}/chart/light/`;
+const FUTURES_BASE = `${CHART_WEB_ORIGIN}/futures-chart/dark/`;
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 export const ChartPreloaderContext = createContext({

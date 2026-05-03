@@ -9,7 +9,7 @@ import {
 } from '../helper/types';
 import {setAppVersion, setLoading, setLoadingOtp, setUserData, setPending2FA, clearPending2FA} from '../slices/authSlice';
 import {AppDispatch} from '../store/store';
-import {USER_TOKEN_KEY} from '../helper/Constants';
+import {BASE_URL, PASSKEY_RP_ID, USER_TOKEN_KEY} from '../helper/Constants';
 import NavigationService from '../navigation/NavigationService';
 import {
   ACCOUNT_ACTIVATED_SCREEN,
@@ -24,7 +24,6 @@ import {
 } from '../navigation/routes';
 import {getUserProfile} from './accountActions';
 import {Passkey} from 'react-native-passkey';
-import {PASSKEY_RP_ID} from '../helper/Constants';
 import {socketService} from '../services/socket/SocketService';
 
 const redactToken = (token: any) => {
@@ -61,6 +60,12 @@ const guestSocialApiUserMessage = (e: any, mode: 'signup' | 'login') => {
       : 'Google sign-in is not available on the server yet. Please log in with email or phone, or ask your team to add POST /v1/user/third-party-login.';
   }
   return (typeof m === 'string' && m.trim()) || 'Something went wrong';
+};
+
+/** GET URL for version check — same as `AppOperation` guest path `user/getApk`. */
+const getAppVersionRequestUrl = () => {
+  const base = String(BASE_URL).replace(/\/+$/, '');
+  return `${base}/v1/user/getApk`;
 };
 
 export const sendOtp =
@@ -102,23 +107,37 @@ export const sendOtp =
     }
   };
 
+  /** `user/getApk` (web: v1/user/getApk) — optional `{ silent: true }` for splash. */
   export const getAppVersion =
-  () =>
-  async (dispatch: AppDispatch) => {
-    try {
-      dispatch(setLoading(true));
-      const response: any = await appOperation.guest.app_version();
-      if (response.success) {
-        // showError(response.message);
-        dispatch(setAppVersion(response.data));
-      } 
-    } catch (e: any) {
-      logger(e);
-      showError(e?.message);
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
+    (options?: { silent?: boolean }) =>
+    async (dispatch: AppDispatch) => {
+      const silent = options?.silent === true;
+      try {
+        if (!silent) {
+          dispatch(setLoading(true));
+        }
+        console.log('[getAppVersion] full URL:', getAppVersionRequestUrl());
+        const response: any = await appOperation.guest.app_version();
+        console.log(
+          '[getAppVersion] user/getApk response:',
+          JSON.stringify(response, null, 2),
+        );
+        if (response?.success && response?.data != null) {
+          dispatch(setAppVersion(response.data));
+        }
+      } catch (e: any) {
+        console.log('[getAppVersion] full URL:', getAppVersionRequestUrl());
+        console.log('[getAppVersion] user/getApk error:', e?.message ?? e);
+        logger(e);
+        if (!silent) {
+          showError(e?.message);
+        }
+      } finally {
+        if (!silent) {
+          dispatch(setLoading(false));
+        }
+      }
+    };
 
 export const register =
   (data: RegistrationProps, setData = () => {}, setVerifyToken = (data: any) => {}, handleClearCaptcha = () => {}) => async (dispatch: AppDispatch) => {
