@@ -483,7 +483,7 @@ const Login = (): JSX.Element => {
               type={TEN}
               onPress={() => {
                 NavigationService.navigate(CMS_SCREEN, {
-                  id: "https://zillion.wrathcode.com/TermsofUse",
+                  id: "https://zillionexchange.com/TermsofUse",
                 });
               }}
             >

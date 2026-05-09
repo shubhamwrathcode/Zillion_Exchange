@@ -462,7 +462,7 @@ const Register = () => {
                 style={{ color: colors.buttonBg }}
                 onPress={() =>
                   NavigationService.navigate(CMS_SCREEN, {
-                    id: "https://zillion.wrathcode.com/TermsofUse",
+                    id: "hhttps://zillionexchange.com/TermsofUse",
                   })
                 }
               >
@@ -534,7 +534,7 @@ const Register = () => {
           By signing up, I agree to Zillion Exchange user{" "}
           <AppText style={{ color: colors.buttonBg, textDecorationLine: 'underline' }} type={TEN} onPress={() => {
             NavigationService.navigate(CMS_SCREEN, {
-              id: 'https://zillion.wrathcode.com/TermsofUse',
+              id: 'https://zillionexchange.com/TermsofUse',
             });
           }}>
             Terms and Conditions

@@ -46,7 +46,7 @@ import moment from "moment";
 import RefferalRewardSkeleton from "./RefferalRewardSkeleton";
 import { appOperation } from "../../appOperation";
 
-const SIGNUP_BASE_URL = "https://zillion.wrathcode.com";
+const SIGNUP_BASE_URL = "https://zillionexchange.com";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CONTENT_PADDING = 16;
 const CONTENT_WIDTH = SCREEN_WIDTH - CONTENT_PADDING * 2;
@@ -545,7 +545,7 @@ const RefferalReward = () => {
                 </TouchableOpacity>
               </View>
             </View>
-           
+
 
             {/* More Referral Events */}
             <View style={styles.eventsSection}>
@@ -811,7 +811,7 @@ const RefferalReward = () => {
                                   style={[styles.rhName, { color: isDark ? colors.white : "#111827" }]}
                                   numberOfLines={1}
                                 >
-                                   {displayName}
+                                  {displayName}
                                 </AppText>
                                 <AppText
                                   type={TWELVE}
@@ -826,7 +826,7 @@ const RefferalReward = () => {
                               </View>
 
                               {hasEarned ? (
-                                <View style={{ marginRight:20 }}>
+                                <View style={{ marginRight: 20 }}>
                                   <View
                                     style={[
                                       styles.rhEarnPill,
@@ -1020,7 +1020,7 @@ const RefferalReward = () => {
               ) : (
                 <View style={styles.noDataWrap}>
                   <FastImage source={isDark ? NO_NOTIFICATION_ICON : NO_NOTIFICATION_ICON_LIGHT} style={{ width: 80, height: 80 }} resizeMode="contain" />
-               
+
                 </View>
               )}
             </View>
