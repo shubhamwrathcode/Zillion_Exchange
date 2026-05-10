@@ -67,6 +67,7 @@ import { KYC_STATUS_SCREEN, WALLET_SCREEN } from "../../navigation/routes";
 import NavigationService from "../../navigation/NavigationService";
 import { colors } from "../../theme/colors";
 import { SocketContext } from "../../SocketProvider";
+import AirdropPromoBannerModal from "../../shared/components/AirdropPromoBannerModal";
 
 import { useTheme } from "../../hooks/useTheme";
 
@@ -212,6 +213,7 @@ const Home = () => {
         <View>
           {showCoinSkeleton ? <CoinListSkeleton /> : <CoinList />}
         </View>
+        <AirdropPromoBannerModal enabled={true} />
       </KeyBoardAware>
     </AppSafeAreaView>
   );

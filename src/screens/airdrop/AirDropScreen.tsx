@@ -6,7 +6,6 @@ import LinearGradient from "react-native-linear-gradient";
 import { useTheme } from "../../hooks/useTheme";
 import { appOperation } from "../../appOperation";
 import NavigationService from "../../navigation/NavigationService";
-import { LOGIN_SCREEN, REGISTER_SCREEN } from "../../navigation/routes";
 import {
   AppSafeAreaView,
   AppText,
@@ -20,7 +19,7 @@ import {
   YELLOW,
 } from "../../shared";
 import KeyBoardAware from "../../shared/components/KeyboardAware";
-import { airdrop_bnr_img, airdrop_stats_icon, airdrop_stats_icon2, airdrop_stats_icon3, airdrop_stats_icon4, back_ic, bonusbg, giftIc, instaIcon, LOCK_ICON, telegramIcon, tokenlock, twitterIcon } from "../../helper/ImageAssets";
+import { airdrop_bnr_img, airdrop_stats_icon, airdrop_stats_icon2, airdrop_stats_icon3, airdrop_stats_icon4, back_ic, bonusbg, giftIc, instaIcon, LOCK_ICON, telegramIcon, tokenlock, twitterIcon, youTubeIcn, CHAT_IMG } from "../../helper/ImageAssets";
 import { colors } from "../../theme/colors";
 import { showError, showSuccess } from "../../helper/logger";
 import { USER_TOKEN_KEY } from "../../helper/Constants";
@@ -29,15 +28,19 @@ const SOCIAL_DEFAULT_LABELS: Record<number, string> = {
   1: "Open X",
   2: "Open Telegram",
   3: "Open Instagram",
+  4: "Open YouTube",
+  5: "Open WhatsApp",
 };
 
 const SOCIAL_LINK_FALLBACK: Record<number, string> = {
   1: "https://x.com/Zillion_exc",
   2: "https://t.me/zillionexc",
   3: "https://www.instagram.com/zillion_exc?utm_source=qr&igsh=MXZsOHlxejgzbmppaQ==",
+  4: "https://www.youtube.com/@ZillionExchange",
+  5: "https://whatsapp.com/channel/0029VbCYwlUAe5VwyoR1OC30",
 };
 
-const stepNumBg = ["#FF4FA3", "#3FA9FF", "#36D399"];
+const stepNumBg = ["#FF4FA3", "#3FA9FF", "#36D399", "#FF0000", "#25D366"];
 
 const GUEST_STEPS = [
   {
@@ -55,6 +58,14 @@ const GUEST_STEPS = [
     title: "Connect & Claim Tokens",
     body: "Connect your account, verify tasks, and claim your token rewards instantly.",
   },
+];
+
+const SOCIAL_TASK_DEFS = [
+  { n: 1, title: "Follow on X", hint: "Follow our official X account, then mark done." },
+  { n: 2, title: "Join Telegram", hint: "Join our Telegram community, then mark done." },
+  { n: 3, title: "Follow on Instagram", hint: "Follow us on Instagram, then mark done." },
+  { n: 4, title: "Subscribe on YouTube", hint: "Open our YouTube channel and subscribe, then mark done." },
+  { n: 5, title: "Join WhatsApp", hint: "Open our WhatsApp channel or chat link, then mark done." },
 ];
 
 const normalizeSocialUrl = (v: any) => {
@@ -105,6 +116,14 @@ function getSocialUrlFromOtherSettings(settings: any, taskNum: number) {
   }
   if (n === "3") {
     const u = normalizeSocialUrl(settings.instagramUrl) || normalizeSocialUrl(settings.instagram);
+    if (u) return u;
+  }
+  if (n === "4") {
+    const u = normalizeSocialUrl(settings.youtubeUrl) || normalizeSocialUrl(settings.youtubeChannelUrl) || normalizeSocialUrl(settings.youtube);
+    if (u) return u;
+  }
+  if (n === "5") {
+    const u = normalizeSocialUrl(settings.whatsappUrl) || normalizeSocialUrl(settings.whatsAppUrl) || normalizeSocialUrl(settings.whatsapp);
     if (u) return u;
   }
   return null;
@@ -219,19 +238,28 @@ const AirDropScreen = () => {
     [referralRewardStatus]
   );
 
-  const socialProgress = useMemo(() => {
-    if (referralRewardStatus?.socialTasksCompleted) {
-      return { done: 3, total: 3, pct: 100 };
-    }
-    const list = referralRewardStatus?.referral_social_tasks;
-    const done = Array.isArray(list) ? list.length : 0;
-    const total = 3;
-    return {
-      done,
-      total,
-      pct: total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0,
-    };
+  const socialTasksRequired = useMemo(() => {
+    const t = Number(referralRewardStatus?.socialTasksRequired ?? referralRewardStatus?.total);
+    if (Number.isFinite(t) && t > 0) return t;
+    return 5;
   }, [referralRewardStatus]);
+
+  const socialProgress = useMemo(() => {
+    const total = socialTasksRequired;
+    const completedField = Number(referralRewardStatus?.completed);
+    const list = referralRewardStatus?.referral_social_tasks;
+    const listLen = Array.isArray(list) ? list.length : 0;
+    let done = Number.isFinite(completedField) ? completedField : listLen;
+
+    if (referralRewardStatus?.rewardClaimed) {
+      done = total;
+    } else if (referralRewardStatus?.socialTasksCompleted) {
+      done = Math.max(done, total);
+    }
+    done = Math.min(Math.max(done, 0), total);
+    const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+    return { done, total, pct };
+  }, [referralRewardStatus, socialTasksRequired]);
 
   const getLinkForTask = useCallback(
     (taskNum: number) => {
@@ -306,8 +334,8 @@ const AirDropScreen = () => {
         }
       }
       throw lastErr;
-    } catch {
-      showError("Could not open link");
+    } catch (e) {
+      console.log("Could not open link", e);
     }
   }, [buildPreferredAppUrls]);
 
@@ -333,7 +361,7 @@ const AirDropScreen = () => {
   );
 
   const SocialIcon = ({ n }: { n: number }) => {
-    const src = n === 1 ? twitterIcon : n === 2 ? telegramIcon : instaIcon;
+    const src = n === 1 ? twitterIcon : n === 2 ? telegramIcon : n === 3 ? instaIcon : n === 4 ? youTubeIcn : CHAT_IMG;
     return <FastImage source={src} style={{ width: 18, height: 18 }} resizeMode="contain" />;
   };
 
@@ -378,18 +406,14 @@ const AirDropScreen = () => {
   const stepCardGradient = useCallback(
     (n: number, done?: boolean) => {
       if (isDark) {
-        return done
-          ? ["#16241B", "#0F1712"]
-          : n === 1
-            ? ["#1A1730", "#10121B"]
-            : n === 2
-              ? ["#10233D", "#0C1624"]
-              : ["#10261A", "#0B140F"];
+        if (done) return ["#16241B", "#0F1712"];
+        if (n === 1 || n === 5) return ["#1A1730", "#10121B"];
+        if (n === 2 || n === 4) return ["#10233D", "#0C1624"];
+        return ["#10261A", "#0B140F"];
       }
-      // Light (match website mobile): task 1 = purple tint, task 2/3 = mint tint
       if (done) return ["#EAF6EE", "#F7FBF8"];
-      if (n === 1) return ["#EEF2FF", "#FFFFFF"];
-      if (n === 2) return ["#EAF6EE", "#FFFFFF"];
+      if (n === 1 || n === 5) return ["#EEF2FF", "#FFFFFF"];
+      if (n === 2 || n === 4) return ["#E0F2FE", "#FFFFFF"]; // slightly blueish
       return ["#EAF6EE", "#FFFFFF"];
     },
     [isDark]
@@ -603,13 +627,13 @@ const AirDropScreen = () => {
                   </View>
 
                   <View style={styles.progressTasks}>
-                    {[1, 2, 3].map((n) => (
-                      <View key={n} style={styles.progressTaskRow}>
+                    {SOCIAL_TASK_DEFS.map((s) => (
+                      <View key={s.n} style={styles.progressTaskRow}>
                         <View style={styles.progressDotOuter}>
                           <View style={styles.progressDotInner} />
                         </View>
                         <AppText type={TWELVE} weight={MEDIUM} style={{ color: isDark ? "rgba(255,255,255,0.80)" : "#2E7D32" }}>
-                          Task {n}
+                          Task {s.n}
                         </AppText>
                       </View>
                     ))}
@@ -617,7 +641,7 @@ const AirDropScreen = () => {
                 </LinearGradient>
 
                 <View style={{ marginTop: 10 }}>
-                  {GUEST_STEPS.map((s) => {
+                  {SOCIAL_TASK_DEFS.map((s) => {
                     const n = s.n;
                     const link = getLinkForTask(n);
                     const done = isTaskComplete(n);

@@ -379,8 +379,11 @@ export const airdrop_stats_icon2 = require('../../assets/images/airdrop_stats_ic
 export const airdrop_stats_icon3 = require('../../assets/images/airdrop_stats_icon3.png');
 export const airdrop_stats_icon4 = require('../../assets/images/airdrop_stats_icon4.png');
 export const airdropLight = require('../../assets/images/airdropLight.png');
-export const airdropDark= require('../../assets/images/airdropDark.png');
-export const earngift_vector1= require('../../assets/images/earngift_vector1.png');
+export const airdropDark = require('../../assets/images/airdropDark.png');
+export const earngift_vector1 = require('../../assets/images/earngift_vector1.png');
+export const zillionBanner = require('../../assets/images/Zillion-banner.png');
+export const whatsapp = require('../../assets/images/whatsapp.png');
+
 
 
 
