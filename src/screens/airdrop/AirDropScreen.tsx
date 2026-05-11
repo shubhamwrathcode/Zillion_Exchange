@@ -817,10 +817,10 @@ const AirDropScreen = () => {
               style={{ marginTop: 12 }}
             >
               {[
-                { title: "Round 1", pct: "10%", sub: "Token Distribution", time: "1–2 Weeks" },
-                { title: "Round 2", pct: "15%", sub: "Token Distribution", time: "3–4 Weeks" },
-                { title: "Round 3", pct: "25%", sub: "Token Distribution", time: "5–6 Weeks" },
-                { title: "Round 4", pct: "50%", sub: "Token Distribution", time: "7–8 Weeks" },
+                { title: "Round 1", pct: "10%", sub: "Token Distribution", time: "1 - 3 Months" },
+                { title: "Round 2", pct: "15%", sub: "Token Distribution", time: "4 - 6 Months" },
+                { title: "Round 3", pct: "25%", sub: "Token Distribution", time: "7 - 12 Months" },
+                { title: "Round 4", pct: "50%", sub: "Token Distribution", time: "13 - 24 Months" },
               ].map((x) => (
                 <LinearGradient
                   key={x.title}
