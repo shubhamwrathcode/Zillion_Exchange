@@ -19,10 +19,14 @@ import {
   YELLOW,
 } from "../../shared";
 import KeyBoardAware from "../../shared/components/KeyboardAware";
-import { airdrop_bnr_img, airdrop_stats_icon, airdrop_stats_icon2, airdrop_stats_icon3, airdrop_stats_icon4, back_ic, bonusbg, giftIc, instaIcon, LOCK_ICON, telegramIcon, tokenlock, twitterIcon, youTubeIcn, CHAT_IMG } from "../../helper/ImageAssets";
+import { airdrop_bnr_img, airdrop_stats_icon, airdrop_stats_icon2, airdrop_stats_icon3, airdrop_stats_icon4, back_ic, bonusbg, giftIc, instaIcon, LOCK_ICON, telegramIcon, tokenlock, twitterIcon, youTubeIcn, CHAT_IMG, PHONE } from "../../helper/ImageAssets";
 import { colors } from "../../theme/colors";
 import { showError, showSuccess } from "../../helper/logger";
 import { USER_TOKEN_KEY } from "../../helper/Constants";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { getUserProfile } from "../../actions/accountActions";
+import { ADD_PHONE_NUMBER_SCREEN } from "../../navigation/routes";
+import { useFocusEffect } from "@react-navigation/native";
 
 const SOCIAL_DEFAULT_LABELS: Record<number, string> = {
   1: "Open X",
@@ -40,7 +44,7 @@ const SOCIAL_LINK_FALLBACK: Record<number, string> = {
   5: "https://whatsapp.com/channel/0029VbCYwlUAe5VwyoR1OC30",
 };
 
-const stepNumBg = ["#FF4FA3", "#3FA9FF", "#36D399", "#FF0000", "#25D366"];
+const stepNumBg = ["#FF4FA3", "#3FA9FF", "#36D399", "#FF0000", "#25D366", "#8B5CF6"];
 
 const GUEST_STEPS = [
   {
@@ -141,12 +145,16 @@ const formatRewardAmount = (value: any, currencyShortName?: any) => {
 
 const AirDropScreen = () => {
   const { colors: themeColors, isDark } = useTheme();
+  const dispatch = useAppDispatch();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [taskSubmitting, setTaskSubmitting] = useState<number | null>(null);
   const [otherSettings, setOtherSettings] = useState<any>(null);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [rewardStatusLoading, setRewardStatusLoading] = useState(false);
   const [referralRewardStatus, setReferralRewardStatus] = useState<any>(null);
+
+  const userData = useAppSelector((state: any) => state.auth.userData);
+  const isPhoneSignupUser = userData?.registeredBy === "phone";
 
   const syncLogin = useCallback(async () => {
     try {
@@ -188,10 +196,13 @@ const AirDropScreen = () => {
     fetchOtherSettings();
   }, [fetchOtherSettings]);
 
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    fetchReferralRewardStatus();
-  }, [isLoggedIn, fetchReferralRewardStatus]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!isLoggedIn) return;
+      dispatch(getUserProfile(false, false, true));
+      fetchReferralRewardStatus();
+    }, [isLoggedIn, dispatch, fetchReferralRewardStatus])
+  );
 
   const ccy = otherSettings?.currencyShortName;
 
@@ -228,38 +239,49 @@ const AirDropScreen = () => {
     [otherSettings?.level3Reward, ccy]
   );
 
+  const mobileTaskId = useMemo(() => {
+    const t = Number(referralRewardStatus?.referralMobileTaskId);
+    return Number.isFinite(t) && t > 0 ? t : 6;
+  }, [referralRewardStatus]);
+
+  const satisfiedTaskIds = useMemo(() => {
+    const ids = new Set(
+      (referralRewardStatus?.referral_social_tasks || [])
+        .map(Number)
+        .filter((x: any) => Number.isFinite(x) && x >= 1)
+    );
+    if (referralRewardStatus?.mobileTaskSatisfied) {
+      ids.add(mobileTaskId);
+    }
+    return ids;
+  }, [referralRewardStatus?.referral_social_tasks, referralRewardStatus?.mobileTaskSatisfied, mobileTaskId]);
+
   const isTaskComplete = useCallback(
     (taskNum: number) => {
-      if (referralRewardStatus?.socialTasksCompleted) return true;
-      const done = referralRewardStatus?.referral_social_tasks;
-      if (!Array.isArray(done)) return false;
-      return done.map(Number).includes(Number(taskNum));
+      if (referralRewardStatus?.rewardClaimed || referralRewardStatus?.socialTasksCompleted) return true;
+      return satisfiedTaskIds.has(Number(taskNum));
     },
-    [referralRewardStatus]
+    [referralRewardStatus, satisfiedTaskIds]
   );
 
   const socialTasksRequired = useMemo(() => {
     const t = Number(referralRewardStatus?.socialTasksRequired ?? referralRewardStatus?.total);
     if (Number.isFinite(t) && t > 0) return t;
-    return 5;
+    return 6;
   }, [referralRewardStatus]);
 
   const socialProgress = useMemo(() => {
     const total = socialTasksRequired;
-    const completedField = Number(referralRewardStatus?.completed);
-    const list = referralRewardStatus?.referral_social_tasks;
-    const listLen = Array.isArray(list) ? list.length : 0;
-    let done = Number.isFinite(completedField) ? completedField : listLen;
-
-    if (referralRewardStatus?.rewardClaimed) {
+    let done;
+    if (referralRewardStatus?.rewardClaimed || referralRewardStatus?.socialTasksCompleted) {
       done = total;
-    } else if (referralRewardStatus?.socialTasksCompleted) {
-      done = Math.max(done, total);
+    } else {
+      done = Array.from(satisfiedTaskIds).filter((id: any) => id >= 1 && id <= total).length;
     }
     done = Math.min(Math.max(done, 0), total);
     const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
     return { done, total, pct };
-  }, [referralRewardStatus, socialTasksRequired]);
+  }, [referralRewardStatus, socialTasksRequired, satisfiedTaskIds]);
 
   const getLinkForTask = useCallback(
     (taskNum: number) => {
@@ -627,16 +649,61 @@ const AirDropScreen = () => {
                   </View>
 
                   <View style={styles.progressTasks}>
-                    {SOCIAL_TASK_DEFS.map((s) => (
-                      <View key={s.n} style={styles.progressTaskRow}>
-                        <View style={styles.progressDotOuter}>
-                          <View style={styles.progressDotInner} />
+                    {SOCIAL_TASK_DEFS.map((s) => {
+                      const done = isTaskComplete(s.n);
+                      return (
+                        <View key={s.n} style={styles.progressTaskRow}>
+                          <View
+                            style={[
+                              styles.progressDotOuter,
+                              { backgroundColor: done ? "rgba(34,197,94,0.20)" : "rgba(156,163,175,0.20)" },
+                            ]}
+                          >
+                            <View
+                              style={[
+                                styles.progressDotInner,
+                                { backgroundColor: done ? "#22c55e" : "#9ca3af" },
+                              ]}
+                            />
+                          </View>
+                          <AppText
+                            type={TWELVE}
+                            weight={MEDIUM}
+                            style={{ color: done ? (isDark ? "rgba(255,255,255,0.80)" : "#2E7D32") : (isDark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.40)") }}
+                          >
+                            Task {s.n}
+                          </AppText>
                         </View>
-                        <AppText type={TWELVE} weight={MEDIUM} style={{ color: isDark ? "rgba(255,255,255,0.80)" : "#2E7D32" }}>
-                          Task {s.n}
-                        </AppText>
-                      </View>
-                    ))}
+                      );
+                    })}
+                    {/* Task 6 - Mobile Verification */}
+                    {(() => {
+                      const done = isTaskComplete(mobileTaskId);
+                      return (
+                        <View style={styles.progressTaskRow}>
+                          <View
+                            style={[
+                              styles.progressDotOuter,
+                              { backgroundColor: done ? "rgba(34,197,94,0.20)" : "rgba(156,163,175,0.20)" },
+                            ]}
+                          >
+                            <View
+                              style={[
+                                styles.progressDotInner,
+                                { backgroundColor: done ? "#22c55e" : "#9ca3af" },
+                              ]}
+                            />
+                          </View>
+                          <AppText
+                            type={TWELVE}
+                            weight={MEDIUM}
+                            style={{ color: done ? (isDark ? "rgba(255,255,255,0.80)" : "#2E7D32") : (isDark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.40)") }}
+                          >
+                            Task {mobileTaskId} (Mobile)
+                          </AppText>
+                        </View>
+                      );
+                    })()}
                   </View>
                 </LinearGradient>
 
@@ -709,6 +776,67 @@ const AirDropScreen = () => {
                       </LinearGradient>
                     );
                   })}
+
+                  {/* Verified mobile task card */}
+                  {(() => {
+                    const done = isTaskComplete(mobileTaskId);
+                    return (
+                      <LinearGradient
+                        key={mobileTaskId}
+                        colors={stepCardGradient(mobileTaskId, done)}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={[
+                          styles.taskCard,
+                          { borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)" },
+                        ]}
+                      >
+                        <View style={styles.taskHead}>
+                          <View style={[styles.stepNum, { backgroundColor: stepNumBg[mobileTaskId - 1] || stepNumBg[0] }]}>
+                            <AppText weight={SEMI_BOLD} type={TWELVE} style={{ color: colors.white }}>
+                              {mobileTaskId}
+                            </AppText>
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <AppText weight={SEMI_BOLD} type={TWELVE} color={themeColors.text}>
+                              Verified mobile
+                            </AppText>
+                            {done && (
+                              <AppText type={TEN} color={colors.buttonBg} style={{ marginTop: 2 }}>
+                                Completed
+                              </AppText>
+                            )}
+                          </View>
+                        </View>
+
+                        <AppText type={TWELVE} color={themeColors.secondaryText} style={{ marginTop: 10, lineHeight: 18 }}>
+                          {isPhoneSignupUser
+                            ? "You registered with a phone number — this step is satisfied automatically when your account shows a verified mobile (confirm above via task progress)."
+                            : "Verify Your Mobile Number to claim your signup bonus."}
+                        </AppText>
+
+                        {!done && !isPhoneSignupUser && (
+                          <View style={styles.taskActions}>
+                            <TouchableOpacity
+                              style={[
+                                styles.linkOutBtn,
+                                {
+                                  borderColor: isDark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.08)",
+                                  backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(30,86,245,0.10)",
+                                },
+                              ]}
+                              onPress={() => NavigationService.navigate(ADD_PHONE_NUMBER_SCREEN)}
+                            >
+                              <FastImage source={PHONE} style={{ width: 18, height: 18 }} resizeMode="contain" />
+                              <AppText type={TWELVE} color={themeColors.text} style={{ marginLeft: 8 }}>
+                                Add & verify mobile
+                              </AppText>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </LinearGradient>
+                    );
+                  })()}
                 </View>
               </>
             )}

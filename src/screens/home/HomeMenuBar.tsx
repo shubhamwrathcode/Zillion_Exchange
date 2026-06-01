@@ -140,12 +140,15 @@ const HomeMenuBar = () => {
   };
 
   return (
-    <View style={[styles.container, { justifyContent: "space-around", paddingHorizontal: 10 }]}>
-      {Data.map((item, index) => (
-        <React.Fragment key={item.id}>
-          {renderItem({ item, index })}
-        </React.Fragment>
-      ))}
+    <View style={styles.container}>
+      <FlatList
+        data={Data}
+        renderItem={renderItem}
+        horizontal
+        ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
+        keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
+      />
 
     </View>
   );

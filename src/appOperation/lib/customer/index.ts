@@ -436,9 +436,16 @@ export default (appOperation: AppOperation) => ({
   /** Same as web: POST security/passkey/auth/verify - returns { success, data: { userId } } */
   passkeyVerifyAuth: (signId: string, credential: object) =>
     appOperation.post('security/passkey/auth/verify', { signId, credential }, CUSTOMER_TYPE),
-  /** Same as web: POST security/mobile/add - body { mobileNumber, countryCode, mobileOtp } */
-  securityMobileAdd: (data: { mobileNumber: string; countryCode: string; mobileOtp: string }) =>
-    appOperation.post('security/mobile/add', data, CUSTOMER_TYPE),
+  /** Same as web: POST security/mobile/add - body { mobileNumber, countryCode, mobileOtp, emailOtp?, tofaCode?, passkeyVerified?, passkeyUserId? } */
+  securityMobileAdd: (data: {
+    mobileNumber: string;
+    countryCode: string;
+    mobileOtp: string;
+    emailOtp?: string;
+    tofaCode?: string;
+    passkeyVerified?: boolean;
+    passkeyUserId?: string;
+  }) => appOperation.post('security/mobile/add', data, CUSTOMER_TYPE),
   /** Same as web: POST security/email/add - body { email, tofaCode?, mobileOtp?, emailOtp } */
   securityEmailAdd: (data: { email: string; tofaCode?: string; mobileOtp?: string; emailOtp: string }) =>
     appOperation.post('security/email/add', data, CUSTOMER_TYPE),
@@ -551,6 +558,13 @@ export default (appOperation: AppOperation) => ({
     Staking_History: (data: any) =>
       appOperation.get(
         'staking/staking_history',
+        undefined,
+        undefined,
+        CUSTOMER_TYPE,
+      ),
+    staking_referral_commissions: (page: any, limit: any) =>
+      appOperation.get(
+        `earning/staking-referral-commissions?page=${page}&limit=${limit}`,
         undefined,
         undefined,
         CUSTOMER_TYPE,

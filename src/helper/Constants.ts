@@ -22,14 +22,8 @@ export const CHART_WEB_ORIGIN = 'https://zillionexchange.com';
  */
 export const GUEST_THIRD_PARTY_SIGNUP_PATH = 'user/third-party-signup';
 export const GUEST_THIRD_PARTY_LOGIN_PATH = 'user/third-party-login';
-// export const BASE_URL = 'http://3.110.173.10:3008/';
 
-// For passkey testing with backend on localhost:5001 use one of:
-// 'http://localhost:5001/' (same machine) | 'http://10.0.2.2:5001/' (Android emulator) | 'http://<your-ip>:5001/' (device)
-
-/** Passkey RP ID. Must match the domain that serves /.well-known/assetlinks.json (required on Android). Use zillion.wrathcode.com - backend sends this and assetlinks.json is hosted there. */
-export const PASSKEY_RP_ID = 'zillion.wrathcode.com';
-
+export const CAPTCHA_KEY = '6Ld7dJcrAAAAAK-0IDXac7t8X-0NJzBOm6IhWae3';
 export const placeHolderText = {
   userName: 'Phone Number',
   email: 'Enter Email',

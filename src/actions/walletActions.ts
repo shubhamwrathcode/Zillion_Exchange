@@ -62,7 +62,9 @@ import {
   setUserFuturesWallet,
   setUserOptionsWallet,
   setWalletBalanceFutures,
-  setWalletBalanceOptions
+  setWalletBalanceOptions,
+  setStakingCommissionData,
+  clearStakingCommissionData
 } from '../slices/walletSlice';
 import {AppDispatch} from '../store/store';
 
@@ -237,6 +239,21 @@ export const getAdminTrades = (skip: any, limit: any) => async (dispatch: AppDis
     logger(e);
   } finally {
     
+    dispatch(setLoading(false));
+  }
+};
+
+export const getStakingReferralCommissions = (page: any, limit: any) => async (dispatch: AppDispatch) => {
+  try {
+    if (page === 1) dispatch(clearStakingCommissionData());
+    dispatch(setLoading(true));
+    const response: any = await appOperation.customer.staking_referral_commissions(page, limit);
+    if (response.success) {
+      dispatch(setStakingCommissionData(response?.data));
+    }
+  } catch (e) {
+    logger(e);
+  } finally {
     dispatch(setLoading(false));
   }
 };

@@ -953,15 +953,29 @@ export const verifyPasskeyRegistration = (credential: object, name: string) => a
   }
 };
 
-/** Same as web: POST security/mobile/add - add mobile number to account. Button loader only, no SpinnerSecond. */
-export const addMobileToAccount = (mobileNumber: string, countryCode: string, mobileOtp: string) => async (dispatch: AppDispatch) => {
+export const addMobileToAccount = (
+  mobileNumber: string,
+  countryCode: string,
+  mobileOtp: string,
+  emailOtp?: string,
+  tofaCode?: string,
+  passkeyVerified?: boolean,
+  passkeyUserId?: string
+) => async (dispatch: AppDispatch) => {
   try {
     dispatch(setLoadingOtp(true));
-    const payload = {
+    const payload: any = {
       mobileNumber: String(mobileNumber ?? '').trim(),
       countryCode: String(countryCode ?? '').trim(),
       mobileOtp: String(mobileOtp ?? '').trim(),
     };
+    if (emailOtp) payload.emailOtp = String(emailOtp).trim();
+    if (tofaCode) payload.tofaCode = String(tofaCode).trim();
+    if (passkeyVerified) payload.passkeyVerified = passkeyVerified;
+    if (passkeyUserId) payload.passkeyUserId = String(passkeyUserId).trim();
+
+    console.log('[AddMobile] Payload:', JSON.stringify(payload));
+
     const response: any = await appOperation.customer.securityMobileAdd(payload);
     if (response?.success) {
       dispatch(getUserProfile());

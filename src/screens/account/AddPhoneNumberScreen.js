@@ -103,11 +103,7 @@ const AddPhoneNumberScreen = () => {
         showError('Please enter a valid 6-digit OTP');
         return;
       }
-      const verified = await dispatch(verifySecurityOtp(verifyMethod, emailOtp, 'add_mobile'));
-      if (verified) {
-        showSuccess('Verified!');
-        setStep(3);
-      }
+      setStep(3);
     }
   };
 
@@ -142,7 +138,13 @@ const AddPhoneNumberScreen = () => {
       showError('Please enter a valid mobile number');
       return;
     }
-    const success = await dispatch(addMobileToAccount(mobileNumberDigits, countryCodeStr.trim(), newMobileOtp));
+    const success = await dispatch(addMobileToAccount(
+      mobileNumberDigits,
+      countryCodeStr.trim(),
+      newMobileOtp,
+      emailOtp || undefined,
+      googleCode || undefined
+    ));
     if (success) {
       await dispatch(getUserProfile());
       navigation.goBack();

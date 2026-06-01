@@ -120,6 +120,7 @@ export interface WalletSliceProps {
   interalWalletHistory: any[] | null;
   swapCurrencyList: [],
   swapConversionRate: any;
+  stakingCommissionData?: any;
 }
 
 export interface SendOtpRegistrationProps {

@@ -49,6 +49,7 @@ export const initialState: WalletSliceProps = {
   interalWalletHistory: [],
   swapCurrencyList: [],
   swapConversionRate: undefined,
+  stakingCommissionData: undefined,
 };
 
 export const walletSlice = createSlice({
@@ -214,6 +215,12 @@ export const walletSlice = createSlice({
     setSwapConversionRate: (state, {payload}) => {
       state.swapConversionRate = payload;
     },
+    setStakingCommissionData: (state, {payload}) => {
+      state.stakingCommissionData = payload;
+    },
+    clearStakingCommissionData: (state) => {
+      state.stakingCommissionData = null;
+    },
     
   },
 });
@@ -270,6 +277,8 @@ export const {
   setInteralWalletHistory,
   clearInteralWalletHistory,
   setSwapCurrencyList,
-  setSwapConversionRate
+  setSwapConversionRate,
+  setStakingCommissionData,
+  clearStakingCommissionData
 } = walletSlice.actions;
 export const walletReducer = walletSlice.reducer;

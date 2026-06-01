@@ -25,30 +25,33 @@ const AuthLoading = () => {
   const proceededRef = useRef(false);
 
   // 1) Fetch server version (silent — no full-screen loader on splash).
-  useEffect(() => {
-    dispatch(getAppVersion({ silent: true })).finally(() => {
-      setVersionCheckDone(true);
-    });
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(getAppVersion({ silent: true })).finally(() => {
+  //     setVersionCheckDone(true);
+  //   });
+  // }, [dispatch]);
 
   // 2) After fetch settles: force-update if server `version` !== installed build; else continue boot.
   useEffect(() => {
-    if (!versionCheckDone || proceededRef.current) return;
+    // if (!versionCheckDone || proceededRef.current) return;
 
-    const serverVersion =
-      appVersion && typeof appVersion === 'object' && appVersion.version != null
-        ? String(appVersion.version).trim()
-        : null;
-    const current = String(CheckCurrent || '').trim();
+    // const serverVersion =
+    //   appVersion && typeof appVersion === 'object' && appVersion.version != null
+    //     ? String(appVersion.version).trim()
+    //     : null;
+    // const current = String(CheckCurrent || '').trim();
 
-    if (serverVersion && current !== serverVersion) {
-      setShowUpdateModal(true);
-      return;
-    }
+    // if (serverVersion && current !== serverVersion) {
+    //   setShowUpdateModal(true);
+    //   return;
+    // }
 
-    proceededRef.current = true;
+    // proceededRef.current = true;
+
     checkUserLogin();
     checkLanguage();
+
+
   }, [versionCheckDone, appVersion, CheckCurrent]);
 
 
@@ -130,13 +133,13 @@ const AuthLoading = () => {
       <View style={commonStyles.center}>
         {/* Your logo or loader can go here */}
       </View>
-      
+
       <Modal
         transparent
         visible={showUpdateModal}
         animationType="fade"
         statusBarTranslucent
-        onRequestClose={() => {}}
+        onRequestClose={() => { }}
       >
         <View style={styles.fullScreen}>
           <View style={styles.modalBox}>

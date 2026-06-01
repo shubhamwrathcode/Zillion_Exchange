@@ -160,6 +160,7 @@ import TicketScreen from "../screens/supportSreen/TicketScreen";
 import { useTheme } from "../hooks/useTheme";
 import AirDropScreen from "../screens/airdrop/AirDropScreen";
 import AirdropHistoryScreen from "../screens/airdrop/AirdropHistoryScreen";
+import StakingCommissionHistory from "../screens/account/StakingCommissionHistory";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -407,6 +408,7 @@ const MyAuthLoadingStack = () => {
       <Stack.Screen name={'Wallet_History'} component={NewWalletHistory} />
       <Stack.Screen name={'Swap_History'} component={NewSwapHistory} />
       <Stack.Screen name={'Admin_Trade'} component={AdminTradeHistory} />
+      <Stack.Screen name={routes.STAKING_COMMISSION_HISTORY} component={StakingCommissionHistory} />
       <Stack.Screen name={'Ticket_Screen'} component={TicketScreen} />
       <Stack.Screen name={'BuyPackage'} component={BuyPackage} />
       <Stack.Screen

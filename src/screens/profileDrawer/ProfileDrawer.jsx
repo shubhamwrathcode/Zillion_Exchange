@@ -33,6 +33,7 @@ import {
   depositImage,
   earning,
   earningMenuIcon,
+  earningMenuDarkIcon,
   externalLinkIcon,
   helpicon,
   kycixon,
@@ -112,6 +113,7 @@ import {
   AIRDROP_HISTORY_SCREEN,
   WALLET_WITHDRAW_SCREEN,
   WITHDRAW_Coin_SCREEN,
+  STAKING_COMMISSION_HISTORY,
 } from "../../navigation/routes";
 import { useAppSelector } from "../../store/hooks";
 import { colors, darkTheme } from "../../theme/colors";
@@ -249,6 +251,12 @@ const getHistoryData = (theme) => [
     title: "Airdrop History",
     icon: theme !== "Dark" ? airdropDark : airdropLight,
     onPress: () => NavigationService.navigate(AIRDROP_HISTORY_SCREEN),
+  },
+  {
+    id: "7",
+    title: "Staking Commission",
+    icon: theme !== "Dark" ? earningMenuIcon : earningMenuDarkIcon,
+    onPress: () => NavigationService.navigate(STAKING_COMMISSION_HISTORY),
   },
 ];
 
