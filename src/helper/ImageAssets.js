@@ -236,11 +236,7 @@ export const barsIcon = require('../../assets/images/barsIcon.png');
 export const BarTrading = require('../../assets/images/bar.png');
 export const newReferImage = require('../../assets/images/newReferImage.png');
 export const referBg = require('../../assets/images/referBg.jpg');
-export const youTubeIcn = require('../../assets/images/youTubeIcn.png');
-export const telegramIcon = require('../../assets/images/telegramIcon.png');
-export const facebookIcon = require('../../assets/images/facebookIcon.png');
-export const twitterIcon = require('../../assets/images/twitterIcon.png');
-export const instaIcon = require('../../assets/images/instaIcon.png');
+
 export const peopleIcon = require('../../assets/images/peopleIcon.png');
 export const add = require('../../assets/images/add.png');
 export const minus = require('../../assets/images/minus.png');
@@ -383,6 +379,21 @@ export const airdropDark = require('../../assets/images/airdropDark.png');
 export const earngift_vector1 = require('../../assets/images/earngift_vector1.png');
 export const zillionBanner = require('../../assets/images/Zillion-banner.png');
 export const whatsapp = require('../../assets/images/whatsapp.png');
+export const stakingComission_Dark = require('../../assets/images/stakingComission_Dark.png');
+export const stakingComission_Light = require('../../assets/images/stakingComission_Light.png');
+
+
+
+
+export const youTubeIcn = require('../../assets/images/youTubeIcn.png');
+export const telegramIcon = require('../../assets/images/telegramIcon.png');
+export const facebookIcon = require('../../assets/images/facebookIcon.png');
+export const twitterIcon = require('../../assets/images/twitterIcon.png');
+export const instaIcon = require('../../assets/images/instaIcon.png');
+
+
+
+
 
 
 

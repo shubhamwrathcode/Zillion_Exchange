@@ -87,6 +87,8 @@ import {
   INFERNAL_TRANSFER_Light,
   airdropDark,
   airdropLight,
+  stakingComission_Light,
+  stakingComission_Dark,
 } from "../../helper/ImageAssets";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import { AppText, BLACK, DISCLAIMTEXT, ELEVEN, THIRTEEN, TWELVE, YELLOW } from "../../shared";
@@ -255,7 +257,7 @@ const getHistoryData = (theme) => [
   {
     id: "7",
     title: "Staking Commission",
-    icon: theme !== "Dark" ? earningMenuIcon : earningMenuDarkIcon,
+    icon: theme == "Dark" ? stakingComission_Light : stakingComission_Dark,
     onPress: () => NavigationService.navigate(STAKING_COMMISSION_HISTORY),
   },
 ];

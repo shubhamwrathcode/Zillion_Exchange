@@ -19,7 +19,7 @@ import {
   YELLOW,
 } from "../../shared";
 import KeyBoardAware from "../../shared/components/KeyboardAware";
-import { airdrop_bnr_img, airdrop_stats_icon, airdrop_stats_icon2, airdrop_stats_icon3, airdrop_stats_icon4, back_ic, bonusbg, giftIc, instaIcon, LOCK_ICON, telegramIcon, tokenlock, twitterIcon, youTubeIcn, CHAT_IMG, PHONE } from "../../helper/ImageAssets";
+import { airdrop_bnr_img, airdrop_stats_icon, airdrop_stats_icon2, airdrop_stats_icon3, airdrop_stats_icon4, back_ic, bonusbg, giftIc, instaIcon, LOCK_ICON, telegramIcon, tokenlock, twitterIcon, youTubeIcn, CHAT_IMG, PHONE, whatsapp } from "../../helper/ImageAssets";
 import { colors } from "../../theme/colors";
 import { showError, showSuccess } from "../../helper/logger";
 import { USER_TOKEN_KEY } from "../../helper/Constants";
@@ -27,6 +27,15 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { getUserProfile } from "../../actions/accountActions";
 import { ADD_PHONE_NUMBER_SCREEN } from "../../navigation/routes";
 import { useFocusEffect } from "@react-navigation/native";
+
+const PROGRESS_LABELS: Record<number, string> = {
+  1: "X",
+  2: "Telegram",
+  3: "Instagram",
+  4: "YouTube",
+  5: "WhatsApp",
+  6: "Mobile",
+};
 
 const SOCIAL_DEFAULT_LABELS: Record<number, string> = {
   1: "Open X",
@@ -145,6 +154,7 @@ const formatRewardAmount = (value: any, currencyShortName?: any) => {
 
 const AirDropScreen = () => {
   const { colors: themeColors, isDark } = useTheme();
+  const greenColor = isDark ? "#4ED46C" : "#10B981";
   const dispatch = useAppDispatch();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [taskSubmitting, setTaskSubmitting] = useState<number | null>(null);
@@ -383,9 +393,30 @@ const AirDropScreen = () => {
   );
 
   const SocialIcon = ({ n }: { n: number }) => {
-    const src = n === 1 ? twitterIcon : n === 2 ? telegramIcon : n === 3 ? instaIcon : n === 4 ? youTubeIcn : CHAT_IMG;
+    const src =
+      n === 1
+        ? twitterIcon
+        : n === 2
+        ? telegramIcon
+        : n === 3
+        ? instaIcon
+        : n === 4
+        ? youTubeIcn
+        : whatsapp;
     return <FastImage source={src} style={{ width: 18, height: 18 }} resizeMode="contain" />;
   };
+
+  const getProgressIcon = useCallback((n: number) => {
+    switch (n) {
+      case 1: return twitterIcon;
+      case 2: return telegramIcon;
+      case 3: return instaIcon;
+      case 4: return youTubeIcn;
+      case 5: return whatsapp;
+      case 6: return PHONE;
+      default: return PHONE;
+    }
+  }, []);
 
   const rewardText = useMemo(() => {
     if (isDark) {
@@ -624,23 +655,23 @@ const AirDropScreen = () => {
                 </AppText>
 
                 <LinearGradient
-                  colors={isDark ? ["#1B2330", "#10151D"] : ["#F3F4F6", "#FFFFFF"]}
+                  colors={isDark ? ["#1C2230", "#1C2230"] : ["#F4F4F5", "#F4F4F5"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={[styles.progressCard, { borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)" }]}
+                  style={[styles.progressCard, { borderColor: isDark ? "rgba(255,255,255,0.08)" : "#E4E4E7" }]}
                 >
                   <View style={styles.progressTop}>
-                    <AppText type={TWELVE} weight={MEDIUM} color={themeColors.text}>
+                    <AppText type={SIXTEEN} weight={SEMI_BOLD} color={themeColors.text}>
                       Task progress
                     </AppText>
-                    <AppText type={TWELVE} color={themeColors.secondaryText}>
-                      {socialProgress.done} / {socialProgress.total} completed{rewardStatusLoading ? " (updating…)" : ""}
+                    <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: isDark ? "#60A5FA" : "#1E56F5" }}>
+                      {socialProgress.done} / {socialProgress.total} completed
                     </AppText>
                   </View>
-                  <View style={[styles.progressTrack, { backgroundColor: isDark ? "#0F1116" : "#EEF1F8" }]}>
+                  <View style={[styles.progressTrack, { backgroundColor: isDark ? "#2A2E3D" : "#E5E7EB" }]}>
                     <View style={[styles.progressFill, { width: `${socialProgress.pct}%` }]}>
                       <LinearGradient
-                        colors={["#1e56f5", "#22c55e"]}
+                        colors={["#3B82F6", "#10B981"]}
                         start={{ x: 0, y: 0.5 }}
                         end={{ x: 1, y: 0.5 }}
                         style={styles.progressFillGradient}
@@ -655,23 +686,31 @@ const AirDropScreen = () => {
                         <View key={s.n} style={styles.progressTaskRow}>
                           <View
                             style={[
-                              styles.progressDotOuter,
-                              { backgroundColor: done ? "rgba(34,197,94,0.20)" : "rgba(156,163,175,0.20)" },
+                              styles.progressIconCircle,
+                              {
+                                borderColor: done ? greenColor : (isDark ? "rgba(255,255,255,0.15)" : "#D4D4D8"),
+                                backgroundColor: done
+                                  ? (isDark ? "rgba(78,212,108,0.06)" : "rgba(16,185,129,0.05)")
+                                  : (isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)"),
+                              },
                             ]}
                           >
-                            <View
-                              style={[
-                                styles.progressDotInner,
-                                { backgroundColor: done ? "#22c55e" : "#9ca3af" },
-                              ]}
+                            <FastImage
+                              source={getProgressIcon(s.n)}
+                              style={{ width: 16, height: 16, opacity: done ? 1 : 0.45 }}
+                              resizeMode="contain"
                             />
                           </View>
                           <AppText
-                            type={TWELVE}
-                            weight={MEDIUM}
-                            style={{ color: done ? (isDark ? "rgba(255,255,255,0.80)" : "#2E7D32") : (isDark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.40)") }}
+                            type={FOURTEEN}
+                            weight={done ? SEMI_BOLD : MEDIUM}
+                            style={{
+                              color: done
+                                ? greenColor
+                                : (isDark ? "rgba(255,255,255,0.70)" : "#71717A"),
+                            }}
                           >
-                            Task {s.n}
+                            {PROGRESS_LABELS[s.n]}
                           </AppText>
                         </View>
                       );
@@ -683,23 +722,31 @@ const AirDropScreen = () => {
                         <View style={styles.progressTaskRow}>
                           <View
                             style={[
-                              styles.progressDotOuter,
-                              { backgroundColor: done ? "rgba(34,197,94,0.20)" : "rgba(156,163,175,0.20)" },
+                              styles.progressIconCircle,
+                              {
+                                borderColor: done ? greenColor : (isDark ? "rgba(255,255,255,0.15)" : "#D4D4D8"),
+                                backgroundColor: done
+                                  ? (isDark ? "rgba(78,212,108,0.06)" : "rgba(16,185,129,0.05)")
+                                  : (isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)"),
+                              },
                             ]}
                           >
-                            <View
-                              style={[
-                                styles.progressDotInner,
-                                { backgroundColor: done ? "#22c55e" : "#9ca3af" },
-                              ]}
+                            <FastImage
+                              source={getProgressIcon(mobileTaskId)}
+                              style={{ width: 16, height: 16, opacity: done ? 1 : 0.45 }}
+                              resizeMode="contain"
                             />
                           </View>
                           <AppText
-                            type={TWELVE}
-                            weight={MEDIUM}
-                            style={{ color: done ? (isDark ? "rgba(255,255,255,0.80)" : "#2E7D32") : (isDark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.40)") }}
+                            type={FOURTEEN}
+                            weight={done ? SEMI_BOLD : MEDIUM}
+                            style={{
+                              color: done
+                                ? greenColor
+                                : (isDark ? "rgba(255,255,255,0.70)" : "#71717A"),
+                            }}
                           >
-                            Task {mobileTaskId} (Mobile)
+                            {PROGRESS_LABELS[mobileTaskId]}
                           </AppText>
                         </View>
                       );
@@ -1146,35 +1193,30 @@ const styles = StyleSheet.create({
 
   progressCard: {
     marginTop: 12,
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 1,
   },
-  progressTop: { flexDirection: "row", justifyContent: "space-between" },
+  progressTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   progressTrack: {
-    height: 10,
-    borderRadius: 10,
+    height: 8,
+    borderRadius: 4,
     overflow: "hidden",
-    marginTop: 10,
+    marginTop: 12,
+    marginBottom: 20,
   },
-  progressFill: { height: 10, borderRadius: 10, overflow: "hidden" },
+  progressFill: { height: 8, borderRadius: 4, overflow: "hidden" },
   progressFillGradient: { width: "100%", height: "100%" },
-  progressTasks: { marginTop: 14, gap: 10 },
-  progressTaskRow: { flexDirection: "row", alignItems: "center" },
-  progressDotOuter: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: "rgba(34,197,94,0.20)",
+  progressTasks: { marginTop: 10, gap: 12 },
+  progressTaskRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
+  progressIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1.2,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 10,
-  },
-  progressDotInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#22c55e",
+    marginRight: 12,
   },
 
   taskCard: {
