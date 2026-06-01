@@ -22,31 +22,41 @@ const AuthLoading = () => {
   const appVersion = useAppSelector((state) => state.auth.appVersion);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [versionCheckDone, setVersionCheckDone] = useState(false);
+
+
   const proceededRef = useRef(false);
 
   // 1) Fetch server version (silent — no full-screen loader on splash).
-  // useEffect(() => {
-  //   dispatch(getAppVersion({ silent: true })).finally(() => {
-  //     setVersionCheckDone(true);
-  //   });
-  // }, [dispatch]);
+  useEffect(() => {
+    dispatch(getAppVersion({ silent: true })).finally(() => {
+      setVersionCheckDone(true);
+    });
+  }, [dispatch]);
 
   // 2) After fetch settles: force-update if server `version` !== installed build; else continue boot.
   useEffect(() => {
-    // if (!versionCheckDone || proceededRef.current) return;
+    if (!versionCheckDone || proceededRef.current) return;
 
-    // const serverVersion =
-    //   appVersion && typeof appVersion === 'object' && appVersion.version != null
-    //     ? String(appVersion.version).trim()
-    //     : null;
-    // const current = String(CheckCurrent || '').trim();
+    const serverVersion =
+      appVersion && typeof appVersion === 'object' && appVersion.version != null
+        ? String(appVersion.version).trim()
+        : null;
+    const current = String(CheckCurrent || '').trim();
 
-    // if (serverVersion && current !== serverVersion) {
-    //   setShowUpdateModal(true);
-    //   return;
-    // }
+    console.log('[AuthLoading Version Check]', {
+      serverVersion,
+      currentVersion: current,
+      versionCheckDone,
+      shouldShowUpdateModal: !!(serverVersion && current !== serverVersion),
+      appVersionRaw: appVersion,
+    });
 
-    // proceededRef.current = true;
+    if (serverVersion && current !== serverVersion) {
+      setShowUpdateModal(true);
+      return;
+    }
+
+    proceededRef.current = true;
 
     checkUserLogin();
     checkLanguage();
