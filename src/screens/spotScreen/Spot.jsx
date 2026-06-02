@@ -34,9 +34,7 @@ import Reanimated, {
 
 import SpotHeader from "../../shared/components/spotHeader/SpotHeader";
 import FastImage from "react-native-fast-image";
-import Skeleton from "react-native-reanimated-skeleton";
 import {
-  BarTrading,
   binIcon,
   checkIc,
   confirmOrderIcon,
@@ -932,6 +930,7 @@ const Spot = () => {
     change_percentage,
     _id,
     buy_price,
+    sell_price,
     high,
     low,
     volume,
@@ -948,6 +947,10 @@ const Spot = () => {
   const [isLimit, setIsLimit] = useState(true);
   const [isBuy, setIsBuy] = useState(true);
   const [total, setTotal] = useState("");
+  const [slippage, setSlippage] = useState("0.1");
+  const isLocalPair = spotSelectedPair?.available === 'LOCAL';
+  const isZilUsdt = base_currency === 'ZIL' && quote_currency === 'USDT';
+  const showSlippage = isLocalPair && isZilUsdt && !isLimit;
   // const [chartLoading, setChartLoading] = useState(true);
   // const [preloadedUrl, setPreloadedUrl] = useState(null);
   // const [showPlaceholder, setShowPlaceholder] = useState(true);
@@ -1566,6 +1569,8 @@ const Spot = () => {
         quantity: amount,
         quote_currency_id: quote_currency_id,
         side: isBuy ? "BUY" : "SELL",
+        ...(showSlippage ? { slippage } : {}),
+        is_local: isLocalPair,
       };
       dispatch(placeOrder(data, setVisible));
 
@@ -1601,6 +1606,8 @@ const Spot = () => {
       quantity: amount,
       quote_currency_id: quote_currency_id,
       side: isBuy ? "BUY" : "SELL",
+      ...(showSlippage ? { slippage } : {}),
+      is_local: isLocalPair,
     };
     dispatch(placeOrder(data, setVisible));
     setIsConfirm(false);
@@ -2236,6 +2243,50 @@ const Spot = () => {
                   </AppText>
                 </View>
               </View>
+
+              {showSlippage && (
+                <View style={styles.spotOrderInputBlock}>
+                  <AppText style={[styles.spotOrderInputLabel, { color: themeColors.secondaryText }]}>
+                    Slippage Tolerance
+                  </AppText>
+                  <View style={[styles.spotOrderInputBox, { backgroundColor: themeColors.themeElevationColor, borderWidth: 0.5, borderColor: themeColors.themeBorderColor }]}>
+                    <TouchableOpacity activeOpacity={1} style={styles.spotOrderStepBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                      <AppText style={[styles.spotOrderStepBtnText, { color: 'transparent' }]}>-</AppText>
+                    </TouchableOpacity>
+                    <TextInput
+                      placeholder={"0.1"}
+                      placeholderTextColor={themeColors.secondaryText}
+                      value={slippage}
+                      onChangeText={(val) => {
+                        if (val === '' || val === '0' || val === '0.') { setSlippage(val); return; }
+                        if (!/^\d*\.?\d*$/.test(val)) return;
+                        let numVal = parseFloat(val);
+                        if (isNaN(numVal)) return;
+                        if (numVal > 1) { setSlippage('1'); return; }
+                        setSlippage(val);
+                      }}
+                      onBlur={() => {
+                        if (slippage === '' || slippage === '0' || slippage === '0.') { setSlippage('0.1'); return; }
+                        let numVal = parseFloat(slippage);
+                        if (isNaN(numVal) || numVal < 0.1) setSlippage('0.1');
+                        else if (numVal > 1) setSlippage('1');
+                        else setSlippage(String(numVal));
+                      }}
+                      keyboardType="numeric"
+                      style={[styles.spotOrderInputValue, { color: themeColors.text }]}
+                    />
+                    <TouchableOpacity activeOpacity={1} style={styles.spotOrderStepBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                      <AppText style={[styles.spotOrderStepBtnText, { color: themeColors.text }]}>%</AppText>
+                    </TouchableOpacity>
+                  </View>
+                  <AppText style={[{ color: themeColors.secondaryText, fontSize: 11, marginTop: 4, marginLeft: 2 }]}>
+                    {isBuy
+                      ? `Est. max buy price: ${formatPrice((parseFloat(sellOrders?.[0]?.price) || parseFloat(buy_price) || 0) * (1 + (parseFloat(slippage) || 0.1) / 100))} ${quote_currency}`
+                      : `Est. min sell price: ${formatPrice((parseFloat(buyOrders?.[0]?.price) || parseFloat(sell_price) || 0) * (1 - (parseFloat(slippage) || 0.1) / 100))} ${quote_currency}`
+                    }
+                  </AppText>
+                </View>
+              )}
 
 
               <PercentQuickSelect

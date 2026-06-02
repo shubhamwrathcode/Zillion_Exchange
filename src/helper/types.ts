@@ -339,6 +339,8 @@ export interface PlaceOrderProps {
   quantity: string;
   quote_currency_id: string;
   side: string;
+  slippage?: string;
+  is_local?: boolean;
 }
 
 export interface HistoricDataProps {
