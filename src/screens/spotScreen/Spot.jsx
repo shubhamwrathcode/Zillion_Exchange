@@ -1420,7 +1420,10 @@ const Spot = () => {
   };
 
   const handlePriceInput = (value, setter) => {
-    if (isValidPriceInput(value)) setter(value);
+    if (isValidPriceInput(value)) {
+      setter(value);
+      setTotal(''); // Clear local total when price changes manually
+    }
   };
 
   const handlePriceBlur = (value, setter) => {
@@ -1451,7 +1454,10 @@ const Spot = () => {
   };
 
   const handleQuantityInput = (value, setter) => {
-    if (isValidQuantityInput(value)) setter(value);
+    if (isValidQuantityInput(value)) {
+      setter(value);
+      setTotal(''); // Clear local total when amount changes manually
+    }
   };
 
   const handleQuantityBlur = (value, setter) => {
@@ -1516,6 +1522,7 @@ const Spot = () => {
 
   const handleTotalPercentage = (value) => {
     setActivePercentage(value);
+    setTotal(''); 
     if (isBuy) {
       const val = percentCalculation(
         coinBalance?.quote_currency_balance || 0,
@@ -1535,10 +1542,46 @@ const Spot = () => {
     }
   };
 
-  const handleTotal = (text) => {
-    const qty = Number(text) / Number(price);
-    setAmount(qty?.toString());
-    setTotal(multiply(price, qty));
+  const handleTotalInput = (value) => {
+    if (value === '' || value === '0' || value === '0.') {
+      setTotal(value);
+      if (value === '') setAmount('');
+      return;
+    }
+    const regex = /^\d*\.?\d*$/;
+    if (!regex.test(value)) return;
+    
+    setTotal(value);
+    
+    const numTotal = parseFloat(value);
+    const effectivePrice = isLimit
+      ? (parseFloat(price) || parseFloat(buy_price) || 0)
+      : (parseFloat(buy_price) || 0);
+
+    if (effectivePrice > 0 && !isNaN(numTotal) && numTotal > 0) {
+      const qtyPrec = getQuantityPrecision();
+      setAmount((numTotal / effectivePrice).toFixed(qtyPrec));
+    }
+  };
+
+  const handleTotalBlur = () => {
+    if (total === '' || total === '0' || total === '0.') {
+      setTotal('');
+      setAmount('');
+      return;
+    }
+    const numTotal = parseFloat(total);
+    const effectivePrice = isLimit
+      ? (parseFloat(price) || parseFloat(buy_price) || 0)
+      : (parseFloat(buy_price) || 0);
+
+    if (isNaN(numTotal) || numTotal === 0 || isNaN(effectivePrice) || effectivePrice <= 0) {
+      setTotal('');
+      setAmount('');
+      return;
+    }
+    // Clear local total state so display falls back to amount * price via totalDisplayValue
+    setTotal(''); 
   };
 
   const selectNumberLimitOn = (item) => {
@@ -2231,16 +2274,21 @@ const Spot = () => {
                   Total ({quote_currency})
                 </AppText>
                 <View style={[styles.spotOrderInputBox, { backgroundColor: themeColors.themeElevationColor, borderWidth: 0.5, borderColor: themeColors.themeBorderColor }]}>
-                  <AppText
-                    style={[
-                      styles.spotOrderInputValue,
-                      styles.spotOrderTotalValue,
-                      { color: themeColors.text },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {formatTotal(totalDisplayValue) ?? "0"}
-                  </AppText>
+                  <TouchableOpacity activeOpacity={1} style={styles.spotOrderStepBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                    <AppText style={[styles.spotOrderStepBtnText, { color: 'transparent' }]}>-</AppText>
+                  </TouchableOpacity>
+                  <TextInput
+                    placeholder={formatTotal(totalDisplayValue) ?? "0"}
+                    placeholderTextColor={themeColors.secondaryText}
+                    value={total !== "" ? total : (totalDisplayValue ? formatTotal(totalDisplayValue) : "")}
+                    onChangeText={handleTotalInput}
+                    onBlur={handleTotalBlur}
+                    keyboardType="numeric"
+                    style={[styles.spotOrderInputValue, { color: themeColors.text }]}
+                  />
+                  <TouchableOpacity activeOpacity={1} style={styles.spotOrderStepBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                    <AppText style={[styles.spotOrderStepBtnText, { color: 'transparent' }]}>+</AppText>
+                  </TouchableOpacity>
                 </View>
               </View>
 

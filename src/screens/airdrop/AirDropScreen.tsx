@@ -158,6 +158,7 @@ const AirDropScreen = () => {
   const dispatch = useAppDispatch();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [taskSubmitting, setTaskSubmitting] = useState<number | null>(null);
+  const [claimSubmitting, setClaimSubmitting] = useState<boolean>(false);
   const [otherSettings, setOtherSettings] = useState<any>(null);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [rewardStatusLoading, setRewardStatusLoading] = useState(false);
@@ -391,6 +392,33 @@ const AirDropScreen = () => {
     },
     [isLoggedIn, fetchReferralRewardStatus]
   );
+
+  const canClaimSignupReward =
+    Boolean(referralRewardStatus?.socialTasksCompleted) &&
+    !referralRewardStatus?.rewardClaimed;
+
+  const handleClaimSignupReward = useCallback(async () => {
+    if (!isLoggedIn || !canClaimSignupReward || claimSubmitting) return;
+    setClaimSubmitting(true);
+    try {
+      const res: any = await appOperation.customer.claim_signup_reward();
+      if (res?.success) {
+        showSuccess(res?.message || "Signup reward claimed");
+        await fetchReferralRewardStatus();
+      } else {
+        showError(res?.message || "Could not claim reward. Please try again.");
+      }
+    } catch (e: any) {
+      showError(e?.message || "Could not claim reward. Please try again.");
+    } finally {
+      setClaimSubmitting(false);
+    }
+  }, [
+    isLoggedIn,
+    canClaimSignupReward,
+    claimSubmitting,
+    fetchReferralRewardStatus,
+  ]);
 
   const SocialIcon = ({ n }: { n: number }) => {
     const src =
@@ -752,6 +780,23 @@ const AirDropScreen = () => {
                       );
                     })()}
                   </View>
+                  
+                  {canClaimSignupReward && (
+                    <View style={{ marginTop: 20, alignItems: "center" }}>
+                      <TouchableOpacity
+                        style={[styles.heroPillBtn, { backgroundColor: colors.buttonBg, width: "100%", opacity: claimSubmitting || rewardStatusLoading ? 0.6 : 1 }]}
+                        disabled={claimSubmitting || rewardStatusLoading}
+                        onPress={handleClaimSignupReward}
+                      >
+                        <AppText weight={SEMI_BOLD} type={FOURTEEN} style={{ color: colors.white }}>
+                          {claimSubmitting ? "Claiming…" : "Claim signup reward"}
+                        </AppText>
+                      </TouchableOpacity>
+                      <AppText type={ELEVEN} color={themeColors.secondaryText} style={{ marginTop: 8, textAlign: "center" }}>
+                        All {socialTasksRequired} steps completed — claim your referral signup bonus.
+                      </AppText>
+                    </View>
+                  )}
                 </LinearGradient>
 
                 <View style={{ marginTop: 10 }}>
@@ -795,30 +840,21 @@ const AirDropScreen = () => {
                               {
                                 borderColor: isDark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.08)",
                                 backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(30,86,245,0.10)",
+                                opacity: taskSubmitting === n || rewardStatusLoading ? 0.6 : 1,
                               },
                             ]}
-                            onPress={() => openLink(link.href)}
+                            disabled={taskSubmitting === n || rewardStatusLoading}
+                            onPress={() => {
+                              openLink(link.href);
+                              const canSubmitNow = !done && !referralRewardStatus?.rewardClaimed && !rewardStatusLoading && !taskSubmitting;
+                              if (canSubmitNow) handleCompleteTask(n);
+                            }}
                           >
                             <SocialIcon n={n} />
                             <AppText type={TWELVE} color={themeColors.text} style={{ marginLeft: 8 }}>
-                              {link.label}
+                              {taskSubmitting === n ? "Saving…" : link.label}
                             </AppText>
                           </TouchableOpacity>
-
-                          {!done && (
-                            <TouchableOpacity
-                              style={[
-                                styles.markDoneBtn,
-                                { backgroundColor: colors.buttonBg, opacity: taskSubmitting || rewardStatusLoading ? 0.6 : 1 },
-                              ]}
-                              disabled={!!taskSubmitting || rewardStatusLoading}
-                              onPress={() => handleCompleteTask(n)}
-                            >
-                              <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: colors.white }}>
-                                {taskSubmitting === n ? "Saving…" : "Mark as done"}
-                              </AppText>
-                            </TouchableOpacity>
-                          )}
                         </View>
                       </LinearGradient>
                     );
