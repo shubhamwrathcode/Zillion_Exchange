@@ -758,8 +758,8 @@ const Spot = () => {
 
   // Get decimal places from step_size or tick_size
   const getDecimalPlaces = (value) => {
-    if (!value || value >= 1) return 0;
-    const str = value.toString();
+    if (!value || Number(value) >= 1) return 0;
+    const str = value.toString().toLowerCase();
     if (str.includes("e-")) return parseInt(str.split("e-")[1], 10);
     const decimalPart = str.split(".")[1];
     return decimalPart ? decimalPart.length : 0;
@@ -862,7 +862,22 @@ const Spot = () => {
       setCurrency(spotSelectedPair);
       currentCurrencyRef.current = spotSelectedPair;
       setAmount("1");
-      setPrice(formatPrice(spotSelectedPair.buy_price).toString());
+      
+      const newPairData = (coinData || []).find(
+        (c) => c.base_currency === spotSelectedPair.base_currency && c.quote_currency === spotSelectedPair.quote_currency
+      ) || spotSelectedPair;
+      
+      const tickSize = newPairData?.tick_size;
+      const precision = (tickSize === undefined || tickSize === null) ? 8 : getDecimalPlaces(tickSize);
+      
+      const bp = spotSelectedPair.buy_price;
+      if (bp === undefined || bp === null || bp === "") {
+        setPrice("0");
+      } else {
+        const numBp = Number(bp);
+        setPrice(isNaN(numBp) ? "0" : (numBp.toFixed(precision).replace(/\.?0+$/, "") || "0"));
+      }
+
       setActivePercentage("");
       // Clear order book so skeleton shows until new pair's socket data arrives (no UI fluctuation)
       setLastSocketData(null);
@@ -906,7 +921,7 @@ const Spot = () => {
     currentCurrencyRef.current = curr;
 
     const updated = coinData.find(
-      (c) => c.base_currency === curr.base_currency
+      (c) => c.base_currency === curr.base_currency && c.quote_currency === curr.quote_currency
     );
 
     if (updated) {
@@ -1390,19 +1405,11 @@ const Spot = () => {
   };
 
   const formatTotal = (value) => {
+    if (value === undefined || value === null || value === "") return "";
+    const numValue = Number(value);
+    if (isNaN(numValue)) return "";
     const precision = getPricePrecision();
-    const finalValue = value?.toFixed(precision)?.replace(/\.?0+$/, "");
-    let formattedNum = finalValue?.toString();
-    let result = formattedNum?.replace(/^0\.0*/, "");
-    const decimalPart = finalValue?.toString()?.split(".")[1];
-    if (!decimalPart) return finalValue;
-    let zeroCount = 0;
-    for (let char of decimalPart) {
-      if (char === "0") zeroCount++;
-      else break;
-    }
-    if (zeroCount > 4) return `0.0{${zeroCount}}${result}`;
-    if (value < 1e-7) return `0.0{${zeroCount}}${result}`;
+    const finalValue = numValue.toFixed(precision).replace(/\.?0+$/, "");
     return finalValue;
   };
 
@@ -1522,7 +1529,7 @@ const Spot = () => {
 
   const handleTotalPercentage = (value) => {
     setActivePercentage(value);
-    setTotal(''); 
+    setTotal('');
     if (isBuy) {
       const val = percentCalculation(
         coinBalance?.quote_currency_balance || 0,
@@ -1550,9 +1557,9 @@ const Spot = () => {
     }
     const regex = /^\d*\.?\d*$/;
     if (!regex.test(value)) return;
-    
+
     setTotal(value);
-    
+
     const numTotal = parseFloat(value);
     const effectivePrice = isLimit
       ? (parseFloat(price) || parseFloat(buy_price) || 0)
@@ -1581,7 +1588,7 @@ const Spot = () => {
       return;
     }
     // Clear local total state so display falls back to amount * price via totalDisplayValue
-    setTotal(''); 
+    setTotal('');
   };
 
   const selectNumberLimitOn = (item) => {
