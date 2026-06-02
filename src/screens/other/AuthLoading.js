@@ -35,28 +35,28 @@ const AuthLoading = () => {
 
   // 2) After fetch settles: force-update if server `version` !== installed build; else continue boot.
   useEffect(() => {
-    // if (!versionCheckDone || proceededRef.current) return;
+    if (!versionCheckDone || proceededRef.current) return;
 
-    // const serverVersion =
-    //   appVersion && typeof appVersion === 'object' && appVersion.version != null
-    //     ? String(appVersion.version).trim()
-    //     : null;
-    // const current = String(CheckCurrent || '').trim();
+    const serverVersion =
+      appVersion && typeof appVersion === 'object' && appVersion.version != null
+        ? String(appVersion.version).trim()
+        : null;
+    const current = String(CheckCurrent || '').trim();
 
-    // console.log('[AuthLoading Version Check]', {
-    //   serverVersion,
-    //   currentVersion: current,
-    //   versionCheckDone,
-    //   shouldShowUpdateModal: !!(serverVersion && current !== serverVersion),
-    //   appVersionRaw: appVersion,
-    // });
+    console.log('[AuthLoading Version Check]', {
+      serverVersion,
+      currentVersion: current,
+      versionCheckDone,
+      shouldShowUpdateModal: !!(serverVersion && current !== serverVersion),
+      appVersionRaw: appVersion,
+    });
 
-    // if (serverVersion && current !== serverVersion) {
-    //   setShowUpdateModal(true);
-    //   return;
-    // }
+    if (serverVersion && current !== serverVersion) {
+      setShowUpdateModal(true);
+      return;
+    }
 
-    // proceededRef.current = true;
+    proceededRef.current = true;
 
     checkUserLogin();
     checkLanguage();
