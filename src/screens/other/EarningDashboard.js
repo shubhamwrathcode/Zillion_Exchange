@@ -59,7 +59,7 @@ const EarningDashboard = ({
   const cardBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
   const dividerColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
   const boneColor = themeColors.themeElevationColor;
-  const shimmerColors = isDark 
+  const shimmerColors = isDark
     ? ["transparent", "rgba(255,255,255,0.16)", "transparent"]
     : ["transparent", "rgba(0,0,0,0.05)", "transparent"];
 
@@ -137,10 +137,7 @@ const EarningDashboard = ({
               <AppText type={TEN} style={{ color: secondaryColor }}>Running</AppText>
               <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: textColor }}>{formatNum(running)} {item?.currency}</AppText>
             </View>
-            <View style={styles.assetDetailRow}>
-              <AppText type={TEN} style={{ color: secondaryColor }}>Bonus Remaining</AppText>
-              <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: colors.buttonBg }}>{formatNum(bonus)} {item?.currency}</AppText>
-            </View>
+
           </View>
         ) : (
           <View style={styles.assetDetails}>

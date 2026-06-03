@@ -620,17 +620,95 @@ const Earning = () => {
                   );
                 }
                 return (
-                <ScrollView
-                  style={styles.planScroll}
-                  contentContainerStyle={styles.planScrollContent}
-                  showsVerticalScrollIndicator={false}
-                >
-                  {planList.map((item, index) => {
-                    if (planTab === "Cancel") {
-                      const refundN = readStakingMoney(item, "refund_amount", "refundAmount");
-                      const feeN = readStakingMoney(item, "cancel_fee_amount", "fee_amount", "feeAmount", "cancelFeeAmount");
-                      const feePctN = readStakingMoney(item, "cancel_fee_percent", "fee_percent", "feePercent", "cancelFeePercent");
+                  <ScrollView
+                    style={styles.planScroll}
+                    contentContainerStyle={styles.planScrollContent}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    {planList.map((item, index) => {
+                      if (planTab === "Cancel") {
+                        const refundN = readStakingMoney(item, "refund_amount", "refundAmount");
+                        const feeN = readStakingMoney(item, "cancel_fee_amount", "fee_amount", "feeAmount", "cancelFeeAmount");
+                        const feePctN = readStakingMoney(item, "cancel_fee_percent", "fee_percent", "feePercent", "cancelFeePercent");
+                        const invested = readStakingMoney(item, "invested_amount") ?? 0;
+                        return (
+                          <View key={item?._id || index} style={[styles.planCard, { backgroundColor: themeColors.themeElevationColor }]}>
+                            <View style={styles.planCardRow}>
+                              <AppText type={ELEVEN} color={themeColors.secondaryText}>Currency</AppText>
+                              <AppText type={ELEVEN} weight={SEMI_BOLD} color={themeColors.text}>{item?.currency}</AppText>
+                            </View>
+                            <View style={styles.planCardRow}>
+                              <AppText type={ELEVEN} color={themeColors.secondaryText}>Deducted From</AppText>
+                              <AppText type={ELEVEN} style={{ color: colors.buttonBg }}>
+                                {formatWalletTypeLabel(item?.wallet_type)} Wallet
+                              </AppText>
+                            </View>
+                            <View style={styles.planCardRow}>
+                              <AppText type={ELEVEN} color={themeColors.secondaryText}>Duration</AppText>
+                              <AppText type={ELEVEN} color={themeColors.text}>{item?.duration_days} days</AppText>
+                            </View>
+                            <View style={styles.planCardRow}>
+                              <AppText type={ELEVEN} color={themeColors.secondaryText}>Start Date</AppText>
+                              <AppText type={ELEVEN} color={themeColors.text}>
+                                {item?.start_date ? moment(item.start_date).format("YYYY-MM-DD") : "—"}
+                              </AppText>
+                            </View>
+                            <View style={styles.planCardRow}>
+                              <AppText type={ELEVEN} color={themeColors.secondaryText}>Mature Date</AppText>
+                              <AppText type={ELEVEN} color={themeColors.text}>
+                                {item?.end_date ? moment(item.end_date).format("YYYY-MM-DD") : "—"}
+                              </AppText>
+                            </View>
+                            <View style={styles.planCardRow}>
+                              <AppText type={ELEVEN} color={themeColors.secondaryText}>Subscription Amount</AppText>
+                              <AppText type={ELEVEN} color={themeColors.text}>
+                                {toFixedFive(invested)} {item?.currency}
+                              </AppText>
+                            </View>
+                            <View style={styles.planCardRow}>
+                              <AppText type={ELEVEN} color={themeColors.secondaryText}>Cancel fee %</AppText>
+                              <AppText type={ELEVEN} color={themeColors.text}>
+                                {feePctN != null ? `${formatNum(feePctN, 2)}%` : "—"}
+                              </AppText>
+                            </View>
+                            <View style={styles.planCardRow}>
+                              <AppText type={ELEVEN} color={themeColors.secondaryText}>Cancel fee</AppText>
+                              <AppText type={ELEVEN} color={themeColors.text}>
+                                {feeN != null ? `${toFixedFive(feeN)} ${item?.currency}` : "—"}
+                              </AppText>
+                            </View>
+                            <View style={styles.planCardRow}>
+                              <AppText type={ELEVEN} color={themeColors.secondaryText}>Refund Amount</AppText>
+                              <AppText type={ELEVEN} style={{ color: YELLOW }}>
+                                {refundN != null ? `${toFixedFive(refundN)} ${item?.currency}` : "—"}
+                              </AppText>
+                            </View>
+                            <View style={styles.planCardRow}>
+                              <AppText type={ELEVEN} color={themeColors.secondaryText}>Status</AppText>
+                              <AppText type={ELEVEN} style={{ color: colors.buttonBg }}>
+                                {item?.status}
+                              </AppText>
+                            </View>
+                            <View style={[styles.planCardRow, styles.planCardActionsRow, styles.planCardRowLast]}>
+                              <TouchableOpacity
+                                onPress={() => goToPayoutHistory(item)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                style={styles.planViewLinkBtn}
+                                activeOpacity={0.7}
+                              >
+                                <AppText type={ELEVEN} weight={SEMI_BOLD} style={styles.planViewLinkText}>
+                                  View
+                                </AppText>
+                              </TouchableOpacity>
+                              <View style={{ width: 24 }} />
+                            </View>
+                          </View>
+                        );
+                      }
+
                       const invested = readStakingMoney(item, "invested_amount") ?? 0;
+                      const expected = readStakingMoney(item, "expected_return") ?? 0;
+                      const bonus = Math.max(0, expected - invested);
                       return (
                         <View key={item?._id || index} style={[styles.planCard, { backgroundColor: themeColors.themeElevationColor }]}>
                           <View style={styles.planCardRow}>
@@ -638,9 +716,14 @@ const Earning = () => {
                             <AppText type={ELEVEN} weight={SEMI_BOLD} color={themeColors.text}>{item?.currency}</AppText>
                           </View>
                           <View style={styles.planCardRow}>
-                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Deducted From</AppText>
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>
+                              {planTab === "Active" ? "Deducted From" : "Received In"}
+                            </AppText>
                             <AppText type={ELEVEN} style={{ color: colors.buttonBg }}>
-                              {formatWalletTypeLabel(item?.wallet_type)} Wallet
+                              {planTab === "Active"
+                                ? formatWalletTypeLabel(item?.wallet_type)
+                                : formatWalletTypeLabel(item?.credited_wallet_type)}{" "}
+                              Wallet
                             </AppText>
                           </View>
                           <View style={styles.planCardRow}>
@@ -666,21 +749,17 @@ const Earning = () => {
                             </AppText>
                           </View>
                           <View style={styles.planCardRow}>
-                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Cancel fee %</AppText>
-                            <AppText type={ELEVEN} color={themeColors.text}>
-                              {feePctN != null ? `${formatNum(feePctN, 2)}%` : "—"}
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Bonus Amount</AppText>
+                            <AppText type={ELEVEN} color={YELLOW}>
+                              +{toFixedFive(bonus)}
                             </AppText>
                           </View>
                           <View style={styles.planCardRow}>
-                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Cancel fee</AppText>
-                            <AppText type={ELEVEN} color={themeColors.text}>
-                              {feeN != null ? `${toFixedFive(feeN)} ${item?.currency}` : "—"}
+                            <AppText type={ELEVEN} color={themeColors.secondaryText}>
+                              {planTab === "Active" ? "Receivable Amount" : "Received Amount"}
                             </AppText>
-                          </View>
-                          <View style={styles.planCardRow}>
-                            <AppText type={ELEVEN} color={themeColors.secondaryText}>Refund Amount</AppText>
-                            <AppText type={ELEVEN} style={{ color: YELLOW }}>
-                              {refundN != null ? `${toFixedFive(refundN)} ${item?.currency}` : "—"}
+                            <AppText type={ELEVEN} color={themeColors.text}>
+                              {toFixedFive(expected)} {item?.currency}
                             </AppText>
                           </View>
                           <View style={styles.planCardRow}>
@@ -700,108 +779,29 @@ const Earning = () => {
                                 View
                               </AppText>
                             </TouchableOpacity>
-                            <View style={{ width: 24 }} />
+                            {planTab === "Active" ? (
+                              <TouchableOpacity
+                                disabled={cancellingId === item._id}
+                                onPress={() => confirmCancelPlan(item)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                style={styles.planCancelBtnWrap}
+                              >
+                                {cancellingId === item._id ? (
+                                  <ActivityIndicator size="small" color="#E53935" />
+                                ) : (
+                                  <AppText type={ELEVEN} weight={SEMI_BOLD} style={styles.planCancelBtnLabel}>
+                                    Cancel
+                                  </AppText>
+                                )}
+                              </TouchableOpacity>
+                            ) : (
+                              <View style={{ minWidth: 72 }} />
+                            )}
                           </View>
                         </View>
                       );
-                    }
-
-                    const invested = readStakingMoney(item, "invested_amount") ?? 0;
-                    const expected = readStakingMoney(item, "expected_return") ?? 0;
-                    const bonus = Math.max(0, expected - invested);
-                    return (
-                    <View key={item?._id || index} style={[styles.planCard, { backgroundColor: themeColors.themeElevationColor }]}>
-                      <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Currency</AppText>
-                        <AppText type={ELEVEN} weight={SEMI_BOLD} color={themeColors.text}>{item?.currency}</AppText>
-                      </View>
-                      <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={themeColors.secondaryText}>
-                          {planTab === "Active" ? "Deducted From" : "Received In"}
-                        </AppText>
-                        <AppText type={ELEVEN} style={{ color: colors.buttonBg }}>
-                          {planTab === "Active"
-                            ? formatWalletTypeLabel(item?.wallet_type)
-                            : formatWalletTypeLabel(item?.credited_wallet_type)}{" "}
-                          Wallet
-                        </AppText>
-                      </View>
-                      <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Duration</AppText>
-                        <AppText type={ELEVEN} color={themeColors.text}>{item?.duration_days} days</AppText>
-                      </View>
-                      <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Start Date</AppText>
-                        <AppText type={ELEVEN} color={themeColors.text}>
-                          {item?.start_date ? moment(item.start_date).format("YYYY-MM-DD") : "—"}
-                        </AppText>
-                      </View>
-                      <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Mature Date</AppText>
-                        <AppText type={ELEVEN} color={themeColors.text}>
-                          {item?.end_date ? moment(item.end_date).format("YYYY-MM-DD") : "—"}
-                        </AppText>
-                      </View>
-                      <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Subscription Amount</AppText>
-                        <AppText type={ELEVEN} color={themeColors.text}>
-                          {toFixedFive(invested)} {item?.currency}
-                        </AppText>
-                      </View>
-                      <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Bonus Amount</AppText>
-                        <AppText type={ELEVEN} color={YELLOW}>
-                          +{toFixedFive(bonus)}
-                        </AppText>
-                      </View>
-                      <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={themeColors.secondaryText}>
-                          {planTab === "Active" ? "Receivable Amount" : "Received Amount"}
-                        </AppText>
-                        <AppText type={ELEVEN} color={themeColors.text}>
-                          {toFixedFive(expected)} {item?.currency}
-                        </AppText>
-                      </View>
-                      <View style={styles.planCardRow}>
-                        <AppText type={ELEVEN} color={themeColors.secondaryText}>Status</AppText>
-                        <AppText type={ELEVEN} style={{ color: colors.buttonBg }}>
-                          {item?.status}
-                        </AppText>
-                      </View>
-                      <View style={[styles.planCardRow, styles.planCardActionsRow, styles.planCardRowLast]}>
-                        <TouchableOpacity
-                          onPress={() => goToPayoutHistory(item)}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          style={styles.planViewLinkBtn}
-                          activeOpacity={0.7}
-                        >
-                          <AppText type={ELEVEN} weight={SEMI_BOLD} style={styles.planViewLinkText}>
-                            View
-                          </AppText>
-                        </TouchableOpacity>
-                        {planTab === "Active" ? (
-                          <TouchableOpacity
-                            disabled={cancellingId === item._id}
-                            onPress={() => confirmCancelPlan(item)}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                            style={styles.planCancelBtnWrap}
-                          >
-                            {cancellingId === item._id ? (
-                              <ActivityIndicator size="small" color="#E53935" />
-                            ) : (
-                              <AppText type={ELEVEN} weight={SEMI_BOLD} style={styles.planCancelBtnLabel}>
-                                Cancel
-                              </AppText>
-                            )}
-                          </TouchableOpacity>
-                        ) : (
-                          <View style={{ minWidth: 72 }} />
-                        )}
-                      </View>
-                    </View>
-                    );
-                  })}
-                </ScrollView>
+                    })}
+                  </ScrollView>
                 );
               })()}
             </View>
@@ -827,7 +827,7 @@ const Earning = () => {
                   { label: "Total Invested", value: formatNum(summary.totalInvested), key: "invested", icon: wallet_coins_balance },
                   { label: "Expected Return", value: formatNum(summary.expectedReturn), key: "return", icon: wallet_coins_balance2 },
                   { label: "Running Investment", value: formatNum(summary.runningInvestment), key: "running", icon: wallet_coins_balance3 },
-                  { label: "Bonus Remaining", value: formatNum(summary.bonusRemaining), key: "bonus", icon: wallet_coins_balance4 },
+                  // { label: "Bonus Remaining", value: formatNum(summary.bonusRemaining), key: "bonus", icon: wallet_coins_balance4 },
                 ];
                 return (
                   <View style={styles.dashboardBalanceGrid}>
