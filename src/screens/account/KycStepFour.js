@@ -104,19 +104,7 @@ const KycStepFour = () => {
       .catch(() => setPictureModalVisible(false));
   };
 
-  const handleStartSelfieCamera = () => {
-    ImageCropPicker.openCamera({ multiple: false, mediaType: "photo", cropping: true, compressImageQuality: 0.8 })
-      .then((image) => {
-        if (image?.size < 5000000 && ["image/png", "image/jpeg", "image/jpg"].includes(image?.mime)) {
-          const mime = image?.mime?.split("/");
-          const photo = { uri: image.path, name: `selfie_${image.modificationDate}.${mime[1]}`, type: image.mime };
-          setSelfieImage(photo);
-        } else {
-          showError("Only JPEG, PNG & JPG formats and file size upto 5MB are supported");
-        }
-      })
-      .catch(() => { });
-  };
+
 
   const onNext = () => {
     if (!validateStep3()) return;
@@ -135,7 +123,7 @@ const KycStepFour = () => {
           {/* Tax Document Type */}
           <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: borderClr, borderWidth: 1 }]}>
             <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.sectionTitle, { color: themeColors.secondaryText }]}>Tax document type</AppText>
-            <AppText type={FOURTEEN} weight={SEMI_BOLD} style={[styles.fieldLabel, { color: textClr }]}>Document Type <AppText color={RED}>*</AppText></AppText>
+            <AppText type={FOURTEEN} weight={SEMI_BOLD} style={[styles.fieldLabel, { color: textClr }]}>Document Type (Optional)</AppText>
             {taxDocs.length > 0 && (
               <FlatList
                 data={taxDocs}
@@ -147,7 +135,7 @@ const KycStepFour = () => {
                   <TaxTypeCard
                     item={item}
                     isSelected={modalTaxType === item.code}
-                    onPress={(code) => { setModalTaxType(code); setTaxDocumentError(""); }}
+                    onPress={(code) => { setModalTaxType(modalTaxType === code ? "" : code); setTaxDocumentError(""); }}
                     isDark={isDark}
                     themeColors={themeColors}
                     accentColor={accentColor}
@@ -200,7 +188,7 @@ const KycStepFour = () => {
           <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: borderClr, borderWidth: 1 }]}>
             <AppText type={TWELVE} weight={SEMI_BOLD} style={[styles.sectionTitle, { color: themeColors.secondaryText }]}>Live selfie</AppText>
             <AppText type={FOURTEEN} weight={SEMI_BOLD} style={[styles.fieldLabel, { color: textClr }]}>Selfie capture <AppText color={RED}>*</AppText></AppText>
-            <AppText type={TWELVE} style={[styles.helperText, { color: themeColors.secondaryText, marginBottom: 12 }]}>Camera required — allow access to capture live selfie</AppText>
+            <AppText type={TWELVE} style={[styles.helperText, { color: themeColors.secondaryText, marginBottom: 12 }]}>Camera or gallery required — allow access to upload selfie</AppText>
             <View style={[styles.selfieBox, selfieImage ? styles.selfieBoxFilled : styles.selfieBoxEmpty, { backgroundColor: selfieImage ? (isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)") : "transparent", borderColor: borderClr }]}>
               {selfieImage ? (
                 <View style={styles.selfieCaptured}>
@@ -210,8 +198,8 @@ const KycStepFour = () => {
                       <FastImage source={checkIc} resizeMode="contain" style={styles.badgeIcon} tintColor={colors.blueThemeColor} />
                     </View>
                   </View>
-                  <TouchableOpacity onPress={handleStartSelfieCamera} style={styles.changeBtn}>
-                    <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: accentColor }}>Retake with camera</AppText>
+                  <TouchableOpacity onPress={() => handleImagePick("selfie")} style={styles.changeBtn}>
+                    <AppText type={TWELVE} weight={SEMI_BOLD} style={{ color: accentColor }}>Change file</AppText>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -219,12 +207,9 @@ const KycStepFour = () => {
                   <View style={[styles.selfieCircle, { borderColor: borderClr }]}>
                     <FastImage source={DEMO_USER} resizeMode="contain" style={styles.selfieCircleImg} />
                   </View>
-                  <TouchableOpacity onPress={handleStartSelfieCamera} style={[styles.cameraBtn, { backgroundColor: themeColors.button }]}>
+                  <TouchableOpacity onPress={() => handleImagePick("selfie")} style={[styles.cameraBtn, { backgroundColor: themeColors.button }]}>
                     <FastImage source={CAMERA_IMG} style={styles.cameraIcon} resizeMode="contain" tintColor={colors.white} />
-                    <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: colors.white }}>Start camera</AppText>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleImagePick("selfie")} style={{ marginTop: 12 }}>
-                    <AppText type={TWELVE} style={{ color: themeColors.secondaryText }}>Or choose from gallery</AppText>
+                    <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: colors.white }}>Upload Selfie</AppText>
                   </TouchableOpacity>
                 </View>
               )}

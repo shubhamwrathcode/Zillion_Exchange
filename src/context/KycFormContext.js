@@ -317,14 +317,15 @@ export function KycFormProvider({ children }) {
   const validateStep3 = useCallback(() => {
     if (needsResubmission && !needsTaxDocResubmit() && !needsSelfieResubmit()) return true;
     if (!needsResubmission || needsTaxDocResubmit()) {
-      if (!modalTaxType) { showError("Please select a tax document type"); return false; }
-      const taxConfig = getTaxDocConfig();
-      if (!panCard) { showError("Please enter Tax Identification Number"); return false; }
-      if (taxConfig) {
-        const v = validateDocNumber(panCard, taxConfig);
-        if (!v.valid) { showError(v.message || "Invalid Tax ID"); setTaxDocumentError(v.message); return false; }
+      if (modalTaxType) {
+        const taxConfig = getTaxDocConfig();
+        if (!panCard) { showError("Please enter Tax Identification Number"); return false; }
+        if (taxConfig) {
+          const v = validateDocNumber(panCard, taxConfig);
+          if (!v.valid) { showError(v.message || "Invalid Tax ID"); setTaxDocumentError(v.message); return false; }
+        }
+        if (!panCardImage) { showError("Please upload Tax document"); return false; }
       }
-      if (!panCardImage) { showError("Please upload Tax document"); return false; }
     }
     if (!needsResubmission || needsSelfieResubmit()) {
       if (!selfieImage) { showError("Please upload/capture selfie"); return false; }
@@ -414,11 +415,12 @@ export function KycFormProvider({ children }) {
     if (!modalCountry || !modalIdType) { showError("Please select country and ID type."); return; }
     if (isResubmitFlow) {
       if (needsIdDocResubmit() && (!aadhar || !docFront)) { showError("Please provide ID document number and front image."); return; }
-      if (needsTaxDocResubmit() && (!modalTaxType || !panCard || !panCardImage)) { showError("Please provide tax document."); return; }
+      if (needsTaxDocResubmit() && modalTaxType && (!panCard || !panCardImage)) { showError("Please provide tax document details."); return; }
       if (needsSelfieResubmit() && !selfieImage) { showError("Please upload/capture selfie."); return; }
     } else {
       if (!aadhar || !docFront) { showError("Please provide ID document number and front image."); return; }
-      if (!modalTaxType || !panCard || !panCardImage || !selfieImage) { showError("Please provide tax document and selfie."); return; }
+      if (modalTaxType && (!panCard || !panCardImage)) { showError("Please provide tax document details."); return; }
+      if (!selfieImage) { showError("Please upload/capture selfie."); return; }
     }
     if (selectedAuthMethod !== 2 && !emailOtp) { showError("Please enter verification code or Get OTP."); return; }
     if (selectedAuthMethod === 2 && !emailOtp) { showError("Please enter Google Authenticator code."); return; }
