@@ -130,12 +130,21 @@ export interface SendOtpRegistrationProps {
 }
 
 export interface RegistrationProps {
-  cid: number;
-  email_or_phone: string;
-  password: string;
-  confirm_password: string;
-  verification_code: string;
-  referal: string;
+  cid?: number;
+  email_or_phone?: string;
+  email?: string;
+  phone?: number;
+  password?: string;
+  confirm_password?: string;
+  verification_code?: string;
+  referal?: string;
+  referral_code?: string;
+  token?: string;
+  firstName?: string;
+  lastName?: string;
+  mobileNumber?: string;
+  country_code?: string;
+  emailId?: string;
 }
 
 export interface LoginProps {

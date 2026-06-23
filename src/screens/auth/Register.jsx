@@ -128,6 +128,10 @@ const Register = () => {
   const isLoading = useAppSelector((state) => state.auth.isLoading);
   const showButtonLoading = useAppSelector((state) => state.auth.isLoading && state.auth.loadingFor !== 'otp');
   const [signUpId, setSignUpId] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [emailId, setEmailId] = useState("");
   const [password, setPassword] = useState("");
   const [showRefer, setShowRefer] = useState(false);
   const refFromParams = route?.params?.reffcode || route?.params?.referCode || route?.params?.emailId || "";
@@ -146,6 +150,10 @@ const Register = () => {
     setSignUpId("");
     setPassword("");
     setReferCode(refFromParams || "");
+    setFirstName("");
+    setLastName("");
+    setMobileNumber("");
+    setEmailId("");
   }, [index]);
 
   const handleClearCaptcha = () => { };
@@ -194,10 +202,44 @@ const Register = () => {
         showError(checkValue(languages?.error_email) || "Please enter a valid email address");
         return;
       }
+      if (!firstName.trim()) {
+        showError("Please enter your first name");
+        return;
+      }
+      if (!lastName.trim()) {
+        showError("Please enter your last name");
+        return;
+      }
+      if (!mobileNumber.trim()) {
+        showError("Please enter your mobile number");
+        return;
+      }
+      const fullPhone = `${countryCode[0] ? `+${countryCode[0]}` : "+91"}${mobileNumber}`;
+      if (!isValidPhoneNumber(fullPhone)) {
+        showError("Please enter a valid mobile number for the selected country");
+        return;
+      }
     } else if (index === 1) {
       const fullPhone = `${countryCode[0] ? `+${countryCode[0]}` : "+91"}${signUpId}`;
       if (!isValidPhoneNumber(fullPhone)) {
         showError(checkValue(languages?.error_userName) || "Please enter a valid phone number for the selected country");
+        return;
+      }
+      if (!firstName.trim()) {
+        showError("Please enter your first name");
+        return;
+      }
+      if (!lastName.trim()) {
+        showError("Please enter your last name");
+        return;
+      }
+      const emailIdTrimmed = String(emailId).trim().toLowerCase();
+      if (!emailIdTrimmed) {
+        showError("Please enter your email");
+        return;
+      }
+      if (!validateEmail(emailIdTrimmed)) {
+        showError("Please enter a valid email address");
         return;
       }
     }
@@ -309,6 +351,10 @@ const Register = () => {
         password: password,
         referral_code: referCode || "",
         token: token || "",
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        mobileNumber: mobileNumber.trim(),
+        country_code: countryCode[0] ? `+${countryCode[0]}` : "+91",
       };
       logRegisterPayload("Email register", "user/register-email", data);
       dispatch(register(data, () => { }, () => { }, handleClearCaptcha));
@@ -319,6 +365,9 @@ const Register = () => {
         password: password,
         referral_code: referCode || "",
         token: token || "",
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        emailId: emailId.trim().toLowerCase(),
       };
       logRegisterPayload("Phone register", "user/register-phone", data);
       dispatch(registerWithPhone(data, () => { }, () => { }, handleClearCaptcha));
@@ -369,29 +418,65 @@ const Register = () => {
         >
           <RenderTabBarAuth index={index} setIndex={setIndex} />
 
-          <View style={authStyles.mobileContainer}>
-            {index === 1 && (
-              <CountrySelector
-                onSelectCountry={setCountryCode}
-                onCountry={setCountry}
-                country={country}
-              />
-            )}
+          {index === 0 && (
             <Input
-              placeholder={
-                index === 0
-                  ? checkValue(languages?.place_login_userName) || "Please enter your email"
-                  : checkValue(languages?.place_userName) || "Enter mobile number"
-              }
+              placeholder={checkValue(languages?.place_login_userName) || "Please enter your email"}
               value={signUpId}
               onChangeText={(text) => setSignUpId(text)}
-              keyboardType={index === 0 ? "email-address" : "numeric"}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              returnKeyType="next"
+              mainContainer={{ marginBottom: 15 }}
+            />
+          )}
+
+          <Input
+            placeholder="Please enter your first name"
+            value={firstName}
+            onChangeText={(text) => setFirstName(text)}
+            autoCapitalize="words"
+            returnKeyType="next"
+            mainContainer={{ marginBottom: 15 }}
+          />
+
+          <Input
+            placeholder="Please enter your last name"
+            value={lastName}
+            onChangeText={(text) => setLastName(text)}
+            autoCapitalize="words"
+            returnKeyType="next"
+            mainContainer={{ marginBottom: 15 }}
+          />
+
+          <View style={[authStyles.mobileContainer, { marginBottom: 15 }]}>
+            <CountrySelector
+              onSelectCountry={setCountryCode}
+              onCountry={setCountry}
+              country={country}
+            />
+            <Input
+              placeholder={index === 0 ? "Enter mobile number" : (checkValue(languages?.place_userName) || "Enter mobile number")}
+              value={index === 0 ? mobileNumber : signUpId}
+              onChangeText={(text) => index === 0 ? setMobileNumber(text) : setSignUpId(text)}
+              keyboardType="numeric"
               autoCapitalize="none"
               returnKeyType="next"
               mainContainer={authStyles.mobileInput}
-              maxLength={index === 1 ? 15 : 100}
+              maxLength={15}
             />
           </View>
+
+          {index === 1 && (
+            <Input
+              placeholder="Please enter your email"
+              value={emailId}
+              onChangeText={(text) => setEmailId(text)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              returnKeyType="next"
+              mainContainer={{ marginBottom: 15 }}
+            />
+          )}
 
           <Input
             placeholder={checkValue(languages?.place_signUpPassword)}
@@ -485,63 +570,64 @@ const Register = () => {
             containerStyle={{ marginTop: 20 }}
           />
         </View>
-      </KeyBoardAware>
-      <View
-        style={{
-          alignSelf: "center",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 20,
-        }}
-      >
-        <View
-          style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
-        >
-          <View
-            style={{
-              backgroundColor: colors.lightGrey,
-              width: 100,
-              height: StyleSheet.hairlineWidth,
-            }}
-          ></View>
-          <AppText color={LIGHTGREY} type={TEN}>
-            Or sign up with
-          </AppText>
-          <View
-            style={{
-              backgroundColor: colors.lightGrey,
-              width: 100,
-              height: StyleSheet.hairlineWidth,
-            }}
-          ></View>
-        </View>
-        <TouchableOpacityView
-          style={{
-            borderWidth: 1,
-            borderColor: themeColors.border,
-            borderRadius: 40,
-            padding: 3,
-          }}
-          onPress={signupWithGoogle}
-        >
-          <FastImage
-            source={googleIcon}
-            resizeMode="contain"
-            style={{ width: 25, height: 25 }}
-          />
-        </TouchableOpacityView>
-        <AppText type={TEN} style={{ color: themeColors.secondaryText }}>
-          By signing up, I agree to Zillion Exchange user{" "}
-          <AppText style={{ color: colors.buttonBg, textDecorationLine: 'underline' }} type={TEN} onPress={() => {
-            NavigationService.navigate(CMS_SCREEN, {
-              id: 'https://zillionexchange.com/TermsofUse',
-            });
-          }}>
-            Terms and Conditions
-          </AppText>
-        </AppText>
-      </View>
 
+        <View
+          style={{
+            alignSelf: "center",
+            alignItems: "center",
+            gap: 10,
+            marginTop: 20,
+            marginBottom: 20,
+          }}
+        >
+          <View
+            style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+          >
+            <View
+              style={{
+                backgroundColor: colors.lightGrey,
+                width: 100,
+                height: StyleSheet.hairlineWidth,
+              }}
+            ></View>
+            <AppText color={LIGHTGREY} type={TEN}>
+              Or sign up with
+            </AppText>
+            <View
+              style={{
+                backgroundColor: colors.lightGrey,
+                width: 100,
+                height: StyleSheet.hairlineWidth,
+              }}
+            ></View>
+          </View>
+          <TouchableOpacityView
+            style={{
+              borderWidth: 1,
+              borderColor: themeColors.border,
+              borderRadius: 40,
+              padding: 3,
+            }}
+            onPress={signupWithGoogle}
+          >
+            <FastImage
+              source={googleIcon}
+              resizeMode="contain"
+              style={{ width: 25, height: 25 }}
+            />
+          </TouchableOpacityView>
+          <AppText type={TEN} style={{ color: themeColors.secondaryText }}>
+            By signing up, I agree to Zillion Exchange user{" "}
+            <AppText style={{ color: colors.buttonBg, textDecorationLine: 'underline' }} type={TEN} onPress={() => {
+              NavigationService.navigate(CMS_SCREEN, {
+                id: 'https://zillionexchange.com/TermsofUse',
+              });
+            }}>
+              Terms and Conditions
+            </AppText>
+          </AppText>
+        </View>
+      </KeyBoardAware>
     </AppSafeAreaView>
   );
 };
