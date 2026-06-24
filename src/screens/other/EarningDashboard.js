@@ -169,12 +169,8 @@ const EarningDashboard = ({
   );
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={[styles.headerRow, { marginTop: 5 }]}>
+    <View style={[styles.container, styles.content]}>
+      <View style={styles.headerRow}>
         <View style={styles.headerTextWrap}>
           <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: textColor, marginBottom: 8 }}>
             Zillion Exchange Earning Balance
@@ -280,15 +276,15 @@ const EarningDashboard = ({
       )}
 
       <View style={{ height: 40 }} />
-    </ScrollView>
+    </View>
   );
 };
 
 export default EarningDashboard;
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { paddingBottom: 20 },
+  container: {},
+  content: { paddingBottom: 20, paddingTop: 12 },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",

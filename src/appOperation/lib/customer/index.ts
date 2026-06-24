@@ -572,6 +572,20 @@ export default (appOperation: AppOperation) => ({
         undefined,
         CUSTOMER_TYPE,
       ),
+    get_team_staking_performance: () =>
+      appOperation.get(
+        `earning/team-staking-performance`,
+        undefined,
+        undefined,
+        CUSTOMER_TYPE,
+      ),
+    get_brokerage_commissions: (page: any = 1, limit: any = 100) =>
+      appOperation.get(
+        `user/brokerage-commissions?page=${page}&limit=${limit}`,
+        undefined,
+        undefined,
+        CUSTOMER_TYPE,
+      ),
       get_commit_details: (id: any) =>
       appOperation.get(
         `user/launchpad/user_project_commit_history/${id}`,

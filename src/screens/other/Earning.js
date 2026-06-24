@@ -61,8 +61,6 @@ import { useDispatch } from "react-redux";
 import { useAppSelector } from "../../store/hooks";
 import { colors } from "../../theme/colors";
 import EarningSkeleton from "./EarningSkeleton";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { setTheme } from "../../slices/authSlice";
 import { BASE_URL, IMAGE_BASE_URL } from "../../helper/Constants";
 import NavigationService from "../../navigation/NavigationService";
 import { EARNING_PAYOUT_HISTORY_SCREEN } from "../../navigation/routes";
@@ -74,6 +72,9 @@ import LinearGradient from "react-native-linear-gradient";
 import { Screen } from "../../theme/dimens";
 import CustomDots from "../home/CustomDots";
 import EarningDashboard from "./EarningDashboard";
+import StakingTeamLevelPerformance from "./StakingTeamLevelPerformance";
+import ReferralPerformanceHistory from "./ReferralPerformanceHistory";
+import BrokerageCommission from "./BrokerageCommission";
 import { showError } from "../../helper/logger";
 
 const formatNum = (val, decimals = 2) => {
@@ -183,7 +184,7 @@ const Earning = () => {
     useCallback(() => {
       let cancelled = false;
       if (route.params?.initialTab === 1) setActiveTab(1);
-      if (route.params?.initialTab === 2) setActiveTab(2);
+      if (route.params?.initialTab === 2) setActiveTab(5);
 
       if (isFirstLoad.current) {
         if (!packageList || packageList.length === 0) {
@@ -479,41 +480,23 @@ const Earning = () => {
 
   return (
     <AppSafeAreaView style={[styles.safeArea, { backgroundColor: themeColors.background }]}>
-      <KeyBoardAware style={styles.keyboardAware} containerStyle={styles.keyboardAwareContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.text} />}>
+      <ScrollView style={styles.keyboardAware} contentContainerStyle={styles.keyboardAwareContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.text} />}>
         <View style={styles.earningContentWrap}>
           {/* Top bar: title + Portfolio & History icons (like web) */}
           <View style={styles.topBar}>
             <AppText type={FIFTEEN} weight={SEMI_BOLD} color={themeColors.text} style={styles.topBarTitle}>
               Staking
             </AppText>
-            <View style={styles.topBarIcons}>
-              {/* <TouchableOpacity
-                onPress={() => setActiveTab(1)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <FastImage
-                  source={earningAsset1}
-                  resizeMode="contain"
-                  style={styles.headerIcon}
-                  tintColor={colors.white}
-                />
-              </TouchableOpacity> */}
-              {/* <TouchableOpacity
-                onPress={() => setActiveTab(2)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <FastImage
-                  source={earnAsset2}
-                  resizeMode="contain"
-                  style={styles.headerIconSmall}
-                  tintColor={colors.white}
-                />
-              </TouchableOpacity> */}
-            </View>
+
           </View>
 
-          {/* Tabs: Earning | Earning Dashboard */}
-          <View style={[styles.tabRow, { borderBottomColor: themeColors.border }]}>
+          {/* Tabs: Earning | Earning Dashboard | Staking Team Level Performance | Referral Performance History | Brokerage Commission | Recent Plans */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={[styles.tabRow, { borderBottomColor: themeColors.border }]}
+            contentContainerStyle={styles.tabRowContent}
+          >
             <TouchableOpacity
               style={[styles.tab, activeTab === 0 && styles.tabActive]}
               onPress={() => setActiveTab(0)}
@@ -556,12 +539,57 @@ const Earning = () => {
                   color: activeTab === 2 ? colors.buttonBg : themeColors.secondaryText,
                 }}
               >
+                Staking Team Level Performance
+              </AppText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 3 && styles.tabActive]}
+              onPress={() => setActiveTab(3)}
+              activeOpacity={0.7}
+            >
+              <AppText
+                type={FOURTEEN}
+                weight={SEMI_BOLD}
+                style={{
+                  color: activeTab === 3 ? colors.buttonBg : themeColors.secondaryText,
+                }}
+              >
+                Referral Performance History
+              </AppText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 4 && styles.tabActive]}
+              onPress={() => setActiveTab(4)}
+              activeOpacity={0.7}
+            >
+              <AppText
+                type={FOURTEEN}
+                weight={SEMI_BOLD}
+                style={{
+                  color: activeTab === 4 ? colors.buttonBg : themeColors.secondaryText,
+                }}
+              >
+                Brokerage Commission
+              </AppText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 5 && styles.tabActive]}
+              onPress={() => setActiveTab(5)}
+              activeOpacity={0.7}
+            >
+              <AppText
+                type={FOURTEEN}
+                weight={SEMI_BOLD}
+                style={{
+                  color: activeTab === 5 ? colors.buttonBg : themeColors.secondaryText,
+                }}
+              >
                 Recent Plans
               </AppText>
             </TouchableOpacity>
-          </View>
+          </ScrollView>
 
-          {activeTab === 2 ? (
+          {activeTab === 5 ? (
             <View style={styles.recentPlansWrap}>
               <View style={styles.planTabsWrapper}>
                 <TouchableOpacity
@@ -850,6 +878,12 @@ const Earning = () => {
                 );
               })()}
             </EarningDashboard>
+          ) : activeTab === 2 ? (
+            <StakingTeamLevelPerformance />
+          ) : activeTab === 3 ? (
+            <ReferralPerformanceHistory />
+          ) : activeTab === 4 ? (
+            <BrokerageCommission />
           ) : null}
 
           {activeTab === 0 && contentLoading && <EarningSkeleton />}
@@ -1007,7 +1041,7 @@ const Earning = () => {
             </>
           )}
         </View>
-      </KeyBoardAware>
+      </ScrollView>
     </AppSafeAreaView>
   );
 };
@@ -1026,9 +1060,7 @@ const styles = StyleSheet.create({
   keyboardAwareContent: {
     flexGrow: 1,
   },
-  earningContentWrap: {
-    flex: 1,
-  },
+  earningContentWrap: {},
   topBar: {
     marginTop: 14,
     flexDirection: "row",
@@ -1036,20 +1068,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   tabRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     marginTop: 16,
     marginBottom: 4,
     borderBottomWidth: 1,
   },
+  tabRowContent: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 16,
+    paddingHorizontal: 4,
+  },
   tab: {
     paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
   },
   tabActive: {
-    borderBottomWidth: 2,
     borderBottomColor: colors.buttonBg,
-    marginBottom: -1,
   },
   recentPlansWrap: { flex: 1, },
   planTabsWrapper: {
@@ -1138,8 +1174,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     ...Platform.select({
-      android: { elevation: 4 },
-      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8 },
+      android: { elevation: 1 },
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
     }),
   },
   dashboardBalanceCardLeft: {
