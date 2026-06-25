@@ -207,7 +207,7 @@ const EarningDashboard = ({
           <Carousel
             loop={earningPortfolio.length > 1}
             width={PORTFOLIO_CARD_WIDTH}
-            height={200}
+            height={180}
             data={earningPortfolio}
             autoPlay
             autoPlayInterval={3500}
@@ -266,7 +266,7 @@ const EarningDashboard = ({
       )}
 
       {/* Earning Assets */}
-      <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: textColor, marginTop: 20, marginBottom: 12 }}>
+      <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: textColor, marginTop: 10, marginBottom: 12 }}>
         Earning Assets
       </AppText>
       {Array.isArray(earningPortfolio) && earningPortfolio.length > 0 ? (
@@ -310,18 +310,18 @@ const styles = StyleSheet.create({
     minWidth: "47%",
     borderRadius: 16,
     padding: 18,
-    borderWidth: 1,
+    borderWidth: 0.7,
     ...Platform.select({
-      android: { elevation: 4 },
+      android: { elevation: 0.7 },
       ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8 },
     }),
   },
   portfolioCard: {
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: 1,
+    borderWidth: 0.5,
     ...Platform.select({
-      android: { elevation: 4 },
+      android: { elevation: 0.7 },
       ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 8 },
     }),
   },
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 12,
+    marginTop: 8,
     gap: 8,
   },
   portfolioDot: {
@@ -368,10 +368,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 1,
+    borderWidth: 0.7,
     overflow: "hidden",
     ...Platform.select({
-      android: { elevation: 4 },
+      android: { elevation: 0.7 },
       ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8 },
     }),
   },
