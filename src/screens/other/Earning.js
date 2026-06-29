@@ -554,7 +554,7 @@ const Earning = () => {
                   color: activeTab === 3 ? colors.buttonBg : themeColors.secondaryText,
                 }}
               >
-                Referral Performance History
+                Referral Performance Team
               </AppText>
             </TouchableOpacity>
             <TouchableOpacity

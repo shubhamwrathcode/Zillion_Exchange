@@ -40,6 +40,7 @@ const ReferralPerformanceHistory = () => {
   const dispatch = useDispatch();
   const { colors: themeColors, isDark } = useTheme();
   const referralList = useAppSelector((state) => state.home.referralList);
+  const userData = useAppSelector((state) => state.auth.userData);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [listLoading, setListLoading] = useState(false);
@@ -54,6 +55,7 @@ const ReferralPerformanceHistory = () => {
     totalEarned: null,
     earningsShortName: "USDT",
   });
+  const [signupRewardData, setSignupRewardData] = useState(null);
 
   useEffect(() => {
     dispatch(getReferralList());
@@ -210,6 +212,25 @@ const ReferralPerformanceHistory = () => {
     loadReferralEarnings();
   }, [loadReferralEarnings]);
 
+  const loadSignupRewardHistory = useCallback(async () => {
+    const userId = userData?.userId || userData?._id;
+    if (!userId) return;
+    try {
+      const res = await appOperation.customer.get_signup_reward_history(userId);
+      if (res?.success && res?.data != null) {
+        setSignupRewardData(res.data);
+      } else {
+        setSignupRewardData(null);
+      }
+    } catch {
+      setSignupRewardData(null);
+    }
+  }, [userData?.userId, userData?._id]);
+
+  useEffect(() => {
+    loadSignupRewardHistory();
+  }, [loadSignupRewardHistory]);
+
   const earningsByFromUserId = useMemo(() => {
     const map = {};
     for (const it of referralEarningsState.items || []) {
@@ -304,8 +325,24 @@ const ReferralPerformanceHistory = () => {
       referralEarningsState.totalEarned != null
         ? `${Math.round(Number(referralEarningsState.totalEarned) * 100) / 100}`
         : "0";
-    return { totalReferrals, verifiedUsers, pendingKyc, totalEarned, earnSymbol };
-  }, [referralList, isKycVerifiedUser, referralEarningsState.totalEarned, referralEarningsState.earningsShortName]);
+    const signupBonus = signupRewardData?.signupBonus;
+    const signupCurrency =
+      (signupRewardData?.currencyShortName && String(signupRewardData.currencyShortName).trim()) ||
+      signupRewardData?.history?.[0]?.shortName ||
+      "USDT";
+    const signupClaimed = Boolean(signupRewardData?.status?.rewardClaimed);
+
+    return {
+      totalReferrals,
+      verifiedUsers,
+      pendingKyc,
+      totalEarned,
+      earnSymbol,
+      signupBonus: signupBonus != null ? Number(signupBonus) : null,
+      signupCurrency,
+      signupClaimed
+    };
+  }, [referralList, isKycVerifiedUser, referralEarningsState.totalEarned, referralEarningsState.earningsShortName, signupRewardData]);
 
   const textColor = isDark ? colors.white : colors.black;
   const secondaryColor = isDark ? colors.descText : "#666";
@@ -316,7 +353,7 @@ const ReferralPerformanceHistory = () => {
       <View style={styles.rhHeaderRow}>
         <View style={styles.rhIntro}>
           <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: textColor, marginBottom: 8 }}>
-            Referral Performance History
+            Referral Performance Team
           </AppText>
           <AppText type={TEN} style={{ color: secondaryColor }}>
             Explore your referral network, track earnings and view levels.
@@ -344,6 +381,19 @@ const ReferralPerformanceHistory = () => {
 
       {/* Summary Grid */}
       <View style={styles.rhSummaryGrid}>
+        <View style={[styles.rhStatCard, { backgroundColor: isDark ? themeColors.themeElevationColor : "#FFFFFF", borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)", borderWidth: 1 }]}>
+          <AppText type={TWELVE} style={[styles.rhStatLabel, { color: isDark ? "rgba(255,255,255,0.60)" : "rgba(0,0,0,0.55)" }]}>
+            SIGNUP BONUS
+          </AppText>
+          <AppText weight={SEMI_BOLD} style={[styles.rhStatValue, { color: "#2563EB" }]}>
+            {summaryStats.signupBonus != null
+              ? `${summaryStats.signupBonus} ${summaryStats.signupCurrency}`
+              : "—"}
+          </AppText>
+          <AppText type={TWELVE} style={[styles.rhStatHint, { color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)" }]}>
+            {summaryStats.signupClaimed ? "Reward claimed" : "Complete tasks to claim"}
+          </AppText>
+        </View>
         <View style={[styles.rhStatCard, { backgroundColor: isDark ? themeColors.themeElevationColor : "#FFFFFF", borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)", borderWidth: 1 }]}>
           <AppText type={TWELVE} style={[styles.rhStatLabel, { color: isDark ? "rgba(255,255,255,0.60)" : "rgba(0,0,0,0.55)" }]}>
             TOTAL REFERRALS

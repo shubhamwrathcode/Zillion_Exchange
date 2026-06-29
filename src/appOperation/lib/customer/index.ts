@@ -347,6 +347,9 @@ export default (appOperation: AppOperation) => ({
   /** Same as web: POST /v1/user/claim-signup-reward */
   claim_signup_reward: () =>
     appOperation.post('user/claim-signup-reward', {}, CUSTOMER_TYPE),
+  /** Same as web: GET /v1/user/signup-reward-history */
+  get_signup_reward_history: (userId: string) =>
+    appOperation.get(`user/signup-reward-history?userId=${encodeURIComponent(userId)}`, undefined, undefined, CUSTOMER_TYPE),
   past_orders: (data: PastOrdersProps) =>
     appOperation.post('exchange/past-order', data, CUSTOMER_TYPE),
   open_orders: (data: OpenOrdersProps) =>
