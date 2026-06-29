@@ -862,14 +862,14 @@ const Spot = () => {
       setCurrency(spotSelectedPair);
       currentCurrencyRef.current = spotSelectedPair;
       setAmount("1");
-      
+
       const newPairData = (coinData || []).find(
         (c) => c.base_currency === spotSelectedPair.base_currency && c.quote_currency === spotSelectedPair.quote_currency
       ) || spotSelectedPair;
-      
+
       const tickSize = newPairData?.tick_size;
       const precision = (tickSize === undefined || tickSize === null) ? 8 : getDecimalPlaces(tickSize);
-      
+
       const bp = spotSelectedPair.buy_price;
       if (bp === undefined || bp === null || bp === "") {
         setPrice("0");
@@ -949,6 +949,7 @@ const Spot = () => {
     high,
     low,
     volume,
+    volumeQuote,
   } = currencyData ?? {};
   const { skip_buy_sell, id, kycVerified } = userData ?? "";
 
@@ -2118,7 +2119,18 @@ const Spot = () => {
                       fontWeight: "500",
                     }}
                   >
-                    {volume != null ? twoFixedTwo(volume) : "-"} {base_currency ?? effectiveCurrency?.base_currency ?? ""}
+                    {volume != null ? toFixedFive(volume) : "-"} {base_currency ?? effectiveCurrency?.base_currency ?? ""}
+                  </AppText>
+                </View>
+                <View style={styles.contain}>
+                  <AppText style={{ color: themeColors.secondaryText }}>24h Vol</AppText>
+                  <AppText
+                    style={{
+                      color: themeColors.text,
+                      fontWeight: "500",
+                    }}
+                  >
+                    {volumeQuote != null ? toFixedFive(volumeQuote) : "-"} {quote_currency ?? effectiveCurrency?.quote_currency ?? ""}
                   </AppText>
                 </View>
               </View>
