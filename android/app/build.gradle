@@ -87,8 +87,8 @@ android {
         applicationId "com.zillionexchange"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 7
-        versionName "7.0.0"
+        versionCode 9
+        versionName "9.0.0"
     }
     signingConfigs {
         // debug {
