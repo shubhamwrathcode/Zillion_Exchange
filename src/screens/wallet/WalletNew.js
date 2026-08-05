@@ -6,6 +6,7 @@ import {
   View,
   RefreshControl,
 } from "react-native";
+import Toast from "react-native-simple-toast";
 import {
   AppSafeAreaView,
   AppText,
@@ -310,10 +311,10 @@ const WalletNew = () => {
             <WalletMenu
               theme={theme}
               onDeposit={() => {
-                NavigationService.navigate(DEPOSIT_COIN_SCREEN)
+                Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG);
               }}
               onWithdraw={() => {
-                NavigationService.navigate(WALLET_WITHDRAW_SCREEN)
+                Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG);
               }}
             />
             <View style={{ marginVertical: 20, paddingHorizontal: 20 }}>

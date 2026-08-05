@@ -1,3 +1,4 @@
+import Toast from "react-native-simple-toast";
 import {
   View,
   Text,
@@ -2405,15 +2406,13 @@ const Spot = () => {
                           backgroundColor: themeColors.themeElevationColor,
                         },
                       ]}
-                      onPress={() =>
-                        NavigationService.navigate(
-                          btn == "Withdraw"
-                            ? WALLET_WITHDRAW_SCREEN
-                            : btn == "Deposit"
-                              ? DEPOSIT_COIN_SCREEN
-                              : TRANSFER_SCREEN
-                        )
-                      }
+                      onPress={() => {
+                        if (btn === "Withdraw" || btn === "Deposit") {
+                          Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG);
+                        } else {
+                          NavigationService.navigate(TRANSFER_SCREEN);
+                        }
+                      }}
                     >
                       <AppText style={[styles.assetActionText, { color: themeColors.text }]}>{btn}</AppText>
                     </TouchableOpacity>

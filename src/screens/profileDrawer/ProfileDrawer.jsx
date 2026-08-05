@@ -15,6 +15,7 @@ import {
   Modal,
 } from "react-native";
 import FastImage from "react-native-fast-image";
+import Toast from "react-native-simple-toast";
 // import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons'; // or use react-native-vector-icons
 // import MaterialIcons from 'react-native-vector-icon/MaterialIcons'
 const screenWidth = Dimensions.get("window").width;
@@ -710,7 +711,9 @@ const ProfileDrawer = () => {
             <AnimatedCard
               theme={effectiveTheme}
               delay={0}
-              onPress={() => NavigationService.navigate(DEPOSIT_COIN_SCREEN)}
+              onPress={() => {
+                Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG);
+              }}
             >
               <DepositWithdrawCard
                 theme={effectiveTheme}
@@ -725,7 +728,9 @@ const ProfileDrawer = () => {
             <AnimatedCard
               theme={effectiveTheme}
               delay={80}
-              onPress={() => NavigationService.navigate(WALLET_WITHDRAW_SCREEN)}
+              onPress={() => {
+                Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG);
+              }}
             >
               <DepositWithdrawCard
                 theme={effectiveTheme}
