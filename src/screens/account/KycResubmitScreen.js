@@ -187,7 +187,7 @@ const KycResubmitScreen = ({ route }) => {
           showError("Only JPEG, PNG & JPG formats and file size upto 5MB are supported");
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   };
 
   const goNext = () => {
@@ -197,6 +197,10 @@ const KycResubmitScreen = ({ route }) => {
       else if (needsSelfieResubmit()) setResubmitStep(3);
       else setResubmitStep(4);
     } else if (resubmitStep === 1) {
+      if (!resubmitIdNumber || normalizeDocNumber(resubmitIdNumber).length <= 5) {
+        showError("Document number must be more than 5 characters");
+        return;
+      }
       if (!docFront) { showError("Please upload front image of your ID"); return; }
       if (needsTaxDocResubmit()) setResubmitStep(2);
       else if (needsSelfieResubmit()) setResubmitStep(3);
@@ -300,10 +304,10 @@ const KycResubmitScreen = ({ route }) => {
 
   const stepTitle =
     resubmitStep === 0 ? "Resubmit Documents" :
-    resubmitStep === 1 && needsIdDocResubmit() ? `Upload ${getDocTypeName(submittedIdDocType)}` :
-    resubmitStep === 2 && needsTaxDocResubmit() ? `Upload ${getDocTypeName(submittedTaxDocType)}` :
-    resubmitStep === 3 && needsSelfieResubmit() ? "Capture Selfie" :
-    resubmitStep === 4 ? "Security Verification" : "Resubmit Documents";
+      resubmitStep === 1 && needsIdDocResubmit() ? `Upload ${getDocTypeName(submittedIdDocType)}` :
+        resubmitStep === 2 && needsTaxDocResubmit() ? `Upload ${getDocTypeName(submittedTaxDocType)}` :
+          resubmitStep === 3 && needsSelfieResubmit() ? "Capture Selfie" :
+            resubmitStep === 4 ? "Security Verification" : "Resubmit Documents";
 
   return (
     <AppSafeAreaView source={theme !== "Dark" && appBg} style={[styles.container, { backgroundColor: colors.newThemeColor }]}>
@@ -317,10 +321,10 @@ const KycResubmitScreen = ({ route }) => {
           {/* Step 0: List of rejected docs */}
           {resubmitStep === 0 && (
             <View style={styles.stepBlock}>
-              <AppText type={FOURTEEN} style={{ color: textClr,  }}>
+              <AppText type={FOURTEEN} style={{ color: textClr, }}>
                 The following documents were rejected and need to be uploaded again:
               </AppText>
-               <View style={styles.rejectIllustrationWrap}>
+              <View style={styles.rejectIllustrationWrap}>
                 <FastImage source={kyc_reject_vector} resizeMode="contain" style={styles.rejectIllustration} />
               </View>
               <View style={[styles.alertDanger, { backgroundColor: theme === "Dark" ? "rgba(220,53,69,0.2)" : "#f8d7da" }]}>
@@ -334,7 +338,7 @@ const KycResubmitScreen = ({ route }) => {
                   <AppText type={THIRTEEN} style={styles.rejectItem}>⚠️ Selfie: {getRejectReason("selfie")}</AppText>
                 )}
               </View>
-             
+
             </View>
           )}
 

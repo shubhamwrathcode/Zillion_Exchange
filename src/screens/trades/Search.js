@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import {
   AppSafeAreaView,
@@ -10,19 +10,19 @@ import {
   SIXTEEN,
   SearchInput,
 } from '../../shared';
-import {useAppSelector} from '../../store/hooks';
-import {useTheme} from '../../hooks/useTheme';
-import {CoinCardProps, CoinDataProps} from '../../helper/types';
-import {BASE_URL, placeHolderText} from '../../helper/Constants';
-import {ImageBackground, Platform, StyleSheet, View} from 'react-native';
+import { useAppSelector } from '../../store/hooks';
+import { useTheme } from '../../hooks/useTheme';
+import { CoinCardProps, CoinDataProps } from '../../helper/types';
+import { BASE_URL, placeHolderText } from '../../helper/Constants';
+import { ImageBackground, Platform, StyleSheet, View } from 'react-native';
 import KeyBoardAware from '../../shared/components/KeyboardAware';
-import {Screen, universalPaddingHorizontalHigh} from '../../theme/dimens';
+import { Screen, universalPaddingHorizontalHigh } from '../../theme/dimens';
 import TouchableOpacityView from '../../shared/components/TouchableOpacityView';
 import NavigationService from '../../navigation/NavigationService';
-import { NAVIGATION_BOTTOM_TAB_STACK, NAVIGATION_TRADE_STACK, TRADE_SCREEN, WALLET_SCREEN } from '../../navigation/routes';
+import { WALLET_SCREEN } from '../../navigation/routes';
 import FastImage from 'react-native-fast-image';
-import {checkValue, toFixedEight} from '../../helper/utility';
-import {HomeBg } from '../../helper/ImageAssets';
+import { checkValue, toFixedEight } from '../../helper/utility';
+import { HomeBg } from '../../helper/ImageAssets';
 import MarketList from '../other/MarketList';
 import { SpinnerSecond } from '../../shared/components/SpinnerSecond';
 import { colors } from '../../theme/colors';
@@ -49,7 +49,7 @@ const Search = () => {
       let filterData = hotCoins.filter(data => {
         return (
           data?.base_currency?.toLowerCase().indexOf(value?.toLowerCase()) >
-            -1 ||
+          -1 ||
           data?.quote_currency?.toLowerCase().indexOf(value?.toLowerCase()) > -1
         );
       });
@@ -58,7 +58,7 @@ const Search = () => {
   };
 
   const handleNavigate = (item) => {
-    NavigationService.navigate(WALLET_SCREEN, {coinDetail: item});
+    NavigationService.navigate(WALLET_SCREEN, { coinDetail: item });
   };
 
   // const renderItem = ({item}) => {
@@ -99,7 +99,7 @@ const Search = () => {
   // };
 
   return (
-    <AppSafeAreaView style={{backgroundColor: themeColors.background}}>
+    <AppSafeAreaView style={{ backgroundColor: themeColors.background }}>
       {/* <ImageBackground  source={HomeBg} style={styles.imgBg} > */}
       <SearchInput
         cancelBtn={true}
@@ -111,7 +111,7 @@ const Search = () => {
         returnKeyType="done"
         onSubmitEditing={() => getData()}
         // onFocus={true}
-        containerStyle={{paddingTop: Platform.OS === 'ios' ? 25 : 0, paddingHorizontal: 5, backgroundColor: themeColors.background}}
+        containerStyle={{ paddingTop: Platform.OS === 'ios' ? 25 : 0, paddingHorizontal: 5, backgroundColor: themeColors.background }}
         inputStyle={{}}
       />
       <KeyBoardAware>
@@ -121,18 +121,18 @@ const Search = () => {
         {/* {list?.map((item: CoinDataProps, index: number) => {
           return renderItem({item, index});
         })} */}
-         <MarketList filterData={list} onPress={handleNavigate}/>
+        <MarketList filterData={list} onPress={handleNavigate} />
       </KeyBoardAware>
       <SpinnerSecond />
-    {/* </ImageBackground> */}
+      {/* </ImageBackground> */}
     </AppSafeAreaView>
   );
 };
 
 export default Search;
 const styles = StyleSheet.create({
-  imgBg:{
-    width:Screen.Width,height:Screen.Height 
+  imgBg: {
+    width: Screen.Width, height: Screen.Height
   },
   text: {
     marginVertical: universalPaddingHorizontalHigh,

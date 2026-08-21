@@ -151,11 +151,14 @@ export function KycFormProvider({ children }) {
     if (!config) return { valid: false, message: "Document config not found" };
     const normalized = normalizeDocNumber(value);
     if (!normalized) return { valid: false, message: "Document number is required" };
-    if (normalized.length < config.min) return { valid: false, message: `Minimum ${config.min} characters required` };
-    if (normalized.length > config.max) return { valid: false, message: `Maximum ${config.max} characters allowed` };
+    const minLength = Math.max(Number(config.min) || 0, 6);
+    if (normalized.length < minLength) return { valid: false, message: "Document number must be more than 5 characters" };
+    if (config.max && normalized.length > Number(config.max)) return { valid: false, message: `Maximum ${config.max} characters allowed` };
     try {
-      const regex = new RegExp(config.regex);
-      if (!regex.test(normalized)) return { valid: false, message: "Invalid format" };
+      if (config.regex) {
+        const regex = new RegExp(config.regex);
+        if (!regex.test(normalized)) return { valid: false, message: "Invalid format" };
+      }
     } catch (e) {
       return { valid: false, message: "Validation error" };
     }
@@ -175,9 +178,17 @@ export function KycFormProvider({ children }) {
   const handleDocumentNumberChange = (value) => {
     const normalized = (value || "").toUpperCase().replace(/\s/g, "");
     setAadhar(normalized);
+    if (!normalized) {
+      setDocumentNumberError("");
+      return;
+    }
+    if (normalized.length <= 5) {
+      setDocumentNumberError("Document number must be more than 5 characters");
+      return;
+    }
     if (kycConfig && modalIdType) {
       const docConfig = (kycConfig.id_documents || []).find((d) => d.code === modalIdType);
-      if (docConfig && normalized.length >= docConfig.min) {
+      if (docConfig) {
         const validation = validateDocNumber(normalized, docConfig);
         setDocumentNumberError(validation.valid ? "" : validation.message);
       } else {
@@ -304,10 +315,24 @@ export function KycFormProvider({ children }) {
   const validateStep2 = useCallback(() => {
     if (needsResubmission && !needsIdDocResubmit()) return true;
     const docConfig = getIdDocConfig();
-    if (!aadhar || aadhar.trim().length < 4) { showError("Please enter a valid document number"); return false; }
+    const normalized = normalizeDocNumber(aadhar);
+    if (!normalized) {
+      showError("Document number is required");
+      setDocumentNumberError("Document number is required");
+      return false;
+    }
+    if (normalized.length <= 5) {
+      showError("Document number must be more than 5 characters");
+      setDocumentNumberError("Document number must be more than 5 characters");
+      return false;
+    }
     if (docConfig) {
-      const v = validateDocNumber(aadhar, docConfig);
-      if (!v.valid) { showError(v.message || "Invalid document number"); setDocumentNumberError(v.message); return false; }
+      const v = validateDocNumber(normalized, docConfig);
+      if (!v.valid) {
+        showError(v.message || "Invalid document number");
+        setDocumentNumberError(v.message || "Invalid document number");
+        return false;
+      }
     }
     if (!docFront) { showError("Please upload front image of your ID card"); return false; }
     if (docConfig?.requires_back_image && !docBack) { showError("Please upload back image of your ID card"); return false; }
