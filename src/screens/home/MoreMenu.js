@@ -132,8 +132,7 @@ const MoreMenu = () => {
             <TouchableOpacity
               style={{ alignItems: "center" }}
               onPress={() =>
-                //  NavigationService.navigate(DEPOSIT_COIN_SCREEN)
-                Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG)
+                NavigationService.navigate(DEPOSIT_COIN_SCREEN)
 
               }
             >
@@ -150,10 +149,7 @@ const MoreMenu = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={{ alignItems: "center" }}
-              onPress={() =>
-                // NavigationService.navigate(WALLET_WITHDRAW_SCREEN)
-                Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG)
-              }
+              onPress={() => NavigationService.navigate(WALLET_WITHDRAW_SCREEN)}
             >
               <View style={[styles.iconBox, { backgroundColor: isDark ? themeColors.themeSelection : "#F0F3F6" }]}>
                 <FastImage

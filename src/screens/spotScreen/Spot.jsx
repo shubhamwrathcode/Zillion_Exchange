@@ -2408,7 +2408,9 @@ const Spot = () => {
                       ]}
                       onPress={() => {
                         if (btn === "Withdraw" || btn === "Deposit") {
-                          Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG);
+                          NavigationService.navigate(btn === "Withdraw" ? WALLET_WITHDRAW_SCREEN : DEPOSIT_COIN_SCREEN)
+                          // Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG);
+
                         } else {
                           NavigationService.navigate(TRANSFER_SCREEN);
                         }

@@ -311,11 +311,12 @@ const WalletNew = () => {
             <WalletMenu
               theme={theme}
               onDeposit={() => {
-                Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG);
+                NavigationService.navigate(DEPOSIT_COIN_SCREEN)
               }}
               onWithdraw={() => {
-                Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG);
-              }}
+                NavigationService.navigate(WALLET_WITHDRAW_SCREEN)
+              }
+              }
             />
             <View style={{ marginVertical: 20, paddingHorizontal: 20 }}>
               {activeTab === "Overview" && (
