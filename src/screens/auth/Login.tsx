@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import NavigationService from "../../navigation/NavigationService";
 import FastImage from "react-native-fast-image";
 import {
@@ -23,6 +23,7 @@ import {
   BLACK,
   BOLD,
   LIGHTGREY,
+  RED,
   TEN,
   THIRTEEN,
   EIGHTEEN,
@@ -55,7 +56,11 @@ import {
   checkValue,
   validateEmail,
   validatePasswordStrict,
+  validateAllowedEmail,
+  isAllowedEmailDomain,
+  checkEmailDomainState,
 } from "../../helper/utility";
+import EmailDomainSuggestions from "../../shared/components/EmailDomainSuggestions";
 import {
   GoogleSignin,
   statusCodes,
@@ -77,7 +82,7 @@ const RenderTabBarAuth = (props: any) => {
   });
   const routes = [
     { key: "first", title: checkValue(languages?.email) },
-    { key: "second", title: checkValue(languages?.mobile) },
+    // { key: "second", title: checkValue(languages?.mobile) },
   ];
   return (
     <View style={authStyles.tabBarMain}>
@@ -97,7 +102,10 @@ const RenderTabBarAuth = (props: any) => {
             <AppText
               type={FOURTEEN}
               weight={SEMI_BOLD}
-              style={{ color: i === props?.index ? (isDark ? colors.white : themeColors.button) : themeColors.secondaryText }}
+              style={{
+                color: i === props?.index ? (isDark ? colors.white : themeColors.button) :
+                  themeColors.secondaryText
+              }}
             >
               {route.title}
             </AppText>
@@ -128,6 +136,10 @@ const Login = (): JSX.Element => {
     useState(false);
   const [passkeySupported, setPasskeySupported] = useState(false);
   const [hasPasskey, setHasPasskey] = useState(false);
+
+  const emailDomainStatus = useMemo(() => {
+    return index === 0 ? checkEmailDomainState(signUpId) : { isInvalid: false };
+  }, [index, signUpId]);
 
   useEffect(() => {
     setSignUpId("");
@@ -269,6 +281,14 @@ const Login = (): JSX.Element => {
   }, []);
 
   const onSubmit = () => {
+    if (index === 0 && !validateAllowedEmail(signUpId.trim())) {
+      if (!validateEmail(signUpId.trim())) {
+        showError(checkValue(languages?.error_email) || "Please enter a valid email address");
+      } else {
+        showError("Only Gmail, Yahoo, Outlook, and iCloud email addresses are allowed");
+      }
+      return;
+    }
     if (!password) {
       showError(checkValue("Please Enter Password"));
       return;
@@ -284,7 +304,7 @@ const Login = (): JSX.Element => {
   const onLogin = () => {
     dispatch(
       login({
-        email_or_phone: signUpId,
+        email_or_phone: signUpId.trim(),
         password,
         token: "",
       })
@@ -295,7 +315,7 @@ const Login = (): JSX.Element => {
     setSignUpId(val);
     if (index === 0) {
       // Email tab (first)
-      setIsValid(validateEmail(val));
+      setIsValid(validateAllowedEmail(val.trim()));
     } else if (index === 1) {
       // Mobile tab (second)
       const phone = Number(val);
@@ -357,9 +377,33 @@ const Login = (): JSX.Element => {
               onEndEditing={() => passwordInput?.current?.focus()}
               onFocus={() => setShowPassField(true)}
               mainContainer={authStyles.mobileInput}
+              containerStyle={
+                index === 0 && emailDomainStatus.isInvalid
+                  ? { borderColor: colors.red, borderWidth: 1.5 }
+                  : undefined
+              }
               maxLength={100}
             />
           </View>
+
+          {index === 0 && emailDomainStatus.isInvalid && (
+            <AppText
+              type={TEN}
+              color={RED}
+              style={{ marginTop: 2, marginBottom: 8, marginHorizontal: 4 }}
+            >
+              {emailDomainStatus.message || "Only Gmail, Yahoo, Outlook, and iCloud email addresses are allowed"}
+            </AppText>
+          )}
+
+          {index === 0 && (
+            <EmailDomainSuggestions
+              value={signUpId}
+              onSelect={(val: string) => changeInput(val)}
+              containerStyle={{ marginBottom: 10, marginTop: 4 }}
+            />
+          )}
+
           {!showPassField && (
             <Button
               children={"Next"}

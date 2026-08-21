@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import {
   AppSafeAreaView,
   AppText,
@@ -10,6 +10,7 @@ import {
   LIGHTGREY,
   MEDIUM,
   NORMAL,
+  RED,
   SEMI_BOLD,
   TEN,
   THIRTEEN,
@@ -37,7 +38,11 @@ import {
   checkValue,
   validateEmail,
   validatePasswordStrict,
+  validateAllowedEmail,
+  isAllowedEmailDomain,
+  checkEmailDomainState,
 } from "../../helper/utility";
+import EmailDomainSuggestions from "../../shared/components/EmailDomainSuggestions";
 import NavigationService from "../../navigation/NavigationService";
 import { CMS_SCREEN, LOGIN_SCREEN } from "../../navigation/routes";
 import Checkbox from "../../shared/components/Checkbox";
@@ -86,7 +91,7 @@ const RenderTabBarAuth = (props) => {
   // Web order: Email first, Mobile second
   const routes = [
     { key: "email", title: checkValue(languages?.email) || "Email" },
-    { key: "mobile", title: checkValue(languages?.mobile) || "Mobile" },
+    // { key: "mobile", title: checkValue(languages?.mobile) || "Mobile" },
   ];
   return (
     <View style={authStyles.tabBarMain}>
@@ -146,6 +151,10 @@ const Register = () => {
   const [checkTermsPhone, setCheckTermsPhone] = useState(false);
   const { colors: themeColors, isDark } = useTheme();
 
+  const emailDomainStatus = useMemo(() => {
+    return checkEmailDomainState(index === 0 ? signUpId : emailId);
+  }, [index, signUpId, emailId]);
+
   useEffect(() => {
     setSignUpId("");
     setPassword("");
@@ -194,12 +203,17 @@ const Register = () => {
 
   const onSubmit = (token) => {
     if (index === 0) {
-      if (!signUpId) {
+      const emailTrimmed = signUpId.trim().toLowerCase();
+      if (!emailTrimmed) {
         showError("Please enter your email");
         return;
       }
-      if (!validateEmail(signUpId)) {
+      if (!validateEmail(emailTrimmed)) {
         showError(checkValue(languages?.error_email) || "Please enter a valid email address");
+        return;
+      }
+      if (!isAllowedEmailDomain(emailTrimmed)) {
+        showError("Only Gmail, Yahoo, Outlook, and iCloud email addresses are allowed");
         return;
       }
       if (!firstName.trim()) {
@@ -214,13 +228,13 @@ const Register = () => {
         showError("Please enter your mobile number");
         return;
       }
-      const fullPhone = `${countryCode[0] ? `+${countryCode[0]}` : "+91"}${mobileNumber}`;
+      const fullPhone = `${countryCode[0] ? `+${countryCode[0]}` : "+91"}${mobileNumber.trim()}`;
       if (!isValidPhoneNumber(fullPhone)) {
         showError("Please enter a valid mobile number for the selected country");
         return;
       }
     } else if (index === 1) {
-      const fullPhone = `${countryCode[0] ? `+${countryCode[0]}` : "+91"}${signUpId}`;
+      const fullPhone = `${countryCode[0] ? `+${countryCode[0]}` : "+91"}${signUpId.trim()}`;
       if (!isValidPhoneNumber(fullPhone)) {
         showError(checkValue(languages?.error_userName) || "Please enter a valid phone number for the selected country");
         return;
@@ -240,6 +254,10 @@ const Register = () => {
       }
       if (!validateEmail(emailIdTrimmed)) {
         showError("Please enter a valid email address");
+        return;
+      }
+      if (!isAllowedEmailDomain(emailIdTrimmed)) {
+        showError("Only Gmail, Yahoo, Outlook, and iCloud email addresses are allowed");
         return;
       }
     }
@@ -419,15 +437,36 @@ const Register = () => {
           <RenderTabBarAuth index={index} setIndex={setIndex} />
 
           {index === 0 && (
-            <Input
-              placeholder={checkValue(languages?.place_login_userName) || "Please enter your email"}
-              value={signUpId}
-              onChangeText={(text) => setSignUpId(text)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              returnKeyType="next"
-              mainContainer={{ marginBottom: 15 }}
-            />
+            <>
+              <Input
+                placeholder={checkValue(languages?.place_login_userName) || "Please enter your email"}
+                value={signUpId}
+                onChangeText={(text) => setSignUpId(text)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                returnKeyType="next"
+                mainContainer={{ marginBottom: emailDomainStatus.isInvalid ? 4 : signUpId.includes("@") ? 6 : 15 }}
+                containerStyle={
+                  emailDomainStatus.isInvalid
+                    ? { borderColor: colors.red, borderWidth: 1.5 }
+                    : undefined
+                }
+              />
+              {emailDomainStatus.isInvalid && (
+                <AppText
+                  type={TEN}
+                  color={RED}
+                  style={{ marginTop: 2, marginBottom: 8, marginHorizontal: 4 }}
+                >
+                  {emailDomainStatus.message || "Only Gmail, Yahoo, Outlook, and iCloud email addresses are allowed"}
+                </AppText>
+              )}
+              <EmailDomainSuggestions
+                value={signUpId}
+                onSelect={(val) => setSignUpId(val)}
+                containerStyle={{ marginBottom: 12, marginTop: -2 }}
+              />
+            </>
           )}
 
           <Input
@@ -467,15 +506,36 @@ const Register = () => {
           </View>
 
           {index === 1 && (
-            <Input
-              placeholder="Please enter your email"
-              value={emailId}
-              onChangeText={(text) => setEmailId(text)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              returnKeyType="next"
-              mainContainer={{ marginBottom: 15 }}
-            />
+            <>
+              <Input
+                placeholder="Please enter your email"
+                value={emailId}
+                onChangeText={(text) => setEmailId(text)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                returnKeyType="next"
+                mainContainer={{ marginBottom: emailDomainStatus.isInvalid ? 4 : emailId.includes("@") ? 6 : 15 }}
+                containerStyle={
+                  emailDomainStatus.isInvalid
+                    ? { borderColor: colors.red, borderWidth: 1.5 }
+                    : undefined
+                }
+              />
+              {emailDomainStatus.isInvalid && (
+                <AppText
+                  type={TEN}
+                  color={RED}
+                  style={{ marginTop: 2, marginBottom: 8, marginHorizontal: 4 }}
+                >
+                  {emailDomainStatus.message || "Only Gmail, Yahoo, Outlook, and iCloud email addresses are allowed"}
+                </AppText>
+              )}
+              <EmailDomainSuggestions
+                value={emailId}
+                onSelect={(val) => setEmailId(val)}
+                containerStyle={{ marginBottom: 12, marginTop: -2 }}
+              />
+            </>
           )}
 
           <Input
@@ -560,7 +620,11 @@ const Register = () => {
           <Button
             children={"Register"}
             disabled={
-              !signUpId ||
+              (index === 0
+                ? !signUpId.trim() || !validateAllowedEmail(signUpId.trim()) || !mobileNumber.trim()
+                : !signUpId.trim() || !emailId.trim() || !validateAllowedEmail(emailId.trim())) ||
+              !firstName.trim() ||
+              !lastName.trim() ||
               !password ||
               !validatePasswordStrict(password) ||
               (index === 0 ? !checkTermsEmail : !checkTermsPhone)

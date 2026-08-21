@@ -22,11 +22,91 @@ export const shareToAny = (message: string) => {
   Share.share(shareOptions);
 };
 
+export const ALLOWED_EMAIL_DOMAINS = [
+  'gmail.com',
+  'googlemail.com',
+  'yahoo.com',
+  'yahoo.co.in',
+  'yahoo.co.uk',
+  'yahoo.ca',
+  'yahoo.com.au',
+  'ymail.com',
+  'outlook.com',
+  'hotmail.com',
+  'live.com',
+  'msn.com',
+  'icloud.com',
+  'me.com',
+  'mac.com',
+];
+
+export const EMAIL_SUGGESTION_DOMAINS = [
+  '@gmail.com',
+  '@yahoo.com',
+  '@outlook.com',
+  '@hotmail.com',
+  '@icloud.com',
+];
+
 export const validateEmail = (email: string) => {
   const expression =
     /(?!.*\.{2})^([a-z\d!#$%&'*+\-\/=?^_`{|}~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+(\.[a-z\d!#$%&'*+\-\/=?^_`{|}~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+)*|"((([\t]*\r\n)?[\t]+)?([\x01-\x08\x0b\x0c\x0e-\x1f\x7f\x21\x23-\x5b\x5d-\x7e\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|\\[\x01-\x09\x0b\x0c\x0d-\x7f\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))*(([\t]*\r\n)?[\t]+)?")@(([a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|[a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-z\d\-._~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*[a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])\.)+([a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|[a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-z\d\-._~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*[a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])\.?$/i;
 
   return expression.test(email);
+};
+
+export const isAllowedEmailDomain = (email: string): boolean => {
+  if (!email || typeof email !== 'string') return false;
+  const trimmed = email.trim().toLowerCase();
+  const atIndex = trimmed.indexOf('@');
+  if (atIndex <= 0) return false;
+  const domain = trimmed.slice(atIndex + 1);
+  return ALLOWED_EMAIL_DOMAINS.includes(domain);
+};
+
+export const checkEmailDomainState = (
+  email: string
+): { isInvalid: boolean; message?: string } => {
+  if (!email || typeof email !== "string" || !email.includes("@")) {
+    return { isInvalid: false };
+  }
+  const atIndex = email.indexOf("@");
+  const afterAt = email.slice(atIndex).toLowerCase().trim();
+
+  // If only '@' typed so far, wait for user input
+  if (afterAt.length <= 1) {
+    return { isInvalid: false };
+  }
+
+  // Check if typed domain prefix matches any allowed domain
+  const hasMatchingPrefix = ALLOWED_EMAIL_DOMAINS.some((d) =>
+    `@${d}`.startsWith(afterAt)
+  );
+
+  if (!hasMatchingPrefix) {
+    return {
+      isInvalid: true,
+      message: "Only Gmail, Yahoo, Outlook, and iCloud email addresses are allowed.",
+    };
+  }
+
+  // If user completed a dot domain part, check exact domain match
+  const domainPart = afterAt.replace("@", "");
+  if (domainPart.includes(".") && domainPart.length > 3) {
+    if (!ALLOWED_EMAIL_DOMAINS.includes(domainPart)) {
+      return {
+        isInvalid: true,
+        message: "Only Gmail, Yahoo, Outlook, and iCloud email addresses are allowed.",
+      };
+    }
+  }
+
+  return { isInvalid: false };
+};
+
+export const validateAllowedEmail = (email: string): boolean => {
+  if (!validateEmail(email)) return false;
+  return isAllowedEmailDomain(email);
 };
 
 export const validatePassword = (value: string) => {
@@ -358,7 +438,7 @@ export function transformCurrencyDataWithDistribution(data: any[]) {
   const flatData = data.flat();
 
   const grouped = flatData.reduce((acc, item) => {
-    const { currency, currency_fullname, duration_days, return_percentage, icon_path, _id, currency_id, min_amount } = item;
+    const { currency, currency_fullname, duration_days, return_percentage, icon_path, _id, currency_id, min_amount, max_amount } = item;
 
     if (!acc[currency]) {
       acc[currency] = {
@@ -367,15 +447,16 @@ export function transformCurrencyDataWithDistribution(data: any[]) {
         max_duration_days: duration_days,
         max_return_percentage: return_percentage,
         icon_path,
-        distribution: [{ duration_days, return_percentage }],
-        _id :_id,
+        distribution: [{ ...item }],
+        _id: _id,
         currency_id: currency_id,
         min_amount: min_amount,
+        max_amount: max_amount,
       };
     } else {
       acc[currency].max_duration_days = Math.max(acc[currency].max_duration_days, duration_days);
       acc[currency].max_return_percentage = Math.max(acc[currency].max_return_percentage, return_percentage);
-      acc[currency].distribution.push({ duration_days, return_percentage });
+      acc[currency].distribution.push({ ...item });
     }
 
     return acc;
@@ -383,3 +464,4 @@ export function transformCurrencyDataWithDistribution(data: any[]) {
 
   return Object.values(grouped);
 }
+
