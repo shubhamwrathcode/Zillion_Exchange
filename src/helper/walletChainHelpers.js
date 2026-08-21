@@ -1,7 +1,20 @@
-/**
- * Shared parsing for coin `chain` + per-network status/limits (deposit & withdraw APIs).
- * Aligns with web: DepositPage (deposit_status), WithdrawPage (withdrawal_status).
- */
+export const isCoboChainActive = (chain) => {
+    if (!chain) return false;
+    if (typeof chain === 'string') return true;
+    if (chain.isActive != null) return Boolean(chain.isActive);
+    if (chain.is_active != null) return Boolean(chain.is_active);
+    if (chain.active != null) return Boolean(chain.active);
+    if (chain.status != null) {
+        const s = String(chain.status).toUpperCase();
+        return s === 'ACTIVE' || s === 'TRUE' || s === '1' || s === 'SUCCESS';
+    }
+    return true;
+};
+
+export const filterActiveCoboChains = (list) => {
+    if (!Array.isArray(list)) return [];
+    return list.filter(isCoboChainActive);
+};
 
 export function networkKeysFromChain(chain) {
     if (chain == null) return [];
@@ -10,7 +23,7 @@ export function networkKeysFromChain(chain) {
             .map((c) => {
                 if (typeof c === 'string' && c.trim()) return c.trim();
                 if (c != null && typeof c === 'object' && !Array.isArray(c)) {
-                    const k = Object.keys(c)[0];
+                    const k = c.chainId || Object.keys(c)[0];
                     return k || '';
                 }
                 return '';
@@ -23,9 +36,12 @@ export function networkKeysFromChain(chain) {
     return [];
 }
 
-/** Web DepositPage: deposit_status[chain] === "ACTIVE" */
+/** Web DepositPage: deposit_status[chain] === "ACTIVE" or cobo_chain_list */
 export function getActiveDepositChainKeys(item) {
     if (!item) return [];
+    if (Array.isArray(item.cobo_chain_list) && item.cobo_chain_list.length > 0) {
+        return filterActiveCoboChains(item.cobo_chain_list).map((c) => c?.chainId || c);
+    }
     const keys = networkKeysFromChain(item.chain);
     const ds = item.deposit_status;
     if (typeof ds === 'string') {
@@ -38,9 +54,12 @@ export function getActiveDepositChainKeys(item) {
     return keys;
 }
 
-/** Web WithdrawPage: withdrawal_status[chain] === "ACTIVE" */
+/** Web WithdrawPage: withdrawal_status[chain] === "ACTIVE" or cobo_chain_list */
 export function getActiveWithdrawChainKeys(item) {
     if (!item) return [];
+    if (Array.isArray(item.cobo_chain_list) && item.cobo_chain_list.length > 0) {
+        return filterActiveCoboChains(item.cobo_chain_list).map((c) => c?.chainId || c);
+    }
     const keys = networkKeysFromChain(item.chain);
     const ws = item.withdrawal_status;
     if (typeof ws === 'string') {
@@ -69,6 +88,9 @@ export function valueForChain(coin, field, chainKey) {
 
 export function isDepositCoinDisabled(item) {
     if (!item) return true;
+    if (Array.isArray(item.cobo_chain_list) && item.cobo_chain_list.length > 0) {
+        return filterActiveCoboChains(item.cobo_chain_list).length === 0;
+    }
     if (typeof item.deposit_status === 'string' && item.deposit_status === 'SUSPENDED') {
         return true;
     }
@@ -77,6 +99,9 @@ export function isDepositCoinDisabled(item) {
 
 export function isWithdrawCoinDisabled(item) {
     if (!item) return true;
+    if (Array.isArray(item.cobo_chain_list) && item.cobo_chain_list.length > 0) {
+        return filterActiveCoboChains(item.cobo_chain_list).length === 0;
+    }
     if (typeof item.withdrawal_status === 'string' && item.withdrawal_status === 'SUSPENDED') {
         return true;
     }
@@ -88,3 +113,4 @@ export function parseNum(v, fallback = 0) {
     const n = parseFloat(v);
     return Number.isFinite(n) ? n : fallback;
 }
+

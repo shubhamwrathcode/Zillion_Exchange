@@ -66,9 +66,15 @@ export default (appOperation: AppOperation) => ({
       CUSTOMER_TYPE,
     ),
     deposit_active_coins: () =>
-      appOperation.get('user/deposit-active-coins', undefined, undefined, CUSTOMER_TYPE),
+      appOperation.get('api/v1/cobo/deposit-assets', undefined, undefined, CUSTOMER_TYPE),
     widthraw_active_coins: () =>
-      appOperation.get('user/withdraw-active-coins', undefined, undefined, CUSTOMER_TYPE),
+      appOperation.get('api/v1/cobo/deposit-assets', undefined, undefined, CUSTOMER_TYPE),
+    get_cobo_deposit_assets: () =>
+      appOperation.get('api/v1/cobo/deposit-assets', undefined, undefined, CUSTOMER_TYPE),
+    check_cobo_withdrawal_asset_chain: (asset: string) =>
+      appOperation.get(`api/v1/cobo/check-withdrawal-asset-chain?asset=${encodeURIComponent(asset)}`, undefined, undefined, CUSTOMER_TYPE),
+    create_cobo_withdrawal_request: (data: { amount: number; address: string; chainId: string; coin: string; otp: string }) =>
+      appOperation.post('api/v1/cobo/create-withdrawal-request', data, CUSTOMER_TYPE),
     deposit_fiat_coins: () =>
       appOperation.get('user/deposit-active-coins-fiat', undefined, undefined, CUSTOMER_TYPE),
   user_wallet: () =>
@@ -77,6 +83,8 @@ export default (appOperation: AppOperation) => ({
     appOperation.get(`wallet/user-wallet?wallet_type=${id}`, undefined, undefined, CUSTOMER_TYPE),
   generate_address: (data: GenerateAddressProps) =>
     appOperation.put('wallet/generate-address', data, CUSTOMER_TYPE),
+  get_cobo_address: (chainId: string) =>
+    appOperation.get(`api/v1/cobo/address?chainId=${encodeURIComponent(chainId)}`, undefined, undefined, CUSTOMER_TYPE),
   withdraw_currency: (data: any) =>
     appOperation.post('wallet/withdrawal', data, CUSTOMER_TYPE),
   withdraw_fiat_currency: (data: any) =>
@@ -127,6 +135,10 @@ export default (appOperation: AppOperation) => ({
       data, 
       CUSTOMER_TYPE
     ),
+  get_cobo_deposit_history: (page: number, limit: number) =>
+    appOperation.get(`api/v1/cobo/deposit-history?page=${page}&limit=${limit}`, undefined, undefined, CUSTOMER_TYPE),
+  get_cobo_withdrawal_history: (page: number, limit: number) =>
+    appOperation.get(`api/v1/cobo/withdrawal-history?page=${page}&limit=${limit}`, undefined, undefined, CUSTOMER_TYPE),
     verify_withdraw: (data: any) =>
     appOperation.post(
       'transaction/wallet-withdrawal-history',

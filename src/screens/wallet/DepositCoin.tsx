@@ -62,8 +62,6 @@ import { setLoading } from '../../slices/authSlice';
 import { setWalletAddress } from '../../slices/walletSlice';
 import { showError } from '../../helper/logger';
 import moment from 'moment';
-import { WALLET_HISTORY_SCREEN } from '../../navigation/routes';
-import { appOperation } from '../../appOperation';
 import ShimmerBone from '../../shared/components/ShimmerBone';
 
 const SHEET_HEIGHT = Math.round(Dimensions.get('window').height * 0.72);
@@ -139,58 +137,38 @@ const yToRailLetter = (locationY: number, railHeight: number): string => {
  * - object e.g. { BEP20: {...} }
  * - array of single-key objects (edge case)
  */
-const networkKeysFromChain = (chain: any): string[] => {
-    if (chain == null) return [];
-    if (Array.isArray(chain)) {
-        return chain
-            .map((c) => {
-                if (typeof c === 'string' && c.trim()) return c.trim();
-                if (c != null && typeof c === 'object' && !Array.isArray(c)) {
-                    const k = Object.keys(c)[0];
-                    return k || '';
-                }
-                return '';
-            })
-            .filter(Boolean);
-    }
-    if (typeof chain === 'object') {
-        return Object.keys(chain);
-    }
-    return [];
+const getNetworkActiveFlag = (network: any) => {
+    if (!network || typeof network !== 'object') return undefined;
+
+    if (network.isActive != null) return network.isActive;
+    if (network.is_active != null) return network.is_active;
+    if (network.active != null) return network.active;
+
+    const activeKey = Object.keys(network).find((key) => key.toLowerCase() === 'isactive');
+    return activeKey ? network[activeKey] : undefined;
 };
 
-/** Same as web DepositPage: chains where deposit_status[chain] === "ACTIVE". */
-const getActiveNetworkKeys = (item: any): string[] => {
-    if (!item) return [];
-    const keys = networkKeysFromChain(item.chain);
-    const ds = item.deposit_status;
-    if (typeof ds === 'string') {
-        if (ds === 'SUSPENDED') return [];
-        return keys;
+const isCoboChainActive = (network: any) => {
+    const value = getNetworkActiveFlag(network);
+
+    if (value === false || value === 0) return false;
+
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === 'false' || normalized === '0') return false;
+        return normalized === 'true' || normalized === '1';
     }
-    if (ds && typeof ds === 'object' && !Array.isArray(ds)) {
-        return keys.filter((k) => ds[k] === 'ACTIVE');
-    }
-    return keys;
+
+    return value === true || value === 1;
 };
 
-const limitForChain = (limits: any, chainKey: string): string | number | null | undefined => {
-    if (limits == null) return null;
-    if (typeof limits === 'object' && !Array.isArray(limits) && chainKey in limits) {
-        return limits[chainKey];
-    }
-    if (typeof limits === 'string' || typeof limits === 'number') {
-        return limits;
-    }
-    return null;
+const getCoboNetworks = (item: any) => {
+    if (!item || !item.cobo_chain_list) return [];
+    return item.cobo_chain_list.filter(isCoboChainActive);
 };
 
 const isCoinDepositDisabled = (item: any) => {
-    if (!item) return true;
-    if (typeof item.deposit_status === 'string' && item.deposit_status === 'SUSPENDED') {
-        return true;
-    }
-    return getActiveNetworkKeys(item).length === 0;
+    return getCoboNetworks(item).length === 0;
 };
 
 const sortCoinsByShortName = (arr: any[]) =>
@@ -245,6 +223,7 @@ const DepositCoin = () => {
     const [searchPair, setSearchPair] = useState('');
     const [selectedCurrency, setSelectedCurrency] = useState<any>({});
     const [selectedNetwork, setSelectedNetwork] = useState('');
+    const [selectedNetworkInfo, setSelectedNetworkInfo] = useState<any>(null);
     const [depositAddress, setDepositAddress] = useState('');
     const [recentDepositHistory, setRecentDepositHistory] = useState<any[]>([]);
     const [allCoinData, setAllCoinData] = useState<any[]>([]);
@@ -321,7 +300,7 @@ const DepositCoin = () => {
                     cancelled = true;
                 };
             }
-            
+
             if (isFirstLoad.current) {
                 if (!depositActiveCoins || depositActiveCoins.length === 0) {
                     setSelectCoinListLoading(true);
@@ -559,30 +538,49 @@ const DepositCoin = () => {
         }
     }, [notificationList]);
 
+    // const handleSelectCoinItem = (item: any) => {
+    //     if (isCoinDepositDisabled(item)) return;
+
+    //     setSelectedCurrency(item);
+    //     const networks = getCoboNetworks(item);
+    //     if (networks.length > 0) {
+    //         const firstNetwork = networks[0];
+    //         setSelectedNetwork(firstNetwork.chainId);
+    //         setSelectedNetworkInfo(firstNetwork);
+    //         getDepositAddress(false, firstNetwork.chainId);
+    //     } else {
+    //         setSelectedNetwork('');
+    //         setSelectedNetworkInfo(null);
+    //         getDepositAddress(false, '');
+    //     }
+    //     setSearchPair('');
+    //     if (networkSheetRef.current) networkSheetRef.current.open();
+    // };
+
     const openNetworkSheetForCoin = (item: any) => {
         if (isCoinDepositDisabled(item)) {
-            if (networkKeysFromChain(item?.chain).length === 0) {
-                showError('No deposit network available for this coin');
-            } else {
-                showError('No active deposit network for this coin');
-            }
+            showError('No active deposit network for this coin');
             return;
         }
         setCoinForNetworkSheet(item);
         networkSheetRef.current?.open();
     };
 
-    const handleNetworkChosenFromSheet = (chain: string) => {
+    const handleNetworkChosenFromSheet = (chainId: string) => {
         const coin = coinForNetworkSheet;
-        if (!coin || !chain) return;
+        if (!coin || !chainId) return;
+        const networks = getCoboNetworks(coin);
+        const networkInfo = networks.find((n: any) => n.chainId === chainId);
+
         setSelectedCurrency(coin);
-        setSelectedNetwork(chain);
+        setSelectedNetwork(chainId);
+        setSelectedNetworkInfo(networkInfo);
         setDepositAddress('');
         dispatch(setWalletAddress(''));
         networkSheetRef.current?.close();
         setCoinForNetworkSheet(null);
         setDepositFlowPhase('deposit');
-        getDepositAddress(false, chain);
+        getDepositAddress(false, chainId);
     };
 
     const handleHeaderBack = () => {
@@ -632,12 +630,10 @@ const DepositCoin = () => {
         };
 
         try {
-            const result = await dispatch(verifyDeposit(data));
+            const result: any = await dispatch(verifyDeposit(data));
 
-            // Match web version logic exactly
             if (result?.success) {
-                if (result?.message === "New deposit detected. Processing transfer to main wallet.") {
-                    // Show modal when deposit is detected (equivalent to depositHistory("showModal"))
+                if (result?.message === "New Transactions Fetched") {
                     const historyData = await dispatch(getDepositHistory(0, 5));
                     if (historyData && historyData.length > 0) {
                         setRecentDepositHistory(historyData);
@@ -655,17 +651,8 @@ const DepositCoin = () => {
                 }
             }
 
-            // Call transfer_funds after promise resolves, only if status is checkPayment
-            // This happens regardless of success, matching web version
             if (status === "checkPayment") {
                 setCheckDepositStatus(false);
-                // Pass data and currency as object to match web version's intent
-                if (result?.data) {
-                    appOperation.customer.transfer_funds({
-                        data: result?.data,
-                        currency: result?.currency
-                    });
-                }
             }
         } catch (e) {
             console.error("Verify deposit error:", e);
@@ -678,22 +665,32 @@ const DepositCoin = () => {
     };
 
     const handleDepositModal = (item: any) => {
-        const shortAddress = shortenAddress(item?.from_address);
-        const shortToAddress = shortenAddress(item?.to_address);
-        const shortTxHash = shortenAddress(item?.transaction_hash);
-        setModalData({ ...item, shortAddress, shortTxHash, shortToAddress });
+        const fromAddr = item?.from_address || item?.fromAddress || '';
+        const toAddr = item?.to_address || item?.toAddress || '';
+        const txHash = item?.transaction_hash || item?.txHash || '';
+        const shortAddress = shortenAddress(fromAddr, 12);
+        const shortToAddress = shortenAddress(toAddr, 12);
+        const shortTxHash = shortenAddress(txHash, 12);
+        setModalData({
+            ...item,
+            short_name: item?.short_name || item?.assetId || item?.currency,
+            currency: item?.currency || item?.assetId || item?.short_name,
+            chain: item?.chain || item?.chainId,
+            from_address: fromAddr,
+            to_address: toAddr,
+            transaction_hash: txHash,
+            updatedAt: item?.updatedAt || item?.createdAt,
+            createdAt: item?.createdAt || item?.updatedAt,
+            shortAddress,
+            shortTxHash,
+            shortToAddress,
+        });
         setShowDepositDetailsModal(true);
     };
 
     const renderCoinListItem = ({ item }: { item: any }) => {
         const disabled = isCoinDepositDisabled(item);
-        const suspended =
-            item?.deposit_status === 'SUSPENDED' ||
-            (typeof item?.deposit_status === 'object' &&
-                item?.deposit_status != null &&
-                !Array.isArray(item.deposit_status) &&
-                networkKeysFromChain(item.chain).length > 0 &&
-                getActiveNetworkKeys(item).length === 0);
+        const suspended = disabled;
         return (
             <TouchableOpacity
                 style={[
@@ -759,155 +756,86 @@ const DepositCoin = () => {
             ? BASE_URL + filteredImageData.icon_path
             : null;
 
+        const isSuccess = !item?.status || item?.status?.toUpperCase() === 'SUCCESS' || item?.status?.toUpperCase() === 'COMPLETED';
+        const statusText = item?.status ? (item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase()) : 'Completed';
+        const statusColor = isSuccess ? '#27AE60' : YELLOW;
+        const dividerColor = isDark ? themeColors.border : '#EEE';
+
         return (
             <View
                 style={[
                     styles.depositHistoryItem,
-                    { backgroundColor: themeColors.background, borderWidth: 1, borderColor: isDark ? themeColors.border : '#EEE' }
+                    { backgroundColor: themeColors.background, borderColor: dividerColor }
                 ]}
             >
-                <TouchableOpacity
-                    style={styles.depositHistoryContent}
-                    onPress={() => handleDepositModal(item)}
-                    activeOpacity={0.7}
-                >
-                    <View style={styles.depositHistoryLeft}>
-                        <View style={styles.coinImageContainer}>
-                            {imageUri ? (
-                                <FastImage
-                                    source={{ uri: imageUri }}
-                                    style={styles.historyCoinIcon}
-                                    resizeMode="cover"
-                                />
-                            ) : (
-                                <View style={[styles.historyCoinIcon, { backgroundColor: colors.textGray, opacity: 0.3 }]} />
-                            )}
-                        </View>
-                        <View style={styles.depositHistoryLeftContent}>
-                            <AppText
-                                weight={SEMI_BOLD}
-                                type={FOURTEEN}
-                                numberOfLines={1}
-                                style={{ color: themeColors.text }}
-                            >
-                                {item?.amount} {item?.currency}
-                            </AppText>
-                            <AppText
-                                type={TWELVE}
-                                color={item?.status === 'SUCCESS' ? GREEN : YELLOW}
-                                style={{ marginTop: 4 }}
-                            >
-                                {item?.status === 'SUCCESS' ? 'Completed' : 'Pending'}
-                            </AppText>
-                        </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <View style={styles.coinImageContainer}>
+                        {imageUri ? (
+                            <FastImage
+                                source={{ uri: imageUri }}
+                                style={{ width: 34, height: 34, borderRadius: 17 }}
+                                resizeMode="cover"
+                            />
+                        ) : (
+                            <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.textGray, opacity: 0.3 }} />
+                        )}
                     </View>
-
-                    {/* Right Side: Network, Date, Address, TxID */}
-                    <View style={styles.depositHistoryRight}>
-                        <View style={styles.depositHistoryRightItem}>
-                            <View style={styles.labelValueRow}>
-                                <AppText type={TEN} color={colors.textGray} style={styles.labelText}>
-                                    Network
-                                </AppText>
-                                <AppText
-                                    type={TWELVE}
-                                    numberOfLines={1}
-                                    style={{ flex: 1, marginLeft: 8, color: themeColors.text }}
-                                >
-                                    {item?.chain || 'Internal transfer'}
-                                </AppText>
-                            </View>
-                        </View>
-                        <View style={[styles.depositHistoryRightItem, { marginTop: 6 }]}>
-                            <View style={styles.labelValueRow}>
-                                <AppText type={TEN} color={colors.textGray} style={styles.labelText}>
-                                    Date
-                                </AppText>
-                                <AppText
-                                    type={TEN}
-                                    style={{ flex: 1, marginLeft: 8, color: themeColors.text }}
-                                >
-                                    {moment(item.updatedAt).format('DD-MM-YYYY hh:mm A')}
-                                </AppText>
-                            </View>
-                        </View>
-                        <View style={[styles.depositHistoryRightItem, { marginTop: 6 }]}>
-                            <View style={styles.labelValueRow}>
-                                <AppText type={TEN} color={colors.textGray} style={styles.labelText}>
-                                    Address
-                                </AppText>
-                                <View style={[styles.addressRow, { flex: 1, marginLeft: 8, flexShrink: 1 }]}>
-                                    <AppText
-                                        type={TEN}
-                                        numberOfLines={1}
-                                        style={styles.addressText}
-                                    >
-                                        {shortAddress || '----'}
-                                    </AppText>
-                                    {shortAddress && (
-                                        <TouchableOpacity
-                                            onPress={(e) => {
-                                                e.stopPropagation();
-                                                copyText(item?.from_address);
-                                            }}
-                                            style={styles.copyButton}
-                                        >
-                                            <FastImage
-                                                source={copyIcon}
-                                                style={styles.copyIcon}
-                                                resizeMode="contain"
-                                                tintColor={colors.textGray}
-                                            />
-                                        </TouchableOpacity>
-                                    )}
-                                </View>
-                            </View>
-                        </View>
-                        <View style={[styles.depositHistoryRightItem, { marginTop: 6 }]}>
-                            <View style={styles.labelValueRow}>
-                                <AppText type={TEN} color={colors.textGray} style={styles.labelText}>
-                                    TxID
-                                </AppText>
-                                <View style={[styles.addressRow, {
-                                    flex: 1, marginLeft: 8, flexShrink: 1,
-                                }]}>
-                                    <AppText
-                                        type={TEN}
-                                        numberOfLines={1}
-                                        style={styles.addressText}
-                                        color={WHITE}
-                                    >
-                                        {shortTxHash || '----'}
-                                    </AppText>
-                                    {shortTxHash && (
-                                        <TouchableOpacity
-                                            onPress={(e) => {
-                                                e.stopPropagation();
-                                                copyText(item?.transaction_hash);
-                                            }}
-                                            style={styles.copyButton}
-                                        >
-                                            <FastImage
-                                                source={copyIcon}
-                                                style={styles.copyIcon}
-                                                resizeMode="contain"
-                                                tintColor={colors.textGray}
-                                            />
-                                        </TouchableOpacity>
-                                    )}
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.viewButton}
-                    onPress={() => handleDepositModal(item)}
-                    activeOpacity={0.7}
-                >
-                    <AppText type={FOURTEEN} color={YELLOW} weight={SEMI_BOLD}>
-                        View
+                    <AppText type={FOURTEEN} weight={SEMI_BOLD} color={statusColor}>
+                        {statusText}
                     </AppText>
+                </View>
+
+                <View style={{ marginBottom: 12 }}>
+                    <AppText type={TWELVE} color={colors.textGray} style={{ marginBottom: 4 }}>Date</AppText>
+                    <AppText type={FOURTEEN} style={{ color: themeColors.text }}>{moment(item.updatedAt || item.createdAt).format('DD-MM-YYYY hh:mm A')}</AppText>
+                </View>
+
+                <View style={{ height: 1, backgroundColor: dividerColor, marginBottom: 12 }} />
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <AppText type={FOURTEEN} color={colors.textGray}>Network</AppText>
+                    <AppText type={FOURTEEN} style={{ color: themeColors.text }}>{item?.chain || item?.chainId || 'Internal transfer'}</AppText>
+                </View>
+
+                <View style={{ height: 1, backgroundColor: dividerColor, marginBottom: 12 }} />
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <AppText type={FOURTEEN} color={colors.textGray}>Address</AppText>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <AppText type={FOURTEEN} style={{ color: themeColors.text, marginRight: 8 }}>{shortAddress || '----'}</AppText>
+                        {shortAddress ? (
+                            <TouchableOpacity onPress={() => copyText(item?.from_address || item?.fromAddress)}>
+                                <FastImage source={copyIcon} style={{ width: 14, height: 14 }} tintColor={isDark ? colors.white : colors.black} resizeMode="contain" />
+                            </TouchableOpacity>
+                        ) : null}
+                    </View>
+                </View>
+
+                <View style={{ height: 1, backgroundColor: dividerColor, marginBottom: 12 }} />
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <AppText type={FOURTEEN} color={colors.textGray}>TxID</AppText>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <AppText type={FOURTEEN} style={{ color: themeColors.text, marginRight: 8 }}>{shortTxHash || '----'}</AppText>
+                        {shortTxHash ? (
+                            <TouchableOpacity onPress={() => copyText(item?.transaction_hash || item?.txHash)}>
+                                <FastImage source={copyIcon} style={{ width: 14, height: 14 }} tintColor={isDark ? colors.white : colors.black} resizeMode="contain" />
+                            </TouchableOpacity>
+                        ) : null}
+                    </View>
+                </View>
+
+                <View style={{ height: 1, backgroundColor: dividerColor, marginBottom: 12 }} />
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <AppText type={FOURTEEN} color={colors.textGray}>Deposit wallet</AppText>
+                    <AppText type={FOURTEEN} style={{ color: themeColors.text }}>Spot Wallet</AppText>
+                </View>
+
+                <View style={{ height: 1, backgroundColor: dividerColor, marginBottom: 12 }} />
+
+                <TouchableOpacity onPress={() => handleDepositModal(item)} style={{ alignItems: 'flex-end', paddingTop: 2 }} activeOpacity={0.7}>
+                    <AppText type={FOURTEEN} weight={SEMI_BOLD} style={{ color: themeColors.text }}>View</AppText>
                 </TouchableOpacity>
             </View>
         );
@@ -938,7 +866,7 @@ const DepositCoin = () => {
                 </AppText>
                 <TouchableOpacity
                     style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
-                    onPress={() => NavigationService.navigate("Wallet_History")}
+                    onPress={() => NavigationService.navigate("Wallet_History", { tab: "Deposit" })}
                 >
                     <FastImage
                         source={printIcon}
@@ -1335,7 +1263,7 @@ const DepositCoin = () => {
                                     </View>
                                     <TouchableOpacity
                                         onPress={() => {
-                                            NavigationService.navigate("Wallet_History")
+                                            NavigationService.navigate("Wallet_History", { tab: "Deposit" })
                                         }}
                                     >
                                         <AppText type={FOURTEEN} color={YELLOW}>
@@ -1393,15 +1321,13 @@ const DepositCoin = () => {
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"
                     >
-                        {getActiveNetworkKeys(coinForNetworkSheet).map((chainKey: string, idx: number) => {
-                            const minDep = limitForChain(coinForNetworkSheet?.min_deposit, chainKey);
-                            const maxDep = limitForChain(coinForNetworkSheet?.max_deposit, chainKey);
-                            const hasRange = minDep != null || maxDep != null;
+                        {getCoboNetworks(coinForNetworkSheet).map((network: any, idx: number) => {
+                            const chainId = network?.chainId;
                             return (
                                 <TouchableOpacity
-                                    key={`${chainKey}-${idx}`}
+                                    key={`${chainId}-${idx}`}
                                     style={[styles.networkCard, { borderColor: isDark ? themeColors.border : '#EEE' }]}
-                                    onPress={() => handleNetworkChosenFromSheet(chainKey)}
+                                    onPress={() => handleNetworkChosenFromSheet(chainId)}
                                     activeOpacity={0.75}
                                 >
                                     <View style={styles.networkCardTitleRow}>
@@ -1410,7 +1336,7 @@ const DepositCoin = () => {
                                             type={FOURTEEN}
                                             style={{ color: themeColors.text }}
                                         >
-                                            {chainKey}
+                                            {network?.chainName || chainId}
                                         </AppText>
                                         <AppText
                                             type={TWELVE}
@@ -1418,26 +1344,14 @@ const DepositCoin = () => {
                                             style={{ flex: 1, marginLeft: 8 }}
                                         >
                                             {coinForNetworkSheet?.name || coinForNetworkSheet?.short_name} ·{' '}
-                                            {chainKey}
+                                            {chainId}
                                         </AppText>
                                     </View>
                                     <AppText type={TEN} color={colors.textGray} style={styles.networkCardLine}>
-                                        1 block confirmation/s
+                                        {network?.confirmations != null ? `${network.confirmations} block confirmation/s` : '1 block confirmation/s'}
                                     </AppText>
                                     <AppText type={TEN} color={colors.textGray} style={styles.networkCardLine}>
-                                        {hasRange ? (
-                                            <>
-                                                Min. / max deposit: {minDep ?? '—'} - {maxDep ?? '—'}{' '}
-                                                {coinForNetworkSheet?.short_name}
-                                            </>
-                                        ) : (
-                                            <>
-                                                Min. deposit &gt;0 {coinForNetworkSheet?.short_name}
-                                            </>
-                                        )}
-                                    </AppText>
-                                    <AppText type={TEN} color={colors.textGray} style={styles.networkCardLine}>
-                                        Est. arrival ≈ 2 mins
+                                        {network?.requireMemo ? 'Memo required' : 'Est. arrival ≈ 2 mins'}
                                     </AppText>
                                 </TouchableOpacity>
                             );
@@ -1479,17 +1393,13 @@ const DepositCoin = () => {
                             <View style={styles.detailRow}>
                                 <AppText type={FOURTEEN}>Minimum deposit</AppText>
                                 <AppText type={FOURTEEN} weight={SEMI_BOLD}>
-                                    {limitForChain(selectedCurrency?.min_deposit, selectedNetwork) ??
-                                        '—'}{' '}
-                                    {selectedCurrency?.short_name}
+                                    — {selectedCurrency?.short_name}
                                 </AppText>
                             </View>
                             <View style={styles.detailRow}>
                                 <AppText type={FOURTEEN}>Maximum deposit</AppText>
                                 <AppText type={FOURTEEN} weight={SEMI_BOLD}>
-                                    {limitForChain(selectedCurrency?.max_deposit, selectedNetwork) ??
-                                        '—'}{' '}
-                                    {selectedCurrency?.short_name}
+                                    — {selectedCurrency?.short_name}
                                 </AppText>
                             </View>
                             <View style={styles.detailRow}>
@@ -1501,7 +1411,9 @@ const DepositCoin = () => {
                             <View style={styles.detailRow}>
                                 <AppText type={FOURTEEN}>Credited (Trading enabled)</AppText>
                                 <AppText type={FOURTEEN} weight={SEMI_BOLD}>
-                                    After 2 network confirmations
+                                    {selectedNetworkInfo?.confirmations != null
+                                        ? `After ${selectedNetworkInfo.confirmations} network confirmations`
+                                        : 'After 2 network confirmations'}
                                 </AppText>
                             </View>
                             <AppText type={TEN} color={colors.textGray} style={styles.warningText}>
@@ -1538,19 +1450,26 @@ const DepositCoin = () => {
                             </TouchableOpacity>
                         </View>
                         <View style={styles.detailsContainer}>
-                            <View style={styles.detailRow}>
-                                <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
-                                    Status
-                                </AppText>
-                                <AppText
-                                    type={FOURTEEN}
-                                    weight={SEMI_BOLD}
-                                    color={modalData?.status === 'SUCCESS' ? GREEN : themeColors.text}
-                                    style={styles.modalValue}
-                                >
-                                    {modalData?.status === 'SUCCESS' ? 'Completed' : 'Pending'}
-                                </AppText>
-                            </View>
+                            {(() => {
+                                const isSuccess = !modalData?.status || modalData?.status?.toUpperCase() === 'SUCCESS' || modalData?.status?.toUpperCase() === 'COMPLETED';
+                                const statusText = modalData?.status ? (modalData.status.charAt(0).toUpperCase() + modalData.status.slice(1).toLowerCase()) : 'Completed';
+                                const statusColor = isSuccess ? '#27AE60' : YELLOW;
+                                return (
+                                    <View style={styles.detailRow}>
+                                        <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
+                                            Status
+                                        </AppText>
+                                        <AppText
+                                            type={FOURTEEN}
+                                            weight={SEMI_BOLD}
+                                            color={statusColor}
+                                            style={styles.modalValue}
+                                        >
+                                            {statusText}
+                                        </AppText>
+                                    </View>
+                                );
+                            })()}
                             <View style={styles.detailRow}>
                                 <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
                                     Date
@@ -1561,7 +1480,7 @@ const DepositCoin = () => {
                                     color={themeColors.text}
                                     style={styles.modalValue}
                                 >
-                                    {moment(modalData?.updatedAt).format('DD-MM-YYYY hh:mm A')}
+                                    {moment(modalData?.updatedAt || modalData?.createdAt).format('DD-MM-YYYY hh:mm A')}
                                 </AppText>
                             </View>
                             <View style={styles.detailRow}>
@@ -1574,7 +1493,7 @@ const DepositCoin = () => {
                                     color={themeColors.text}
                                     style={styles.modalValue}
                                 >
-                                    {modalData?.short_name}
+                                    {modalData?.short_name || modalData?.currency || modalData?.assetId || '----'}
                                 </AppText>
                             </View>
                             <View style={styles.detailRow}>
@@ -1587,7 +1506,7 @@ const DepositCoin = () => {
                                     color={themeColors.text}
                                     style={styles.modalValue}
                                 >
-                                    {modalData?.amount} {modalData?.short_name}
+                                    {modalData?.amount ? `${modalData.amount} ${modalData?.short_name || modalData?.currency || ''}` : '----'}
                                 </AppText>
                             </View>
                             <View style={styles.detailRow}>
@@ -1600,7 +1519,7 @@ const DepositCoin = () => {
                                     color={themeColors.text}
                                     style={styles.modalValue}
                                 >
-                                    {modalData?.chain || 'Internal Transaction'}
+                                    {modalData?.chain || modalData?.chainId || 'Internal Transaction'}
                                 </AppText>
                             </View>
                             <View style={styles.detailRow}>
@@ -1615,11 +1534,11 @@ const DepositCoin = () => {
                                         style={{ flex: 1 }}
                                         numberOfLines={1}
                                     >
-                                        {modalData?.shortAddress || modalData?.from_address || '----'}
+                                        {modalData?.shortAddress || modalData?.from_address || modalData?.fromAddress || '----'}
                                     </AppText>
-                                    {modalData?.from_address && (
+                                    {(modalData?.from_address || modalData?.fromAddress) ? (
                                         <TouchableOpacity
-                                            onPress={() => copyText(modalData?.from_address)}
+                                            onPress={() => copyText(modalData?.from_address || modalData?.fromAddress)}
                                             style={styles.copyButton}
                                         >
                                             <FastImage
@@ -1629,7 +1548,7 @@ const DepositCoin = () => {
                                                 tintColor={colors.textGray}
                                             />
                                         </TouchableOpacity>
-                                    )}
+                                    ) : null}
                                 </View>
                             </View>
                             <View style={styles.detailRow}>
@@ -1644,11 +1563,11 @@ const DepositCoin = () => {
                                         style={{ flex: 1 }}
                                         numberOfLines={1}
                                     >
-                                        {modalData?.shortToAddress || modalData?.to_address || '----'}
+                                        {modalData?.shortToAddress || modalData?.to_address || modalData?.toAddress || '----'}
                                     </AppText>
-                                    {modalData?.to_address && (
+                                    {(modalData?.to_address || modalData?.toAddress) ? (
                                         <TouchableOpacity
-                                            onPress={() => copyText(modalData?.to_address)}
+                                            onPress={() => copyText(modalData?.to_address || modalData?.toAddress)}
                                             style={styles.copyButton}
                                         >
                                             <FastImage
@@ -1658,7 +1577,7 @@ const DepositCoin = () => {
                                                 tintColor={colors.textGray}
                                             />
                                         </TouchableOpacity>
-                                    )}
+                                    ) : null}
                                 </View>
                             </View>
                             <View style={styles.detailRow}>
@@ -1673,11 +1592,11 @@ const DepositCoin = () => {
                                         style={{ flex: 1 }}
                                         numberOfLines={1}
                                     >
-                                        {modalData?.shortTxHash || modalData?.transaction_hash || '----'}
+                                        {modalData?.shortTxHash || modalData?.transaction_hash || modalData?.txHash || '----'}
                                     </AppText>
-                                    {modalData?.transaction_hash && (
+                                    {(modalData?.transaction_hash || modalData?.txHash) ? (
                                         <TouchableOpacity
-                                            onPress={() => copyText(modalData?.transaction_hash)}
+                                            onPress={() => copyText(modalData?.transaction_hash || modalData?.txHash)}
                                             style={styles.copyButton}
                                         >
                                             <FastImage
@@ -1687,7 +1606,7 @@ const DepositCoin = () => {
                                                 tintColor={colors.textGray}
                                             />
                                         </TouchableOpacity>
-                                    )}
+                                    ) : null}
                                 </View>
                             </View>
                             <View style={styles.detailRow}>
@@ -1702,9 +1621,24 @@ const DepositCoin = () => {
                                 >
                                     {modalData?.description?.includes('bonus')
                                         ? 'Bonus Wallet'
-                                        : 'Main Wallet'}
+                                        : 'Spot Wallet'}
                                 </AppText>
                             </View>
+                            {modalData?.description ? (
+                                <View style={styles.detailRow}>
+                                    <AppText type={FOURTEEN} color={themeColors.text} style={styles.modalLabel}>
+                                        Description
+                                    </AppText>
+                                    <AppText
+                                        type={FOURTEEN}
+                                        weight={SEMI_BOLD}
+                                        color={themeColors.text}
+                                        style={styles.modalValue}
+                                    >
+                                        {modalData.description}
+                                    </AppText>
+                                </View>
+                            ) : null}
                         </View>
                     </View>
                 </View>
@@ -1987,12 +1921,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     depositHistoryItem: {
-        flexDirection: 'row',
-        padding: 12,
-        marginBottom: 10,
-        borderRadius: 8,
+        flexDirection: 'column',
+        padding: 16,
+        marginBottom: 16,
+        borderRadius: 10,
         borderWidth: 1,
-        alignItems: 'flex-start',
     },
     depositHistoryContent: {
         flex: 1,

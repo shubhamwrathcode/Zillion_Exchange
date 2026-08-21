@@ -1,5 +1,5 @@
-import {appOperation} from '../appOperation';
-import {logger, showError, showSuccess} from '../helper/logger';
+import { appOperation } from '../appOperation';
+import { logger, showError, showSuccess } from '../helper/logger';
 import {
   GenerateAddressProps,
   WithdrawCurrencyProps,
@@ -8,7 +8,7 @@ import {
 import { transformCurrencyDataWithDistribution } from '../helper/utility';
 import NavigationService from '../navigation/NavigationService';
 import { Dashboard_Inner, DEPOSIT_SCREEN, WITHDRAW_SCREEN } from '../navigation/routes';
-import {setLoading} from '../slices/authSlice';
+import { setLoading } from '../slices/authSlice';
 import { setOpenOrders, clearOpenOrders } from '../slices/homeSlice';
 import {
   setAdminBankDetails,
@@ -36,7 +36,6 @@ import {
   setParticularCoinBalance,
   setUserPayoutList,
   setEarnWalletBal,
-  setSubscribedPackageList,
   setSubscribedActivePackages,
   setSubscribedCompletePackages,
   setSubscribedCancelPackages,
@@ -66,7 +65,7 @@ import {
   setStakingCommissionData,
   clearStakingCommissionData
 } from '../slices/walletSlice';
-import {AppDispatch} from '../store/store';
+import { AppDispatch } from '../store/store';
 
 const useGlobalLoader = (opts?: { useGlobalLoader?: boolean }) => opts?.useGlobalLoader !== false;
 
@@ -192,7 +191,7 @@ export const getDepositActiveCoins = (id: any) => async (dispatch: AppDispatch) 
   } catch (e) {
     logger(e);
   } finally {
-    
+
     dispatch(setLoading(false));
   }
 };
@@ -207,7 +206,7 @@ export const getWithdrawActiveCoins = (id: any) => async (dispatch: AppDispatch)
   } catch (e) {
     logger(e);
   } finally {
-    
+
     dispatch(setLoading(false));
   }
 };
@@ -222,7 +221,7 @@ export const getDepositFiatCoins = (id: any) => async (dispatch: AppDispatch) =>
   } catch (e) {
     logger(e);
   } finally {
-    
+
     dispatch(setLoading(false));
   }
 };
@@ -238,7 +237,7 @@ export const getAdminTrades = (skip: any, limit: any) => async (dispatch: AppDis
   } catch (e) {
     logger(e);
   } finally {
-    
+
     dispatch(setLoading(false));
   }
 };
@@ -270,7 +269,7 @@ export const getqbsHistory = (skip: any, limit: any) => async (dispatch: AppDisp
   } catch (e) {
     logger(e);
   } finally {
-    
+
     dispatch(setLoading(false));
   }
 };
@@ -287,7 +286,7 @@ export const getTradeHistory = (skip: any, limit: any) => async (dispatch: AppDi
   } catch (e) {
     logger(e);
   } finally {
-    
+
     dispatch(setLoading(false));
   }
 };
@@ -304,7 +303,7 @@ export const getInteralWalletHistory = (skip: any, limit: any) => async (dispatc
   } catch (e) {
     logger(e);
   } finally {
-    
+
     dispatch(setLoading(false));
   }
 };
@@ -320,34 +319,34 @@ export const getUserWallet = (id: string | undefined) => async (dispatch: AppDis
     if (response.success) {
       const wallets = response?.data || [];
 
-        // Parse balance to number and sort
-        const walletsWithBalance = wallets
-          .filter((wallet: { balance: string; }) => parseFloat(wallet.balance) > 0)
-          .sort((a: { balance: string; }, b: { balance: string; }) => parseFloat(b.balance) - parseFloat(a.balance));
+      // Parse balance to number and sort
+      const walletsWithBalance = wallets
+        .filter((wallet: { balance: string; }) => parseFloat(wallet.balance) > 0)
+        .sort((a: { balance: string; }, b: { balance: string; }) => parseFloat(b.balance) - parseFloat(a.balance));
 
-        let topWalletsList: any[] = [];
+      let topWalletsList: any[] = [];
 
-        if (walletsWithBalance.length >= 2) {
-          topWalletsList = walletsWithBalance;
-        } else {
-          // Add existing non-zero wallets
-          topWalletsList = [...walletsWithBalance];
+      if (walletsWithBalance.length >= 2) {
+        topWalletsList = walletsWithBalance;
+      } else {
+        // Add existing non-zero wallets
+        topWalletsList = [...walletsWithBalance];
 
-          // Fill remaining with top wallets regardless of balance
-          const remaining = 2 - topWalletsList.length;
-          const walletsSorted = wallets
-            .sort((a: { balance: string; }, b: { balance: string; }) => parseFloat(b.balance) - parseFloat(a.balance))
-            .filter((w: { currency_id: any; }) => !topWalletsList.find(tw => tw.currency_id === w.currency_id));
+        // Fill remaining with top wallets regardless of balance
+        const remaining = 2 - topWalletsList.length;
+        const walletsSorted = wallets
+          .sort((a: { balance: string; }, b: { balance: string; }) => parseFloat(b.balance) - parseFloat(a.balance))
+          .filter((w: { currency_id: any; }) => !topWalletsList.find(tw => tw.currency_id === w.currency_id));
 
-          topWalletsList = topWalletsList.concat(walletsSorted.slice(0, remaining));
-        }
+        topWalletsList = topWalletsList.concat(walletsSorted.slice(0, remaining));
+      }
 
-        // setfundData(wallets);
-        // if (currencyData?.length === 0) {
-        //   setCurrencyData(wallets);
-        //   setSelectedCurrency(wallets[0] || {})
-        // }
-        dispatch(setUserWallet(response?.data));
+      // setfundData(wallets);
+      // if (currencyData?.length === 0) {
+      //   setCurrencyData(wallets);
+      //   setSelectedCurrency(wallets[0] || {})
+      // }
+      dispatch(setUserWallet(response?.data));
       // dispatch(setUserWallet(response?.data));
     }
   } catch (e) {
@@ -388,7 +387,7 @@ export const getSwapCurrencyList = () => async (dispatch: AppDispatch) => {
     dispatch(setLoading(true));
     const response: any = await appOperation.customer.swap_currency_list();
     if (response.success) {
-        dispatch(setSwapCurrencyList(response?.data));
+      dispatch(setSwapCurrencyList(response?.data));
     }
   } catch (e) {
     logger(e);
@@ -402,9 +401,9 @@ export const getConversionRate = (form: any, to: any) => async (dispatch: AppDis
     dispatch(setLoading(true));
     const response: any = await appOperation.customer.get_conversion_rate(form, to);
     if (response.success) {
-        dispatch(setSwapConversionRate(response?.data));
+      dispatch(setSwapConversionRate(response?.data));
     }
-  } catch (e) {
+  } catch (e: any) {
     logger(e);
     if (e?.code === 500) {
       dispatch(setSwapConversionRate({}));
@@ -419,7 +418,7 @@ export const getUserMainWallet = (id: any) => async (dispatch: AppDispatch) => {
     // dispatch(setLoading(true));
     const response: any = await appOperation.customer.user_main_wallet(id);
     if (response.success) {
-        dispatch(setUserMainWallet(response?.data));
+      dispatch(setUserMainWallet(response?.data));
     }
   } catch (e) {
     logger(e);
@@ -433,7 +432,7 @@ export const getUserSpotWallet = (id: any) => async (dispatch: AppDispatch) => {
     // dispatch(setLoading(true));
     const response: any = await appOperation.customer.user_main_wallet(id);
     if (response.success) {
-        dispatch(setUserSpotWallet(response?.data));
+      dispatch(setUserSpotWallet(response?.data));
     }
   } catch (e) {
     logger(e);
@@ -447,7 +446,7 @@ export const getUserSwapWallet = (id: any) => async (dispatch: AppDispatch) => {
     // dispatch(setLoading(true));
     const response: any = await appOperation.customer.user_main_wallet(id);
     if (response.success) {
-        dispatch(setUserSwapWallet(response?.data));
+      dispatch(setUserSwapWallet(response?.data));
     }
   } catch (e) {
     logger(e);
@@ -461,7 +460,7 @@ export const getUserEarningWallet = (id: any) => async (dispatch: AppDispatch) =
     // dispatch(setLoading(true));
     const response: any = await appOperation.customer.user_main_wallet(id);
     if (response.success) {
-        dispatch(setUserEarningWallet(response?.data));
+      dispatch(setUserEarningWallet(response?.data));
     }
   } catch (e) {
     logger(e);
@@ -470,20 +469,20 @@ export const getUserEarningWallet = (id: any) => async (dispatch: AppDispatch) =
   }
 };
 
-  export const getUserArbitrageWallet = (id: any) => async (dispatch: AppDispatch) => {
-    try {
-      // dispatch(setLoading(true));
-      const response: any = await appOperation.customer.user_main_wallet(id);
-      // console.log(response, "getUserArbitrageWallet");
-      if (response.success) {
-          dispatch(setUserArbitrageWallet(response?.data));
-      }
-    } catch (e) {
-      logger(e);
-    } finally {
-      // dispatch(setLoading(false));
+export const getUserArbitrageWallet = (id: any) => async (dispatch: AppDispatch) => {
+  try {
+    // dispatch(setLoading(true));
+    const response: any = await appOperation.customer.user_main_wallet(id);
+    // console.log(response, "getUserArbitrageWallet");
+    if (response.success) {
+      dispatch(setUserArbitrageWallet(response?.data));
     }
-  };
+  } catch (e) {
+    logger(e);
+  } finally {
+    // dispatch(setLoading(false));
+  }
+};
 
 export const getUserFuturesWallet = (id: any) => async (dispatch: AppDispatch) => {
 
@@ -492,7 +491,7 @@ export const getUserFuturesWallet = (id: any) => async (dispatch: AppDispatch) =
     const response: any = await appOperation.customer.user_main_wallet(id);
     // console.log(response, "getUserFuturesWallet");
     if (response.success) {
-        dispatch(setUserFuturesWallet(response?.data));
+      dispatch(setUserFuturesWallet(response?.data));
     }
   } catch (e) {
     logger(e);
@@ -506,7 +505,7 @@ export const getUserOptionsWallet = (id: any) => async (dispatch: AppDispatch) =
     // dispatch(setLoading(true));
     const response: any = await appOperation.customer.user_main_wallet(id);
     if (response.success) {
-        dispatch(setUserOptionsWallet(response?.data));
+      dispatch(setUserOptionsWallet(response?.data));
     }
   } catch (e) {
     logger(e);
@@ -519,12 +518,13 @@ export const generateAddress =
     try {
       dispatch(setLoading(true));
       dispatch(setWalletAddress(''));
-      const response: any = await appOperation.customer.generate_address(data);
+      const response: any = await appOperation.customer.get_cobo_address(data.chain);
 
       if (response.success) {
-        dispatch(setWalletAddress(response?.data));
+        const address = response?.address || response?.data?.address || "";
+        dispatch(setWalletAddress(address));
       } else {
-        showError(response?.message);
+        showError(response?.message || 'Deposit is not available in this coin right now');
       }
     } catch (e) {
       logger(e);
@@ -533,21 +533,21 @@ export const generateAddress =
     }
   };
 
-  export const getParticularCoinBalance = (data: { fromWallet: any; toWallet: any; currencyId: any; }) => async (dispatch: AppDispatch) => {
-    try {
-      // dispatch(setLoading(true));
-      const response: any = await appOperation.customer.particular_coin_balance(data);
-      if (response.success) {
-          dispatch(setParticularCoinBalance(response?.data));
-      }
-    } catch (e) {
-      logger(e);
-    } finally {
-      // dispatch(setLoading(false));
+export const getParticularCoinBalance = (data: { fromWallet: any; toWallet: any; currencyId: any; }) => async (dispatch: AppDispatch) => {
+  try {
+    // dispatch(setLoading(true));
+    const response: any = await appOperation.customer.particular_coin_balance(data);
+    if (response.success) {
+      dispatch(setParticularCoinBalance(response?.data));
     }
-  };
+  } catch (e) {
+    logger(e);
+  } finally {
+    // dispatch(setLoading(false));
+  }
+};
 
-  
+
 
 export const withdrawCoin =
   (data: WithdrawCurrencyProps) => async (dispatch: AppDispatch) => {
@@ -562,7 +562,7 @@ export const withdrawCoin =
       } else {
         showError(response?.message);
       }
-    } catch (e) {
+    } catch (e: any) {
       logger(e);
       showError(e?.message);
     } finally {
@@ -570,7 +570,7 @@ export const withdrawCoin =
     }
   };
 
-  export const withdrawFiatCoin =
+export const withdrawFiatCoin =
   (data: WithdrawCurrencyProps) => async (dispatch: AppDispatch) => {
     try {
       dispatch(setLoading(true));
@@ -581,7 +581,7 @@ export const withdrawCoin =
       } else {
         showError(response?.message);
       }
-    } catch (e) {
+    } catch (e: any) {
       logger(e);
       showError(e?.message);
     } finally {
@@ -612,14 +612,14 @@ export const depositInr = (data: FormData) => async (dispatch: AppDispatch) => {
     } else {
       showError(response?.message);
     }
-  } catch (e) {
+  } catch (e: any) {
     logger(e);
     showError(e?.message);
   } finally {
     dispatch(setLoading(false));
   }
 };
-export const handleTranferCoin = (data: any, setVisible = (p0: boolean) => {}, setAmount = (p0: string) => {}) => async (dispatch: AppDispatch) => {
+export const handleTranferCoin = (data: any, setVisible = (p0: boolean) => { }, setAmount = (p0: string) => { }) => async (dispatch: AppDispatch) => {
   try {
     dispatch(setLoading(true));
     const response: any = await appOperation.customer.tranfer_coin(data);
@@ -628,12 +628,12 @@ export const handleTranferCoin = (data: any, setVisible = (p0: boolean) => {}, s
       showError(response?.message);
       setVisible(true);
       setAmount('');
-     dispatch(getUserDifferentWallet(data?.fromWallet));
-     dispatch(getUserDifferentWallet(data?.toWallet));
+      dispatch(getUserDifferentWallet(data?.fromWallet));
+      dispatch(getUserDifferentWallet(data?.toWallet));
     } else {
       showError(response?.message);
     }
-  } catch (e) {
+  } catch (e: any) {
     logger(e);
     showError(e?.message);
   } finally {
@@ -643,21 +643,21 @@ export const handleTranferCoin = (data: any, setVisible = (p0: boolean) => {}, s
 
 
 export const swapCurrency =
-  (data: any, setVisible = (p0: boolean) => {}, setAmount = (p0: string) => {}) => async (dispatch: AppDispatch) => {
+  (data: any, setVisible = (p0: boolean) => { }, setAmount = (p0: string) => { }) => async (dispatch: AppDispatch) => {
     try {
       dispatch(setLoading(true));
-      const response = await appOperation.customer.qs_BuySell(data);
+      const response: any = await appOperation.customer.qs_BuySell(data);
       if (response?.success) {
         showError(response?.message);
         dispatch(getSwapCurrencyList());
         setVisible(true);
-      setAmount('');
+        setAmount('');
         // dispatch(getTransactionHistory());
       } else {
         // dispatch(setConversion(''));
         showError(response?.message);
       }
-    } catch (e) {
+    } catch (e: any) {
       showError(e?.message);
     } finally {
       dispatch(setLoading(false));
@@ -668,13 +668,33 @@ export const getWalletHistory = (skip: any, limit: any) => async (dispatch: AppD
   try {
     if (skip === 0) dispatch(clearWalletHistory());
     dispatch(setLoading(true));
-    const response: any = await appOperation.customer.wallet_history(skip, limit);
-    // console.log(response, 'getWalletHistory');
-    if (response.success) {
-      dispatch(setWalletHistory(response?.data));
+    const page = Math.floor(skip / limit) + 1;
+    const response: any = await appOperation.customer.get_cobo_deposit_history(page, limit);
+    if (response?.success) {
+      const list = Array.isArray(response?.data) ? response.data : [];
+      const mappedList = list.map((item: any) => ({
+        ...item,
+        transaction_type: 'Deposit',
+        short_name: item.assetId || item.short_name,
+        currency: item.assetId || item.currency,
+        chain: item.chainId || item.chain,
+        amount: item.amount,
+        fee: item.fee ?? '0',
+        from_address: item.fromAddress || item.from_address,
+        to_address: item.toAddress || item.to_address,
+        transaction_hash: item.txHash || item.transaction_hash,
+        transaction_number: item.txHash || item.transaction_hash || item.transaction_number,
+        status: (item.status || 'COMPLETED').toUpperCase(),
+        updatedAt: item.createdAt || item.updatedAt,
+        createdAt: item.createdAt || item.updatedAt,
+      }));
+      dispatch(setWalletHistory(mappedList));
+      return { list: mappedList, pagination: response?.pagination };
     }
+    return { list: [], pagination: {} };
   } catch (e) {
     logger(e);
+    return { list: [], pagination: {} };
   } finally {
     dispatch(setLoading(false));
   }
@@ -712,25 +732,106 @@ export const getOpenOrders = (skip: any, limit: any) => async (dispatch: AppDisp
 
 export const verifyDeposit = (data: any) => async (dispatch: AppDispatch) => {
   try {
-    dispatch(setLoading(true));
     const response: any = await appOperation.customer.deposit_verify(data);
+    return response;
+  } catch (e: any) {
+    logger(e);
+    return { success: false, message: e?.message };
+  }
+};
+
+export const getDepositHistory = (skip: any, limit: any) => async (dispatch: AppDispatch) => {
+  try {
+    const page = Math.floor(skip / limit) + 1;
+    const response: any = await appOperation.customer.get_cobo_deposit_history(page, limit);
     if (response?.success) {
-      if (response?.message === "New Transactions Fetched") {
-        showError("New deposit fetched");
-        // depositHistory("showModal")
-        if (data?.status === "checkPayment") {
-          // setCheckDepositStatus(false)
-          appOperation.customer.transfer_funds(response?.data)
-        }
-      } else {
-        if (data?.status === "checkPayment") {
-          showError("New deposit not found. Please check after some time.");
-        }
-      }
+      const list = Array.isArray(response?.data) ? response.data : [];
+      const mappedList = list.map((item: any) => ({
+        ...item,
+        short_name: item.assetId || item.short_name,
+        currency: item.assetId || item.currency,
+        chain: item.chainId || item.chain,
+        from_address: item.fromAddress || item.from_address,
+        to_address: item.toAddress || item.to_address,
+        transaction_hash: item.txHash || item.transaction_hash,
+        updatedAt: item.createdAt || item.updatedAt,
+        createdAt: item.createdAt || item.updatedAt,
+      }));
+      dispatch(setDepositHistory(mappedList));
+      return mappedList;
     }
-   
+    return [];
   } catch (e) {
     logger(e);
+    return [];
+  }
+};
+
+export const getAllCoins = () => async (dispatch: AppDispatch) => {
+  try {
+    const response: any = await appOperation.customer.coin_list();
+    if (response?.success) {
+      return response?.data;
+    }
+    return [];
+  } catch (e) {
+    logger(e);
+    return [];
+  }
+};
+
+
+
+export const getWithdrawalHistory = (skip: any, limit: any) => async (dispatch: AppDispatch) => {
+  try {
+    const page = Math.floor(skip / limit) + 1;
+    const response: any = await appOperation.customer.get_cobo_withdrawal_history(page, limit);
+    if (response?.success) {
+      const list = Array.isArray(response?.data) ? response.data : [];
+      const mappedList = list.map((item: any) => ({
+        ...item,
+        transaction_type: 'Withdrawal',
+        short_name: item.coin || item.short_name,
+        currency: item.coin || item.currency,
+        chain: item.chainId || item.chain,
+        amount: typeof item.amount === 'object' && item.amount?.$numberDecimal != null ? item.amount.$numberDecimal : item.amount,
+        fee: item.fee ?? '0',
+        to_address: item.toAddress || item.to_address,
+        from_address: item.fromAddress || item.from_address,
+        transaction_hash: item.txHash || item.transaction_hash,
+        transaction_number: item.txHash || item.transaction_hash || item.transaction_number,
+        status: (item.status || 'COMPLETED').toUpperCase(),
+        updatedAt: item.completedAt || item.createdAt || item.updatedAt,
+        createdAt: item.createdAt || item.updatedAt,
+      }));
+      dispatch(setWithdrawHistory(mappedList));
+      return { list: mappedList, pagination: response?.pagination };
+    }
+    return { list: [], pagination: {} };
+  } catch (e) {
+    logger(e);
+    return { list: [], pagination: {} };
+  }
+};
+
+export const checkCoboWithdrawalAssetChain = (asset: string) => async (_dispatch: AppDispatch) => {
+  try {
+    const response: any = await appOperation.customer.check_cobo_withdrawal_asset_chain(asset);
+    return response;
+  } catch (e: any) {
+    logger(e);
+    return { success: false, message: e?.message || "Failed to load withdrawal limits" };
+  }
+};
+
+export const createCoboWithdrawalRequest = (data: { amount: number; address: string; chainId: string; coin: string; otp: string }) => async (dispatch: AppDispatch) => {
+  try {
+    dispatch(setLoading(true));
+    const response: any = await appOperation.customer.create_cobo_withdrawal_request(data);
+    return response;
+  } catch (e: any) {
+    logger(e);
+    return { success: false, message: e?.message || "Failed to create withdrawal request" };
   } finally {
     dispatch(setLoading(false));
   }
@@ -744,7 +845,7 @@ export const verifyWithdraw = (data: any) => async (dispatch: AppDispatch) => {
     if (response?.success) {
       dispatch(setWithdrawHistory(response?.data));
     }
-  } catch (e) {
+  } catch (e: any) {
     logger(e);
     showError(e?.message);
   } finally {
@@ -752,7 +853,7 @@ export const verifyWithdraw = (data: any) => async (dispatch: AppDispatch) => {
   }
 };
 
-export const subscribeEarningPackage = (data: any, setVisible =(p0: boolean) => {}) => async (dispatch: AppDispatch) => {
+export const subscribeEarningPackage = (data: any, setVisible = (p0: boolean) => { }) => async (dispatch: AppDispatch) => {
   try {
     dispatch(setLoading(true));
     const response: any = await appOperation.customer.subscribe_earning_package(data);
@@ -764,7 +865,7 @@ export const subscribeEarningPackage = (data: any, setVisible =(p0: boolean) => 
       dispatch(getSubscribedPackageList());
       // dispatch(setWithdrawHistory(response?.data));
     }
-  } catch (e) {
+  } catch (e: any) {
     logger(e);
     showError(e?.message);
   } finally {
@@ -781,7 +882,7 @@ export const butBotPackage = (data: any) => async (dispatch: AppDispatch) => {
       showError(response?.message);
       NavigationService.navigate(Dashboard_Inner);
     }
-  } catch (e) {
+  } catch (e: any) {
     logger(e);
     showError(e?.message);
   } finally {
@@ -799,7 +900,7 @@ export const withdrawInr =
       if (response?.success) {
         NavigationService.goBack();
       }
-    } catch (e) {
+    } catch (e: any) {
       logger(e);
       showError(e?.message);
     } finally {
@@ -823,7 +924,7 @@ export const getTransactionHistory =
     }
   };
 
-  export const getBotActivePackages =
+export const getBotActivePackages =
   () => async (dispatch: AppDispatch) => {
     try {
       dispatch(setLoading(true));
@@ -831,10 +932,10 @@ export const getTransactionHistory =
 
       if (response.success) {
         dispatch(setBotActiveList(response?.data[0]));
-        if (response?.data?.length > 0){
+        if (response?.data?.length > 0) {
           NavigationService.navigate(Dashboard_Inner)
         }
-        
+
       }
     } catch (e) {
       logger(e);
@@ -843,7 +944,7 @@ export const getTransactionHistory =
     }
   };
 
-  export const getBotTrades =
+export const getBotTrades =
   () => async (dispatch: AppDispatch) => {
     try {
       dispatch(setLoading(true));
@@ -854,8 +955,8 @@ export const getTransactionHistory =
         const total = response?.data.reduce((sum: any, trade: any) => {
           const profit = parseFloat(trade.profit) || 0;
           return sum + profit;
-      }, 0);
-      dispatch(setTotalProfit(total?.toFixed(2) || 0) );
+        }, 0);
+        dispatch(setTotalProfit(total?.toFixed(2) || 0));
       }
     } catch (e) {
       logger(e);
@@ -864,30 +965,30 @@ export const getTransactionHistory =
     }
   };
 
-  
 
-  export const getCoinDetails =
+
+export const getCoinDetails =
   (data: any, type: any, balance: any) => async (dispatch: AppDispatch) => {
     try {
       dispatch(setLoading(true));
       const response: any = await appOperation.customer.coin_details(data);
       if (response.success) {
         dispatch(setCoinDetails(response?.data));
-        if(type == "deposit") {
-if (response?.data?.deposit_status === 'ACTIVE') {
-            NavigationService.navigate(DEPOSIT_SCREEN, {walletDetail: response?.data});
-        } else {
-          showError('Deposit is Disable for Now');
-        }
+        if (type == "deposit") {
+          if (response?.data?.deposit_status === 'ACTIVE') {
+            NavigationService.navigate(DEPOSIT_SCREEN, { walletDetail: response?.data });
+          } else {
+            showError('Deposit is Disable for Now');
+          }
         } else if (type == "withdraw") {
           if (response?.data?.withdrawal_status === 'ACTIVE') {
 
-         NavigationService.navigate(WITHDRAW_SCREEN, {walletDetail: response?.data, balance: balance});
-    }else {
-      showError('Withdrawal is Disable for Now');
-    }
+            NavigationService.navigate(WITHDRAW_SCREEN, { walletDetail: response?.data, balance: balance });
+          } else {
+            showError('Withdrawal is Disable for Now');
+          }
         }
-        
+
       }
     } catch (e) {
       logger(e);
@@ -897,245 +998,245 @@ if (response?.data?.deposit_status === 'ACTIVE') {
   };
 
 
-  export const getPackageList = () => async (dispatch: AppDispatch) => {
-    dispatch(setLoading(true));
-    try {
-      const response: any = await appOperation.customer.package_list();
-      if (response.success) {
-        if (!response?.data || response?.data?.length === 0) {
-          dispatch(setPackageList([]));
-          return;
-        } else {
-          const transformed = transformCurrencyDataWithDistribution(response?.data);
-          dispatch(setPackageList(transformed));
-        }
-        
-        // console.log(filteredPackageList, "filteredPackageList");
+export const getPackageList = () => async (dispatch: AppDispatch) => {
+  dispatch(setLoading(true));
+  try {
+    const response: any = await appOperation.customer.package_list();
+    if (response.success) {
+      if (!response?.data || response?.data?.length === 0) {
+        dispatch(setPackageList([]));
+        return;
+      } else {
+        const transformed = transformCurrencyDataWithDistribution(response?.data);
+        dispatch(setPackageList(transformed));
       }
-    } catch (e) {
-      logger(e);
-    } finally {
-      dispatch(setLoading(false));
+
+      // console.log(filteredPackageList, "filteredPackageList");
     }
-  };
+  } catch (e) {
+    logger(e);
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
 
-  export const getBotPackageList = () => async (dispatch: AppDispatch) => {
-    dispatch(setLoading(true));
-    try {
-      const response: any = await appOperation.customer.bot_package_list();
-      if (response.success) {
-        dispatch(setBotPackageList(response?.data));
-      }
-    } catch (e) {
-      logger(e);
-    } finally {
-      dispatch(setLoading(false));
+export const getBotPackageList = () => async (dispatch: AppDispatch) => {
+  dispatch(setLoading(true));
+  try {
+    const response: any = await appOperation.customer.bot_package_list();
+    if (response.success) {
+      dispatch(setBotPackageList(response?.data));
     }
-  };
+  } catch (e) {
+    logger(e);
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
 
-  /**
-   * Per-user earning payout rows (EarningBalance table).
-   * Current backend returns **404** for `GET /v1/earning/user-payout-list` (route not registered).
-   * Calling it only spammed `[API] Non-JSON error response` and did not populate data.
-   * When the backend exposes this route, restore the fetch below using `appOperation.customer.user_payout_list()`.
-   */
-  export const getUserPayList = () => async (dispatch: AppDispatch) => {
-    dispatch(setUserPayoutList([]));
-    // try {
-    //   dispatch(setLoading(true));
-    //   const response: any = await appOperation.customer.user_payout_list();
-    //   if (response.success) dispatch(setUserPayoutList(response?.data ?? []));
-    // } catch (e) {
-    //   logger(e);
-    //   dispatch(setUserPayoutList([]));
-    // } finally {
-    //   dispatch(setLoading(false));
-    // }
-  };
+/**
+ * Per-user earning payout rows (EarningBalance table).
+ * Current backend returns **404** for `GET /v1/earning/user-payout-list` (route not registered).
+ * Calling it only spammed `[API] Non-JSON error response` and did not populate data.
+ * When the backend exposes this route, restore the fetch below using `appOperation.customer.user_payout_list()`.
+ */
+export const getUserPayList = () => async (dispatch: AppDispatch) => {
+  dispatch(setUserPayoutList([]));
+  // try {
+  //   dispatch(setLoading(true));
+  //   const response: any = await appOperation.customer.user_payout_list();
+  //   if (response.success) dispatch(setUserPayoutList(response?.data ?? []));
+  // } catch (e) {
+  //   logger(e);
+  //   dispatch(setUserPayoutList([]));
+  // } finally {
+  //   dispatch(setLoading(false));
+  // }
+};
 
-  export const getEarningPortfolio = () => async (dispatch: AppDispatch) => {
-    dispatch(setLoading(true));
-    try {
-      const response: any = await appOperation.customer.earning_portfolio();
-      if (response.success) {
-        dispatch(setEarningPortfolio(response?.data));
-      }
-    } catch (e) {
-      logger(e);
-    } finally {
-      dispatch(setLoading(false));
+export const getEarningPortfolio = () => async (dispatch: AppDispatch) => {
+  dispatch(setLoading(true));
+  try {
+    const response: any = await appOperation.customer.earning_portfolio();
+    if (response.success) {
+      dispatch(setEarningPortfolio(response?.data));
     }
-  };
+  } catch (e) {
+    logger(e);
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
 
-  export const getEarningPortfolioSummary = () => async (dispatch: AppDispatch) => {
-    try {
-      const response: any = await appOperation.customer.earning_portfolio_summary();
-      if (response?.success) {
-        dispatch(setEarningPortfolioSummary(response?.data));
-      }
-    } catch (e) {
-      logger(e);
+export const getEarningPortfolioSummary = () => async (dispatch: AppDispatch) => {
+  try {
+    const response: any = await appOperation.customer.earning_portfolio_summary();
+    if (response?.success) {
+      dispatch(setEarningPortfolioSummary(response?.data));
     }
-  };
+  } catch (e) {
+    logger(e);
+  }
+};
 
-  /** Same as web `Earning/index.js` — backend may send mixed casing or alternate cancel strings. */
-  const normalizeSubscriptionStatus = (status: unknown) =>
-    String(status ?? '')
-      .trim()
-      .toUpperCase();
+/** Same as web `Earning/index.js` — backend may send mixed casing or alternate cancel strings. */
+const normalizeSubscriptionStatus = (status: unknown) =>
+  String(status ?? '')
+    .trim()
+    .toUpperCase();
 
-  const isCancelledSubscriptionStatus = (status: unknown) => {
-    const s = normalizeSubscriptionStatus(status);
-    return s === 'CANCELLED' || s === 'CANCELED' || s.includes('CANCEL');
-  };
+const isCancelledSubscriptionStatus = (status: unknown) => {
+  const s = normalizeSubscriptionStatus(status);
+  return s === 'CANCELLED' || s === 'CANCELED' || s.includes('CANCEL');
+};
 
-  /** Backend may return a bare array or paginated wrapper — normalize to rows[]. */
-  const normalizeSubscribedPackageRows = (raw: unknown): any[] => {
-    if (Array.isArray(raw)) return raw;
-    if (raw == null || typeof raw !== 'object') return [];
-    const o = raw as Record<string, unknown>;
-    if (Array.isArray(o.list)) return o.list as any[];
-    if (Array.isArray(o.data)) return o.data as any[];
-    if (Array.isArray(o.items)) return o.items as any[];
-    if (Array.isArray(o.records)) return o.records as any[];
-    if (Array.isArray(o.subscriptions)) return o.subscriptions as any[];
-    if (Array.isArray(o.rows)) return o.rows as any[];
-    return [];
-  };
+/** Backend may return a bare array or paginated wrapper — normalize to rows[]. */
+const normalizeSubscribedPackageRows = (raw: unknown): any[] => {
+  if (Array.isArray(raw)) return raw;
+  if (raw == null || typeof raw !== 'object') return [];
+  const o = raw as Record<string, unknown>;
+  if (Array.isArray(o.list)) return o.list as any[];
+  if (Array.isArray(o.data)) return o.data as any[];
+  if (Array.isArray(o.items)) return o.items as any[];
+  if (Array.isArray(o.records)) return o.records as any[];
+  if (Array.isArray(o.subscriptions)) return o.subscriptions as any[];
+  if (Array.isArray(o.rows)) return o.rows as any[];
+  return [];
+};
 
-  export const getSubscribedPackageList = () => async (dispatch: AppDispatch) => {
-    dispatch(setLoading(true));
-    try {
-      /** Same query string shape as web (`skip`/`limit`); use limit 10 to match web pagination if needed. */
-      const response: any = await appOperation.customer.subscribed_packageList(0, 10);
-      const raw = response?.data ?? response?.result ?? response;
-      const data = normalizeSubscribedPackageRows(raw);
+export const getSubscribedPackageList = () => async (dispatch: AppDispatch) => {
+  dispatch(setLoading(true));
+  try {
+    /** Same query string shape as web (`skip`/`limit`); use limit 10 to match web pagination if needed. */
+    const response: any = await appOperation.customer.subscribed_packageList(0, 10);
+    const raw = response?.data ?? response?.result ?? response;
+    const data = normalizeSubscribedPackageRows(raw);
 
+    if (__DEV__) {
+      const rawObj = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : null;
+      console.log('[Earning] subscribed-package-list response:', {
+        success: response?.success,
+        httpCode: response?.code,
+        message: response?.message,
+        normalizedRowCount: data.length,
+        rawDataWasArray: Array.isArray(response?.data),
+        rawTopKeys: rawObj ? Object.keys(rawObj).slice(0, 15) : [],
+        distinctStatuses: [...new Set(data.map((r: { status?: string }) => String(r?.status ?? '')))].filter(Boolean).slice(0, 12),
+      });
+    }
+
+    if (response.success) {
+      const completedPackage = data.filter(
+        (item: { status?: string }) => normalizeSubscriptionStatus(item?.status) === 'COMPLETED',
+      );
+      const activePackage = data.filter(
+        (item: { status?: string }) => normalizeSubscriptionStatus(item?.status) === 'ACTIVE',
+      );
+      const cancelledPackage = data.filter((item: { status?: string }) =>
+        isCancelledSubscriptionStatus(item?.status),
+      );
       if (__DEV__) {
-        const rawObj = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : null;
-        console.log('[Earning] subscribed-package-list response:', {
-          success: response?.success,
-          httpCode: response?.code,
-          message: response?.message,
-          normalizedRowCount: data.length,
-          rawDataWasArray: Array.isArray(response?.data),
-          rawTopKeys: rawObj ? Object.keys(rawObj).slice(0, 15) : [],
-          distinctStatuses: [...new Set(data.map((r: { status?: string }) => String(r?.status ?? '')))].filter(Boolean).slice(0, 12),
+        console.log('[Earning] subscribed split:', {
+          active: activePackage.length,
+          completed: completedPackage.length,
+          cancelled: cancelledPackage.length,
         });
       }
-
-      if (response.success) {
-        const completedPackage = data.filter(
-          (item: { status?: string }) => normalizeSubscriptionStatus(item?.status) === 'COMPLETED',
-        );
-        const activePackage = data.filter(
-          (item: { status?: string }) => normalizeSubscriptionStatus(item?.status) === 'ACTIVE',
-        );
-        const cancelledPackage = data.filter((item: { status?: string }) =>
-          isCancelledSubscriptionStatus(item?.status),
-        );
-        if (__DEV__) {
-          console.log('[Earning] subscribed split:', {
-            active: activePackage.length,
-            completed: completedPackage.length,
-            cancelled: cancelledPackage.length,
-          });
-        }
-        dispatch(setSubscribedActivePackages(activePackage));
-        dispatch(setSubscribedCompletePackages(completedPackage));
-        dispatch(setSubscribedCancelPackages(cancelledPackage));
-      } else if (__DEV__) {
-        console.warn('[Earning] subscribed-package-list skipped dispatch — success was not true');
-      }
-    } catch (e) {
-      logger(e);
-      if (__DEV__) {
-        console.warn('[Earning] subscribed-package-list threw:', e);
-      }
-    } finally {
-      dispatch(setLoading(false));
+      dispatch(setSubscribedActivePackages(activePackage));
+      dispatch(setSubscribedCompletePackages(completedPackage));
+      dispatch(setSubscribedCancelPackages(cancelledPackage));
+    } else if (__DEV__) {
+      console.warn('[Earning] subscribed-package-list skipped dispatch — success was not true');
     }
-  };
-
-  /** Web `AuthService.cancelEarningSubscription` — refresh lists like web after success */
-  export const cancelEarningSubscription =
-    (stakingId: string, currency?: string) => async (dispatch: AppDispatch) => {
-      dispatch(setLoading(true));
-      try {
-        const response: any = await appOperation.customer.cancel_earning_subscription(stakingId);
-        if (response?.success) {
-          const d = response?.data || {};
-          let msg = response?.message || 'Plan cancelled successfully.';
-          if (d.refundAmount != null && currency) {
-            const amt =
-              typeof d.refundAmount === 'object' && (d.refundAmount as any)?.$numberDecimal != null
-                ? parseFloat((d.refundAmount as any).$numberDecimal)
-                : Number(d.refundAmount);
-            if (Number.isFinite(amt)) {
-              msg += ` Refund: ${amt.toLocaleString(undefined, { maximumFractionDigits: 9 })} ${currency}.`;
-            }
-          }
-          showSuccess(msg);
-          await dispatch(getSubscribedPackageList());
-          await dispatch(getEarningPortfolio());
-          await dispatch(getEarningPortfolioSummary());
-        } else {
-          showError(response?.message || 'Could not cancel this plan.');
-        }
-      } catch (e: any) {
-        logger(e);
-        showError(e?.message || 'Could not cancel this plan.');
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
-
-  /** Web `AuthService.getPerDayPayoutHistory` — used by Earning payout modal */
-  export async function fetchPerDayPayoutHistory(userId: string, stakingId: string) {
-    try {
-      const response: any = await appOperation.customer.get_per_day_payout_history(userId, stakingId);
-      if (response?.success) {
-        const raw = response?.data?.payout_history || [];
-        const sorted = [...raw].sort(
-          (a: any, b: any) => (Number(a?.day) || 0) - (Number(b?.day) || 0),
-        );
-        return { ok: true as const, list: sorted, message: undefined as string | undefined };
-      }
-      return {
-        ok: false as const,
-        list: [] as any[],
-        message: response?.message || 'Could not load payout history.',
-      };
-    } catch (e: any) {
-      return { ok: false as const, list: [] as any[], message: e?.message || 'Could not load payout history.' };
+  } catch (e) {
+    logger(e);
+    if (__DEV__) {
+      console.warn('[Earning] subscribed-package-list threw:', e);
     }
+  } finally {
+    dispatch(setLoading(false));
   }
+};
 
-  export const getWalletBalance = (fromWallet: any, currencyId: any) => async (dispatch: AppDispatch) => {
+/** Web `AuthService.cancelEarningSubscription` — refresh lists like web after success */
+export const cancelEarningSubscription =
+  (stakingId: string, currency?: string) => async (dispatch: AppDispatch) => {
     dispatch(setLoading(true));
     try {
-      const response: any = await appOperation.customer.get_wallet_balance(fromWallet, currencyId);
-      if (response.success) {
-        dispatch(setEarnWalletBal(response?.data?.balance));
-         dispatch(setLoading(false));
+      const response: any = await appOperation.customer.cancel_earning_subscription(stakingId);
+      if (response?.success) {
+        const d = response?.data || {};
+        let msg = response?.message || 'Plan cancelled successfully.';
+        if (d.refundAmount != null && currency) {
+          const amt =
+            typeof d.refundAmount === 'object' && (d.refundAmount as any)?.$numberDecimal != null
+              ? parseFloat((d.refundAmount as any).$numberDecimal)
+              : Number(d.refundAmount);
+          if (Number.isFinite(amt)) {
+            msg += ` Refund: ${amt.toLocaleString(undefined, { maximumFractionDigits: 9 })} ${currency}.`;
+          }
+        }
+        showSuccess(msg);
+        await dispatch(getSubscribedPackageList());
+        await dispatch(getEarningPortfolio());
+        await dispatch(getEarningPortfolioSummary());
+      } else {
+        showError(response?.message || 'Could not cancel this plan.');
       }
-    } catch (e) {
+    } catch (e: any) {
       logger(e);
+      showError(e?.message || 'Could not cancel this plan.');
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-  export const getWalletType = () => async (dispatch: AppDispatch) => {
-    dispatch(setLoading(true));
-    try {
-      const response: any = await appOperation.customer.get_wallet_type();
-      if (response.success) {
-        dispatch(setWalletTypes(response?.data));
-      }
-    } catch (e) {
-      logger(e);
-    } finally {
+/** Web `AuthService.getPerDayPayoutHistory` — used by Earning payout modal */
+export async function fetchPerDayPayoutHistory(userId: string, stakingId: string) {
+  try {
+    const response: any = await appOperation.customer.get_per_day_payout_history(userId, stakingId);
+    if (response?.success) {
+      const raw = response?.data?.payout_history || [];
+      const sorted = [...raw].sort(
+        (a: any, b: any) => (Number(a?.day) || 0) - (Number(b?.day) || 0),
+      );
+      return { ok: true as const, list: sorted, message: undefined as string | undefined };
+    }
+    return {
+      ok: false as const,
+      list: [] as any[],
+      message: response?.message || 'Could not load payout history.',
+    };
+  } catch (e: any) {
+    return { ok: false as const, list: [] as any[], message: e?.message || 'Could not load payout history.' };
+  }
+}
+
+export const getWalletBalance = (fromWallet: any, currencyId: any) => async (dispatch: AppDispatch) => {
+  dispatch(setLoading(true));
+  try {
+    const response: any = await appOperation.customer.get_wallet_balance(fromWallet, currencyId);
+    if (response.success) {
+      dispatch(setEarnWalletBal(response?.data?.balance));
       dispatch(setLoading(false));
     }
-  };
+  } catch (e) {
+    logger(e);
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const getWalletType = () => async (dispatch: AppDispatch) => {
+  dispatch(setLoading(true));
+  try {
+    const response: any = await appOperation.customer.get_wallet_type();
+    if (response.success) {
+      dispatch(setWalletTypes(response?.data));
+    }
+  } catch (e) {
+    logger(e);
+  } finally {
+    dispatch(setLoading(false));
+  }
+};

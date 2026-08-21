@@ -7,89 +7,98 @@ import {
 } from "../../shared";
 import { colors } from "../../theme/colors";
 import { useTheme } from "../../hooks/useTheme";
-import { useAppSelector } from "../../store/hooks";
 import FastImage from "react-native-fast-image";
-import { NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT } from "../../helper/ImageAssets";
-import { getWalletHistory } from "../../actions/walletActions";
+import { NO_NOTIFICATION_ICON, NO_NOTIFICATION_ICON_LIGHT, copyIcon } from "../../helper/ImageAssets";
+import { getWalletHistory, getWithdrawalHistory } from "../../actions/walletActions";
 import { useDispatch } from "react-redux";
+import { useRoute } from "@react-navigation/native";
 import moment from "moment";
 import NewWalletHistorySkeleton from "./NewWalletHistorySkeleton";
 import NavigationService from "../../navigation/NavigationService";
 import { WALLET_HISTORY_DETAILS_SCREEN } from "../../navigation/routes";
 import { fontFamilySemiBold } from "../../theme/typography";
+import { copyText } from "../../helper/utility";
 
-const NewWalletHistory = ({
-  investments = [],
-  totalSelfInvestment = 0,
-  totalDownlineInvestment = 0,
-  totalAllInvestment = 0,
-}) => {
+const NewWalletHistory = () => {
   const dispatch = useDispatch();
+  const route = useRoute();
   const { colors: themeColors, isDark } = useTheme();
-  const walletHistoryRedux = useAppSelector((state) => state.wallet.walletHistory);
+  const initialTab = route?.params?.tab || route?.params?.data || "Deposit";
+  const [activeTab, setActiveTab] = useState(initialTab); // "Deposit" | "Withdrawal"
   const [walletHistory, setWalletHistory] = useState([]);
-  const [skip, setSkip] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalDataLength, setTotalDataLength] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const limit = 10;
 
-  useEffect(() => {
-    setSkip(0);
-    setHasMore(true);
+  const shortenAddress = (address, length = 6) => {
+    if (!address || address.length < 12) return address;
+    return `${address.slice(0, length + 2)}...${address.slice(-length)}`;
+  };
+
+  const fetchPage = async (page, tab) => {
+    setLoading(true);
+    const skip = (page - 1) * limit;
+
+    let res = null;
+    if (tab === "Deposit") {
+      res = await dispatch(getWalletHistory(skip, limit));
+    } else {
+      res = await dispatch(getWithdrawalHistory(skip, limit));
+    }
+
+    const list = Array.isArray(res?.list) ? res.list : [];
+    const pagination = res?.pagination || {};
+    setWalletHistory(list);
+    setCurrentPage(page);
+    const totalCount = pagination.total ?? list.length;
+    setTotalDataLength(totalCount);
+    setTotalPages(pagination.totalPages ?? Math.max(1, Math.ceil(totalCount / limit)));
+    setIsInitialLoad(false);
+    setLoading(false);
+  };
+
+  const handleTabChange = (newTab) => {
+    if (newTab === activeTab) return;
+    setActiveTab(newTab);
+    setCurrentPage(1);
     setWalletHistory([]);
     setIsInitialLoad(true);
-    loadMoreData(0, true);
-  }, []);
+    fetchPage(1, newTab);
+  };
 
   useEffect(() => {
-    if (walletHistoryRedux == null) return;
-    if (isInitialLoad) {
-      setWalletHistory(walletHistoryRedux);
-      setIsInitialLoad(false);
-    } else {
-      setWalletHistory(prev => [...prev, ...walletHistoryRedux]);
+    const tabFromRoute = route?.params?.tab || route?.params?.data || "Deposit";
+    setActiveTab(tabFromRoute);
+    fetchPage(1, tabFromRoute);
+  }, [route?.params]);
+
+  const handlePagination = (action) => {
+    if (loading) return;
+    if (action === "first" && currentPage > 1) {
+      fetchPage(1, activeTab);
+    } else if (action === "prev" && currentPage > 1) {
+      fetchPage(currentPage - 1, activeTab);
+    } else if (action === "next" && currentPage < totalPages) {
+      fetchPage(currentPage + 1, activeTab);
+    } else if (action === "last" && currentPage < totalPages) {
+      fetchPage(totalPages, activeTab);
     }
-    if (walletHistoryRedux.length < limit) setHasMore(false);
-    setLoading(false);
-  }, [walletHistoryRedux]);
-
-  const loadMoreData = (currentSkip, isInitial = false) => {
-    if (loading || (!hasMore && !isInitial)) return;
-    
-    setLoading(true);
-    setSkip(currentSkip);
-    dispatch(getWalletHistory(currentSkip, limit));
-  };
-
-  const handleScroll = (event) => {
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const paddingToBottom = 20;
-    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
-
-    if (isCloseToBottom && hasMore && !loading) {
-      const nextSkip = skip + limit;
-      loadMoreData(nextSkip);
-    }
-  };
-
-  const getStatusColor = (status) => {
-    if (status === "SUCCESS") return "#4CAF50";
-    if (status === "COMPLETED") return "#FF9800";
-    return "#F44336";
-  };
-
-  const formatDateTimeCard = (dateString) => {
-    if (!dateString) return "---";
-    return moment(dateString).format("YYYY-MM-DD HH:mm:ss");
   };
 
   const renderCard = (inv, idx) => {
     const textColor = themeColors.text;
-    const labelColor = themeColors.secondaryText;
-    const typeLabel = inv?.transaction_type || "Transaction";
-    const isDeposit = (typeLabel || "").toLowerCase().includes("deposit");
-    const typeColor = isDeposit ? colors.green : (typeLabel || "").toLowerCase().includes("withdraw") ? colors.red : labelColor;
+    const isDeposit = activeTab === "Deposit";
+    const typeLabel = isDeposit ? "Deposit" : "Withdrawal";
+    const shortTxHash = shortenAddress(inv?.transaction_hash || inv?.txHash || inv?.transaction_number || "");
+    const fullTxHash = inv?.transaction_hash || inv?.txHash || inv?.transaction_number || "";
+    const isSuccess = !inv?.status || String(inv?.status).toUpperCase() === "SUCCESS" || String(inv?.status).toUpperCase() === "COMPLETED";
+    const statusText = inv?.status ? String(inv?.status).toUpperCase() : "COMPLETED";
+    const statusColor = isSuccess ? "#00C087" : String(inv?.status).toUpperCase() === "PENDING" ? "#FF9800" : "#F44336";
+
+    const dateVal = inv?.createdAt || inv?.updatedAt;
 
     return (
       <TouchableOpacity
@@ -98,42 +107,75 @@ const NewWalletHistory = ({
         onPress={() => NavigationService.navigate(WALLET_HISTORY_DETAILS_SCREEN, { item: inv })}
         style={styles.card}
       >
-        <View style={styles.topRow}>
-          <View style={styles.pairRow}>
-            {/* <AppText style={[styles.cardTitle, { color: textColor }]}>
-              {typeLabel}
-            </AppText> */}
-          </View>
-        
-        </View>
- <View style={{width:"100%",flexDirection:"row",justifyContent:"space-between"}}>
-        <AppText style={[styles.orderTypeLabel, { color: typeColor }]}>
-          {typeLabel}
-         
-        </AppText>
-        <AppText style={[styles.cardDate, { color: labelColor }]}>
-            {formatDateTimeCard(inv?.createdAt)}
+        <View style={styles.cardRow}>
+          <AppText style={[styles.cardLabel, { color: textColor }]}>Date</AppText>
+          <AppText style={[styles.cardValue, { color: textColor }]}>
+            {dateVal ? moment(dateVal).format("DD/MM/YYYY") : "---"}
           </AppText>
         </View>
 
         <View style={styles.cardRow}>
-          <AppText style={[styles.cardLabel, { color: labelColor }]}>Amount:</AppText>
-          <AppText style={[styles.cardValue, { color: textColor }]}>{inv?.amount ?? "0"}</AppText>
-        </View>
-        <View style={styles.cardRow}>
-          <AppText style={[styles.cardLabel, { color: labelColor }]}>Chain:</AppText>
-          <AppText style={[styles.cardValue, { color: textColor }]}>{inv?.chain || "---"}</AppText>
-        </View>
-        <View style={styles.cardRow}>
-          <AppText style={[styles.cardLabel, { color: labelColor }]}>Fee:</AppText>
-          <AppText style={[styles.cardValue, { color: textColor }]}>{inv?.fee ?? "0"}</AppText>
-        </View>
-        <View style={styles.cardRow}>
-          <AppText style={[styles.cardLabel, { color: labelColor }]}>Status:</AppText>
-          <AppText style={[styles.cardValue, { color: getStatusColor(inv?.status) }]}>{inv?.status || "---"}</AppText>
+          <AppText style={[styles.cardLabel, { color: textColor }]}>Time</AppText>
+          <AppText style={[styles.cardValue, { color: textColor }]}>
+            {dateVal ? moment(dateVal).format("hh:mm A") : "---"}
+          </AppText>
         </View>
 
-        <View style={[styles.cardDivider, { backgroundColor: themeColors.border }]} />
+        <View style={styles.cardRow}>
+          <AppText style={[styles.cardLabel, { color: textColor }]}>Transaction Type</AppText>
+          <AppText style={[styles.cardValue, { color: textColor }]}>
+            {typeLabel}
+          </AppText>
+        </View>
+
+        <View style={styles.cardRow}>
+          <AppText style={[styles.cardLabel, { color: textColor }]}>Currency</AppText>
+          <AppText style={[styles.cardValue, { color: textColor }]}>
+            {inv?.short_name || inv?.currency || inv?.coin || inv?.assetId || "---"}
+          </AppText>
+        </View>
+
+        <View style={styles.cardRow}>
+          <AppText style={[styles.cardLabel, { color: textColor }]}>Chain</AppText>
+          <AppText style={[styles.cardValue, { color: textColor }]}>
+            {inv?.chain || inv?.chainId || "---"}
+          </AppText>
+        </View>
+
+        <View style={styles.cardRow}>
+          <AppText style={[styles.cardLabel, { color: textColor }]}>Amount</AppText>
+          <AppText style={[styles.cardValue, { color: textColor }]}>
+            {inv?.amount ?? "0"}
+          </AppText>
+        </View>
+
+        <View style={styles.cardRow}>
+          <AppText style={[styles.cardLabel, { color: textColor }]}>Tx Hash</AppText>
+          <View style={styles.txHashRow}>
+            <AppText style={[styles.cardValue, { color: textColor, marginRight: 6 }]}>
+              {shortTxHash || "---"}
+            </AppText>
+            {fullTxHash ? (
+              <TouchableOpacity onPress={() => copyText(fullTxHash)}>
+                <FastImage
+                  source={copyIcon}
+                  style={{ width: 14, height: 14 }}
+                  tintColor={isDark ? colors.white : colors.black}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </View>
+
+        <View style={styles.cardRow}>
+          <AppText style={[styles.cardLabel, { color: textColor }]}>Status</AppText>
+          <AppText style={[styles.cardValue, { color: statusColor, fontWeight: "700" }]}>
+            {statusText}
+          </AppText>
+        </View>
+
+        <View style={[styles.cardDivider, { backgroundColor: isDark ? themeColors.border : "#E0E0E0" }]} />
       </TouchableOpacity>
     );
   };
@@ -147,26 +189,150 @@ const NewWalletHistory = ({
     >
       <Toolbar
         isSecond
-        title={"Deposit/Withdrawal history"}
+        title={"Transaction history"}
         style={{ width: "75%", backgroundColor: "transparent" }}
       />
 
-      {(walletHistoryRedux == null || isInitialLoad) ? (
+      {/* Tabs */}
+      <View style={[styles.tabsContainer, { backgroundColor: isDark ? "#1E1F24" : "#F3F4F6" }]}>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === "Deposit" && [
+              styles.activeTabButton,
+              { backgroundColor: isDark ? "#2C2D35" : colors.white },
+            ],
+          ]}
+          onPress={() => handleTabChange("Deposit")}
+          activeOpacity={0.8}
+        >
+          <AppText
+            style={[
+              styles.tabText,
+              {
+                color: activeTab === "Deposit" ? (colors.buttonBg || "#F3BB2B") : themeColors.secondaryText,
+                fontFamily: activeTab === "Deposit" ? fontFamilySemiBold : undefined,
+                fontWeight: activeTab === "Deposit" ? "600" : "400",
+              },
+            ]}
+          >
+            Deposit
+          </AppText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === "Withdrawal" && [
+              styles.activeTabButton,
+              { backgroundColor: isDark ? "#2C2D35" : colors.white },
+            ],
+          ]}
+          onPress={() => handleTabChange("Withdrawal")}
+          activeOpacity={0.8}
+        >
+          <AppText
+            style={[
+              styles.tabText,
+              {
+                color: activeTab === "Withdrawal" ? (colors.buttonBg || "#F3BB2B") : themeColors.secondaryText,
+                fontFamily: activeTab === "Withdrawal" ? fontFamilySemiBold : undefined,
+                fontWeight: activeTab === "Withdrawal" ? "600" : "400",
+              },
+            ]}
+          >
+            Withdrawal
+          </AppText>
+        </TouchableOpacity>
+      </View>
+
+      {isInitialLoad ? (
         <NewWalletHistorySkeleton />
       ) : walletHistory?.length > 0 ? (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-          onScroll={handleScroll}
-          scrollEventThrottle={400}
-        >
-          {walletHistory.map((inv, idx) => renderCard(inv, idx))}
-          {loading && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={colors.buttonBg || "#007AFF"} />
+        <View style={{ flex: 1 }}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.buttonBg || "#007AFF"} />
+              </View>
+            ) : (
+              walletHistory.map((inv, idx) => renderCard(inv, idx))
+            )}
+          </ScrollView>
+
+          {/* Pagination Footer */}
+          <View style={[styles.paginationContainer, { borderTopColor: isDark ? themeColors.border : "#EAEAEA", backgroundColor: themeColors.background }]}>
+            <AppText style={[styles.paginationInfoText, { color: themeColors.secondaryText }]}>
+              {totalDataLength === 0 ? 0 : (currentPage - 1) * limit + 1}-{Math.min(currentPage * limit, totalDataLength)} of {totalDataLength}
+            </AppText>
+            <View style={styles.paginationButtonsRow}>
+              <TouchableOpacity
+                style={[
+                  styles.pageButton,
+                  { backgroundColor: isDark ? "#2C2D35" : "#F3F4F6" },
+                  currentPage <= 1 && styles.pageButtonDisabled,
+                ]}
+                disabled={currentPage <= 1 || loading}
+                onPress={() => handlePagination("first")}
+              >
+                <AppText style={[styles.pageButtonText, { color: currentPage <= 1 ? (isDark ? "#555" : "#CCC") : themeColors.text }]}>
+                  «
+                </AppText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.pageButton,
+                  { backgroundColor: isDark ? "#2C2D35" : "#F3F4F6" },
+                  currentPage <= 1 && styles.pageButtonDisabled,
+                ]}
+                disabled={currentPage <= 1 || loading}
+                onPress={() => handlePagination("prev")}
+              >
+                <AppText style={[styles.pageButtonText, { color: currentPage <= 1 ? (isDark ? "#555" : "#CCC") : themeColors.text }]}>
+                  ‹
+                </AppText>
+              </TouchableOpacity>
+
+              <View style={[styles.currentPageIndicator, { backgroundColor: isDark ? "#2C2D35" : "#F3F4F6" }]}>
+                <AppText style={[styles.currentPageText, { color: themeColors.text }]}>
+                  {currentPage} / {totalPages}
+                </AppText>
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.pageButton,
+                  { backgroundColor: isDark ? "#2C2D35" : "#F3F4F6" },
+                  currentPage >= totalPages && styles.pageButtonDisabled,
+                ]}
+                disabled={currentPage >= totalPages || loading}
+                onPress={() => handlePagination("next")}
+              >
+                <AppText style={[styles.pageButtonText, { color: currentPage >= totalPages ? (isDark ? "#555" : "#CCC") : themeColors.text }]}>
+                  ›
+                </AppText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.pageButton,
+                  { backgroundColor: isDark ? "#2C2D35" : "#F3F4F6" },
+                  currentPage >= totalPages && styles.pageButtonDisabled,
+                ]}
+                disabled={currentPage >= totalPages || loading}
+                onPress={() => handlePagination("last")}
+              >
+                <AppText style={[styles.pageButtonText, { color: currentPage >= totalPages ? (isDark ? "#555" : "#CCC") : themeColors.text }]}>
+                  »
+                </AppText>
+              </TouchableOpacity>
             </View>
-          )}
-        </ScrollView>
+          </View>
+        </View>
       ) : (
         <View style={styles.noDataRow}>
           <FastImage
@@ -182,59 +348,59 @@ const NewWalletHistory = ({
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  tabsContainer: {
+    flexDirection: "row",
+    marginHorizontal: 16,
+    marginBottom: 12,
+    marginTop: 4,
+    borderRadius: 10,
+    padding: 4,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+  },
+  activeTabButton: {
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  tabText: {
+    fontSize: 14,
+  },
   scrollContent: {
-    paddingHorizontal: 5,
+    paddingHorizontal: 16,
     paddingBottom: 20,
   },
   card: {
-    padding: 14,
-    paddingBottom: 0,
+    paddingVertical: 14,
     width: "100%",
-    alignSelf: "center",
   },
   cardDivider: {
     height: 1,
     marginTop: 14,
   },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 8,
-  },
-  pairRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    marginRight: 8,
-  },
-  cardTitle: {
-    fontSize: 14,
-    marginRight: 6,
-    fontFamily: fontFamilySemiBold,
-  },
-  cardDate: {
-    fontSize: 11,
-  },
-  orderTypeLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 6,
-    justifyContent:"space-between"
-  },
   cardRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 6,
+    marginBottom: 10,
+  },
+  txHashRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   cardLabel: {
-    fontSize: 12,
-    flex: 1,
+    fontSize: 13,
+    fontWeight: "700",
   },
   cardValue: {
-    fontSize: 12,
-    flex: 1,
+    fontSize: 13,
     textAlign: "right",
   },
   noDataRow: {
@@ -250,9 +416,51 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   loadingContainer: {
-    paddingVertical: 20,
+    paddingVertical: 40,
     alignItems: "center",
     justifyContent: "center",
+  },
+  paginationContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+  },
+  paginationInfoText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  paginationButtonsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  pageButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pageButtonDisabled: {
+    opacity: 0.4,
+  },
+  pageButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  currentPageIndicator: {
+    paddingHorizontal: 8,
+    height: 32,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  currentPageText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
 });
 

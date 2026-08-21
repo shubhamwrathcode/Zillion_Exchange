@@ -711,9 +711,7 @@ const ProfileDrawer = () => {
             <AnimatedCard
               theme={effectiveTheme}
               delay={0}
-              onPress={() => {
-                Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG);
-              }}
+              onPress={() => NavigationService.navigate(DEPOSIT_COIN_SCREEN)}
             >
               <DepositWithdrawCard
                 theme={effectiveTheme}
@@ -728,9 +726,7 @@ const ProfileDrawer = () => {
             <AnimatedCard
               theme={effectiveTheme}
               delay={80}
-              onPress={() => {
-                Toast.show("Services unavailable. Please use web for deposit or withdrawal.", Toast.LONG);
-              }}
+              onPress={() => NavigationService.navigate(WALLET_WITHDRAW_SCREEN)}
             >
               <DepositWithdrawCard
                 theme={effectiveTheme}
