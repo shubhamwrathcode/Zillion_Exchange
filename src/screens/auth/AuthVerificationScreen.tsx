@@ -95,25 +95,19 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
   useEffect(() => {
     if (pending2FA) {
       const firstMethod = getFirstMethod();
-      const baseMethods = pending2FA.availableMethods ?? [];
 
       setSelectedAuthMethod(firstMethod);
       setOtpCode("");
-      if (firstMethod !== 1 && firstMethod !== 3) {
-        setResendTimer(0);
-      }
       setPasskeyCancelledOrFailed(false);
 
-      if ((firstMethod === 1 || firstMethod === 3) && lastAutoSentForMethod.current !== firstMethod) {
-        const signId = pending2FA.loginSignId ?? "";
-        const m = baseMethods?.find((x: any) => x.type === firstMethod);
-        const identifier = m?.value ?? signId;
-        if (identifier) {
+      // OTP is already sent on login — only start the resend timer here (no Get OTP API on focus)
+      if (firstMethod === 1 || firstMethod === 3) {
+        if (lastAutoSentForMethod.current !== firstMethod) {
           lastAutoSentForMethod.current = firstMethod;
-          const sendTo = firstMethod === 3 ? "mobile" : "email";
           setResendTimer(60);
-          dispatch(sendLoginOtp(identifier, sendTo, setResendTimer));
         }
+      } else {
+        setResendTimer(0);
       }
     }
   }, [pending2FA]);
