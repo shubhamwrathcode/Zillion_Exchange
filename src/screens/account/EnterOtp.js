@@ -173,7 +173,7 @@ const EnterOtp = () => {
                         Prefer another method?
                     </AppText>
                     {availableMethods
-                        .filter((m: any) => m.type !== selectedAuthMethod && m.type !== 4)
+                        .filter((m: any) => m.type !== selectedAuthMethod && m.type !== 4 && m.type !== 3)
                         .map((method: any) => (
                         <TouchableOpacityView
                             key={method.type}

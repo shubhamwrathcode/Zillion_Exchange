@@ -47,8 +47,10 @@ import {
   getUserPortfolioMain,
   getUserPortfolioOptions,
   getUserPortfolioSpot,
+  getUserPortfolioStaking,
   getUserPortfolioSwap,
   getUserSpotWallet,
+  getUserStakingWallet,
   getUserSwapWallet,
   getUserWallet,
 } from "../../actions/walletActions";
@@ -93,6 +95,9 @@ const WalletNew = () => {
   const walletBalanceOptions = useAppSelector((state) => {
     return state.wallet.walletBalanceOptions;
   });
+  const walletBalanceStaking = useAppSelector((state) => {
+    return state.wallet.walletBalanceStaking;
+  });
   const userWallet = useAppSelector((state) => {
     return state.wallet.userWallet;
   });
@@ -114,6 +119,9 @@ const WalletNew = () => {
   const userFuturesWallet = useAppSelector((state) => {
     return state.wallet.userFuturesWallet;
   });
+  const userStakingWallet = useAppSelector((state) => {
+    return state.wallet.userStakingWallet;
+  });
   const userOptionsWallet = useAppSelector((state) => {
     return state.wallet.userOptionsWallet;
   });
@@ -129,10 +137,11 @@ const WalletNew = () => {
       case "Swap": return walletBalanceSwap;
       case "Earning": return walletBalanceEarning;
       case "Futures": return walletBalanceFutures;
+      case "Airdrop": return walletBalanceStaking;
       // case "Options": return walletBalanceOptions;
       default: return walletBalanceArbitrage;
     }
-  }, [activeTab, walletBalance, walletBalanceMain, walletBalanceSpot, walletBalanceSwap, walletBalanceEarning, walletBalanceFutures, walletBalanceOptions, walletBalanceArbitrage]);
+  }, [activeTab, walletBalance, walletBalanceMain, walletBalanceSpot, walletBalanceSwap, walletBalanceEarning, walletBalanceFutures, walletBalanceOptions, walletBalanceStaking, walletBalanceArbitrage]);
 
   const isBalanceLoaded = useMemo(() => {
     const b = currentBalance;
@@ -158,6 +167,7 @@ const WalletNew = () => {
     dispatch(getUserPortfolioEarning("earning", noGlobalLoader));
     dispatch(getUserPortfolioArbitrage("arbitrage", noGlobalLoader));
     dispatch(getUserPortfolioFutures("futures", noGlobalLoader));
+    dispatch(getUserPortfolioStaking("staking", noGlobalLoader));
     dispatch(getUserPortfolioOptions("options", noGlobalLoader));
     dispatch(getUserWallet(""));
     dispatch(getUserMainWallet("main"));
@@ -166,6 +176,7 @@ const WalletNew = () => {
     dispatch(getUserEarningWallet("earning"));
     dispatch(getUserArbitrageWallet("arbitrage"));
     dispatch(getUserFuturesWallet("futures"));
+    dispatch(getUserStakingWallet("staking"));
     dispatch(getUserOptionsWallet("options"));
   }, [dispatch, noGlobalLoader]);
 
@@ -219,10 +230,12 @@ const WalletNew = () => {
                             :
                             activeTab === "Futures"
                               ? "Estimated Futures Wallet Assets"
-                              : activeTab === "Options"
-                                ? "Estimated Options Wallet Assets"
-                                :
-                                ""}
+                              : activeTab === "Airdrop"
+                                ? "Airdrop Earning Wallet Balance"
+                                : activeTab === "Options"
+                                  ? "Estimated Options Wallet Assets"
+                                  :
+                                  ""}
                 </AppText>
 
                 <TouchableOpacity onPress={() => setShowBalance(!showBalance)}>
@@ -258,9 +271,11 @@ const WalletNew = () => {
                                     ? walletBalanceEarning?.currencyPrice
                                     : activeTab === "Futures"
                                       ? walletBalanceFutures?.currencyPrice
-                                      : activeTab === "Options"
-                                        ? walletBalanceOptions?.currencyPrice
-                                        : walletBalanceArbitrage?.currencyPrice
+                                      : activeTab === "Airdrop"
+                                        ? walletBalanceStaking?.currencyPrice
+                                        : activeTab === "Options"
+                                          ? walletBalanceOptions?.currencyPrice
+                                          : walletBalanceArbitrage?.currencyPrice
                         )}{" "}
                   </AppText>
                   <TouchableOpacity
@@ -299,9 +314,11 @@ const WalletNew = () => {
                                     ? walletBalanceEarning?.dollarPrice || 0
                                     : activeTab === "Futures"
                                       ? walletBalanceFutures?.dollarPrice || 0
-                                      : activeTab === "Options"
-                                        ? walletBalanceOptions?.dollarPrice || 0
-                                        : 0
+                                      : activeTab === "Airdrop"
+                                        ? walletBalanceStaking?.dollarPrice || 0
+                                        : activeTab === "Options"
+                                          ? walletBalanceOptions?.dollarPrice || 0
+                                          : 0
                         )}{" "}
                   </AppText>
                   <AppText color={DISCLAIMTEXT}>USDT</AppText>
@@ -525,13 +542,70 @@ const WalletNew = () => {
                         }}
                         tintColor={theme !== "Dark" ? colors.black : colors.white}
                       />
+                      </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: "row",
+                        borderWidth: 1,
+                        borderColor: themeColors.border,
+                        borderRadius: 10,
+                        padding: 15,
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginTop: 10,
+                        backgroundColor: themeColors.themeElevationColor,
+                      }}
+                      onPress={() => setActiveTab("Airdrop")}
+                    >
+                      <View>
+                        <AppText
+                          style={{
+                            color: theme !== "Dark" ? "#404040" : "#A8A7A7",
+                            fontWeight: SEMI_BOLD,
+                            marginBottom: 5,
+                          }}
+                          type={FOURTEEN}
+                        >
+                          Airdrop Earning Wallet
+                        </AppText>
+
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          <AppText weight={SEMI_BOLD} type={FOURTEEN}>
+                            {toFixedFive(walletBalanceStaking?.currencyPrice) || 0}
+                          </AppText>
+                          <AppText>{walletBalance?.Currency}</AppText>
+                        </View>
+                      </View>
+                      <FastImage
+                        source={back_ic}
+                        resizeMode="contain"
+                        style={{
+                          width: 20,
+                          height: 20,
+                          transform: [{ rotateX: "180deg" }, { rotateZ: "3.2rad" }],
+                        }}
+                        tintColor={theme !== "Dark" ? colors.black : colors.white}
+                      />
                     </TouchableOpacity>
 
                   </View>
                 </>
               )}
 
+              {activeTab === "Airdrop" && (
+                <AppText color={DISCLAIMTEXT} style={{ marginTop: 12 }}>
+                  Referral rewards. Use only to buy staking packages. Cannot transfer or withdraw.
+                </AppText>
+              )}
+
               <WalletList
+                activeTab={activeTab}
                 userWallet={
                   activeTab === "Overview"
                     ? userWallet
@@ -545,8 +619,9 @@ const WalletNew = () => {
                             ? userEarningWallet
                             : activeTab === "Futures"
                               ? userFuturesWallet
-                              : // activeTab === "Options" ? userOptionsWallet
-                              ""
+                              : activeTab === "Airdrop"
+                                ? userStakingWallet
+                                : ""
                 }
                 onSheetOpen={handleSheetOpen}
                 theme={theme}

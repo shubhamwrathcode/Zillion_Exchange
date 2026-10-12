@@ -60,8 +60,10 @@ import {
   setSwapConversionRate,
   setUserFuturesWallet,
   setUserOptionsWallet,
+  setUserStakingWallet,
   setWalletBalanceFutures,
   setWalletBalanceOptions,
+  setWalletBalanceStaking,
   setStakingCommissionData,
   clearStakingCommissionData
 } from '../slices/walletSlice';
@@ -159,6 +161,20 @@ export const getUserPortfolioFutures = (id: any, options?: { useGlobalLoader?: b
     const response: any = await appOperation.customer.user_portfolio(id);
     if (response.success) {
       dispatch(setWalletBalanceFutures(response?.data));
+    }
+  } catch (e) {
+    logger(e);
+  } finally {
+    if (useGlobalLoader(options)) dispatch(setLoading(false));
+  }
+};
+
+export const getUserPortfolioStaking = (id: any, options?: { useGlobalLoader?: boolean }) => async (dispatch: AppDispatch) => {
+  try {
+    if (useGlobalLoader(options)) dispatch(setLoading(true));
+    const response: any = await appOperation.customer.user_portfolio(id);
+    if (response.success) {
+      dispatch(setWalletBalanceStaking(response?.data));
     }
   } catch (e) {
     logger(e);
@@ -314,45 +330,16 @@ export const getInteralWalletHistory = (skip: any, limit: any) => async (dispatc
 
 export const getUserWallet = (id: string | undefined) => async (dispatch: AppDispatch) => {
   try {
-    // dispatch(setLoading(true));
-    const response: any = await appOperation.customer.user_main_wallet(id);
+    // Overview uses the same endpoint as web AssetOverview: wallet/user-wallet
+    // with no wallet_type. A typed call is only for a specific wallet.
+    const response: any = id
+      ? await appOperation.customer.user_main_wallet(id)
+      : await appOperation.customer.user_wallet();
     if (response.success) {
-      const wallets = response?.data || [];
-
-      // Parse balance to number and sort
-      const walletsWithBalance = wallets
-        .filter((wallet: { balance: string; }) => parseFloat(wallet.balance) > 0)
-        .sort((a: { balance: string; }, b: { balance: string; }) => parseFloat(b.balance) - parseFloat(a.balance));
-
-      let topWalletsList: any[] = [];
-
-      if (walletsWithBalance.length >= 2) {
-        topWalletsList = walletsWithBalance;
-      } else {
-        // Add existing non-zero wallets
-        topWalletsList = [...walletsWithBalance];
-
-        // Fill remaining with top wallets regardless of balance
-        const remaining = 2 - topWalletsList.length;
-        const walletsSorted = wallets
-          .sort((a: { balance: string; }, b: { balance: string; }) => parseFloat(b.balance) - parseFloat(a.balance))
-          .filter((w: { currency_id: any; }) => !topWalletsList.find(tw => tw.currency_id === w.currency_id));
-
-        topWalletsList = topWalletsList.concat(walletsSorted.slice(0, remaining));
-      }
-
-      // setfundData(wallets);
-      // if (currencyData?.length === 0) {
-      //   setCurrencyData(wallets);
-      //   setSelectedCurrency(wallets[0] || {})
-      // }
       dispatch(setUserWallet(response?.data));
-      // dispatch(setUserWallet(response?.data));
     }
   } catch (e) {
     logger(e);
-  } finally {
-    // dispatch(setLoading(false));
   }
 };
 
@@ -497,6 +484,17 @@ export const getUserFuturesWallet = (id: any) => async (dispatch: AppDispatch) =
     logger(e);
   } finally {
     // dispatch(setLoading(false));
+  }
+};
+
+export const getUserStakingWallet = (id: any) => async (dispatch: AppDispatch) => {
+  try {
+    const response: any = await appOperation.customer.user_main_wallet(id);
+    if (response.success) {
+      dispatch(setUserStakingWallet(response?.data));
+    }
+  } catch (e) {
+    logger(e);
   }
 };
 

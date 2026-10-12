@@ -9,6 +9,7 @@ export const initialState: WalletSliceProps = {
   walletBalanceArbitrage: 0,
   walletBalanceFutures: 0,
   walletBalanceOptions: 0,
+  walletBalanceStaking: 0,
   depositActiveCoins: undefined,
   withdrawActiveCoins: undefined,
   depositFiatCoins: undefined,
@@ -20,7 +21,8 @@ export const initialState: WalletSliceProps = {
   userEarningWallet: [],
   userArbitrageWallet: [],
   userOptionsWallet: [],
-  userFuturesWallet: [], 
+  userFuturesWallet: [],
+  userStakingWallet: [], 
   walletAddress: '',
   adminBankDetails: undefined,
   walletHistory: [],
@@ -83,6 +85,9 @@ export const walletSlice = createSlice({
     setWalletBalanceOptions: (state, {payload}) => {
       state.walletBalanceOptions = payload;
     },
+    setWalletBalanceStaking: (state, {payload}) => {
+      state.walletBalanceStaking = payload;
+    },
     setUserMainWallet: (state, {payload}) => {
       state.userMainWallet = payload;
     },
@@ -103,6 +108,9 @@ export const walletSlice = createSlice({
     },
     setUserFuturesWallet: (state, {payload}) => {
       state.userFuturesWallet = payload;
+    },
+    setUserStakingWallet: (state, {payload}) => {
+      state.userStakingWallet = payload;
     },
     setDepositActiveCoins: (state, {payload}) => {
       state.depositActiveCoins = payload;
@@ -233,6 +241,7 @@ export const {
   setWalletBalanceArbitrage,
   setWalletBalanceFutures,
   setWalletBalanceOptions,
+  setWalletBalanceStaking,
   setUserWallet,
   setWalletAddress,
   setAdminBankDetails,
@@ -256,6 +265,7 @@ export const {
   setUserArbitrageWallet,
   setUserOptionsWallet,
   setUserFuturesWallet,
+  setUserStakingWallet,
   setPackageList,
   setWalletTypes,
   setUserPayoutList,

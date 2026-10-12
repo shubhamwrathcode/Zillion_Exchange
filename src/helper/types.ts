@@ -79,6 +79,7 @@ export interface WalletSliceProps {
   walletBalanceEarning: number | string;
   walletBalanceFutures: number | string;
   walletBalanceOptions: number | string;
+  walletBalanceStaking: number | string;
   depositActiveCoins: any;
   withdrawActiveCoins: any;
   depositFiatCoins: any;
@@ -90,7 +91,8 @@ export interface WalletSliceProps {
   userEarningWallet: any;
   userArbitrageWallet: any;
   userOptionsWallet: any; 
-  userFuturesWallet: any; 
+  userFuturesWallet: any;
+  userStakingWallet: any; 
   walletAddress: string;
   adminBankDetails?: AdminBankDetailsProps;
   walletHistory: WalletHistoryProps[] | null;

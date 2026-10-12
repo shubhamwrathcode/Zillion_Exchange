@@ -52,18 +52,17 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
   
   const getFirstMethod = () => {
     if (!pending2FA) return 1;
-    const baseMethods = pending2FA.availableMethods ?? [];
-    const hasPasskey = baseMethods.some((m: any) => m.type === 4) || !!pending2FA?.data?.hasPasskey;
-    const hasAuth = baseMethods.some((m: any) => m.type === 2);
-    const hasEmail = baseMethods.some((m: any) => m.type === 1);
-    const hasPhone = baseMethods.some((m: any) => m.type === 3);
-    const loginSignId = (pending2FA.loginSignId ?? "").trim();
-    const loggedInWithEmail = loginSignId.includes("@");
+    const allMethods = pending2FA.availableMethods ?? [];
+    const baseMethods = allMethods.filter((m: any) => m.type !== 3);
+    const methods = baseMethods.length > 0 ? baseMethods : allMethods;
+    const hasPasskey = methods.some((m: any) => m.type === 4) || !!pending2FA?.data?.hasPasskey;
+    const hasAuth = methods.some((m: any) => m.type === 2);
+    const hasEmail = methods.some((m: any) => m.type === 1);
+    const hasPhone = methods.some((m: any) => m.type === 3);
     let firstMethod = pending2FA.defaultMethod ?? 1;
+    if (baseMethods.length > 0 && firstMethod === 3) firstMethod = 1;
     if (hasPasskey) firstMethod = 4;
     else if (hasAuth) firstMethod = 2;
-    else if (loggedInWithEmail && hasEmail) firstMethod = 1;
-    else if (!loggedInWithEmail && hasPhone) firstMethod = 3;
     else if (hasEmail) firstMethod = 1;
     else if (hasPhone) firstMethod = 3;
     return firstMethod;
@@ -189,7 +188,7 @@ export const AuthVerificationContent = ({ onClose }: AuthVerificationContentProp
     return "****";
   };
 
-  const baseMethods = pending2FA?.availableMethods ?? [];
+  const baseMethods = (pending2FA?.availableMethods ?? []).filter((m: any) => m.type !== 3);
   const hasPasskeyInList = baseMethods.some((m: any) => m.type === 4);
   const methodsForOptions =
     pending2FA?.data?.hasPasskey && !hasPasskeyInList

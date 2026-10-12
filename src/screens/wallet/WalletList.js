@@ -11,13 +11,25 @@ import FastImage from "react-native-fast-image";
 import { colors } from "../../theme/colors";
 import { useAppSelector } from "../../store/hooks";
 import { BASE_URL } from "../../helper/Constants";
-import { toFixedFive, toFixedFour, twoFixedTwo } from "../../helper/utility";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import RBSheet from "react-native-raw-bottom-sheet";
 import DepositSheet from "../../shared/components/DepositSheet";
 
-const WalletList = ({ userWallet, theme, onSheetOpen }) => {
-  const [hideAssets, setHideAssets] = useState(true);
+const amount = (value) => parseFloat(value) || 0;
+
+const coinTotal = (item, includeBonus) =>
+  amount(item?.balance) +
+  (includeBonus ? amount(item?.bonus) : 0) +
+  amount(item?.locked_balance);
+
+const safeRound = (value) => {
+  const num = parseFloat(value);
+  if (isNaN(num) || num <= 0) return "0.00";
+  return String(parseFloat(num.toFixed(8)));
+};
+
+const WalletList = ({ userWallet, theme, onSheetOpen, activeTab = "Overview" }) => {
+  const [hideAssets, setHideAssets] = useState(false);
   const depsoitSheet = useRef(null);
 
   const handleSheetOpen = () => {
@@ -35,34 +47,47 @@ const WalletList = ({ userWallet, theme, onSheetOpen }) => {
   };
 
 
+  const sortedWallet = useMemo(() => {
+    const data = [...(userWallet || [])];
+    const pinZiln = activeTab === "Airdrop";
+    const includeBonus = activeTab === "Overview";
+    data.sort((a, b) => {
+      if (pinZiln) {
+        const aIsZiln = String(a?.short_name || "").toUpperCase() === "ZILN";
+        const bIsZiln = String(b?.short_name || "").toUpperCase() === "ZILN";
+        if (aIsZiln && !bIsZiln) return -1;
+        if (!aIsZiln && bIsZiln) return 1;
+      }
+      const totalA = coinTotal(a, includeBonus);
+      const totalB = coinTotal(b, includeBonus);
+      if (totalA > 0 && totalB === 0) return -1;
+      if (totalA === 0 && totalB > 0) return 1;
+      return totalB - totalA;
+    });
+    return data;
+  }, [userWallet, activeTab]);
+
   const filteredCoinList = hideAssets
-    ? userWallet?.filter(
-      (item) =>
-        (item?.balance + item?.bonus + item?.locked_balance || 0) > 0.000001
-    )
-    : userWallet;
+    ? sortedWallet.filter((item) => coinTotal(item, activeTab === "Overview") > 0)
+    : sortedWallet;
   // setFilteredCoinList(data);
 
   const [value, setValue] = useState("");
   const [list, setList] = useState([]);
 
   useEffect(() => {
-    getData();
-  }, [value]);
-
-  const getData = () => {
     if (value === "") {
       setList(filteredCoinList);
-    } else {
-      let filterData = filteredCoinList?.filter((data) => {
-        return (
-          data?.short_name?.toLowerCase().indexOf(value?.toLowerCase()) >
-          -1
-        );
-      });
-      setList(filterData);
+      return;
     }
-  };
+    const query = value.toLowerCase();
+    setList(
+      filteredCoinList?.filter((data) =>
+        data?.short_name?.toLowerCase().includes(query) ||
+        data?.currency?.toLowerCase().includes(query)
+      )
+    );
+  }, [value, filteredCoinList]);
 
   return (
     <>
@@ -97,7 +122,6 @@ const WalletList = ({ userWallet, theme, onSheetOpen }) => {
             value={value}
             onChangeText={(val) => setValue(val)}
             placeholder="Search"
-            onSubmitEditing={getData}
             placeholderTextColor={"#787878"}
             style={{ fontSize: 10, alignItems: "center", height: 40, color: theme !== "Dark" ? "#000000" : "#FFFFFF" }}
           />
@@ -114,17 +138,17 @@ const WalletList = ({ userWallet, theme, onSheetOpen }) => {
           alignItems: "center",
         }}
       >
-        <AppText style={{ width: "40%" }} weight={SEMI_BOLD}>
-          Currency
+        <AppText style={{ width: "34%" }} weight={SEMI_BOLD}>
+          Coin
         </AppText>
-        <AppText style={{ width: "30%" }} weight={SEMI_BOLD}>
-          Balance
+        <AppText style={{ width: "22%" }} weight={SEMI_BOLD}>
+          Available
         </AppText>
-        <AppText style={{ width: "20%" }} weight={SEMI_BOLD}>
+        <AppText style={{ width: "22%" }} weight={SEMI_BOLD}>
           In-Order
         </AppText>
-        <AppText style={{ width: "20%" }} weight={SEMI_BOLD}>
-          Bonus
+        <AppText style={{ width: "22%" }} weight={SEMI_BOLD}>
+          Total
         </AppText>
       </View>
       <FlatList
@@ -143,7 +167,7 @@ const WalletList = ({ userWallet, theme, onSheetOpen }) => {
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  width: "40%",
+                  width: "34%",
                   // gap: 3,
                 }}
               >
@@ -154,22 +178,23 @@ const WalletList = ({ userWallet, theme, onSheetOpen }) => {
                     resizeMode="cover"
                   />
                 </View>
-                <AppText
-                  color={BLACK}
-                  style={{ marginLeft: 5 }}
-                  weight={SEMI_BOLD}
-                >
-                  {item?.short_name}
-                </AppText>
+                <View style={{ marginLeft: 5, flexShrink: 1 }}>
+                  <AppText color={BLACK} weight={SEMI_BOLD}>
+                    {item?.short_name}
+                  </AppText>
+                  <AppText type={TEN} color={DISCLAIMTEXT}>
+                    {item?.currency}
+                  </AppText>
+                </View>
               </View>
-              <AppText color={theme !== "Dark" ? DISCLAIMTEXT : BLACK} style={{ width: "30%" }}>
-                {toFixedFour(item?.balance)}
+              <AppText color={theme !== "Dark" ? DISCLAIMTEXT : BLACK} style={{ width: "22%" }}>
+                {safeRound(item?.balance)}
               </AppText>
-              <AppText color={theme !== "Dark" ? DISCLAIMTEXT : BLACK} style={{ width: "20%" }}>
-                {twoFixedTwo(item?.locked_balance)}
+              <AppText color={theme !== "Dark" ? DISCLAIMTEXT : BLACK} style={{ width: "22%" }}>
+                {safeRound(item?.locked_balance)}
               </AppText>
-              <AppText color={theme !== "Dark" ? DISCLAIMTEXT : BLACK} style={{ width: "20%" }}>
-                {twoFixedTwo(item?.bonus)}
+              <AppText color={theme !== "Dark" ? DISCLAIMTEXT : BLACK} style={{ width: "22%" }}>
+                {safeRound(amount(item?.balance) + amount(item?.locked_balance))}
               </AppText>
               {/* <AppText color={BLACK} style={{width: "20%"}}>
                 {item?.short_name === "USDT"

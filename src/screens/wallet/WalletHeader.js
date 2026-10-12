@@ -160,6 +160,18 @@ const WalletHeader = ({ activeTab, setActiveTab }) => {
             Futures
           </AppText>
         </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setActiveTab("Airdrop")}
+          style={{ marginHorizontal: 14 }}
+        >
+          <AppText
+            weight={BOLD}
+            type={THIRTEEN}
+            style={{ color: activeTab === "Airdrop" ? colors.buttonBg : themeColors.secondaryText }}
+          >
+            Airdrop
+          </AppText>
+        </TouchableOpacity>
         {/* <TouchableOpacity
           onPress={() => setActiveTab("Options")}
           style={{ marginHorizontal: 14 }}
