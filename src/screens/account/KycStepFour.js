@@ -14,7 +14,7 @@ import KeyBoardAware from "../../shared/components/KeyboardAware";
 import { StyleSheet, View, ScrollView, FlatList, TouchableOpacity, Platform } from "react-native";
 import FastImage from "react-native-fast-image";
 import { colors } from "../../theme/colors";
-import { useKycForm } from "../../context/KycFormContext";
+import { useKycForm, useKycDraftStep } from "../../context/KycFormContext";
 import NavigationService from "../../navigation/NavigationService";
 import { KYC_STEP_FIVE_SCREEN, KYC_VERIFICATION_SCREEN } from "../../navigation/routes";
 import { appBg, uploadIcon, checkIc, DEMO_USER, CAMERA_IMG } from "../../helper/ImageAssets";
@@ -48,6 +48,7 @@ const TaxTypeCard = ({ item, isSelected, onPress, isDark, themeColors, accentCol
 );
 
 const KycStepFour = () => {
+  useKycDraftStep(4);
   const { colors: themeColors, isDark, theme } = useTheme();
   const [pictureModalVisible, setPictureModalVisible] = useState(false);
   const [pictureType, setPictureType] = useState("pan");

@@ -12,7 +12,7 @@ import KeyBoardAware from "../../shared/components/KeyboardAware";
 import { StyleSheet, View, ScrollView, FlatList, TouchableOpacity } from "react-native";
 import { colors } from "../../theme/colors";
 import PickerSelect from "../../shared/components/PickerSelect";
-import { useKycForm, getDocTypeName } from "../../context/KycFormContext";
+import { useKycForm, useKycDraftStep, getDocTypeName } from "../../context/KycFormContext";
 import NavigationService from "../../navigation/NavigationService";
 import { KYC_STEP_TWO_SCREEN } from "../../navigation/routes";
 import { useDispatch } from "react-redux";
@@ -24,6 +24,7 @@ import KycStepHeader from "./KycStepHeader";
 import { useTheme } from "../../hooks/useTheme";
 
 const KycStepOne = ({ route }) => {
+  useKycDraftStep(1);
   const dispatch = useDispatch();
   const resubmitFetchedRef = useRef(false);
   const [resubmitLoading, setResubmitLoading] = useState(false);

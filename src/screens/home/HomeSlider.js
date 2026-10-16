@@ -26,9 +26,9 @@ import { colors } from "../../theme/colors";
 import NavigationService from "../../navigation/NavigationService";
 import {
   DEPOSIT_COIN_SCREEN,
-  KYC_STEP_ONE_SCREEN,
   WALLET_SCREEN,
 } from "../../navigation/routes";
+import { kycDraftOwnerFromUser, openKycDraft } from "../../context/KycFormContext";
 import { useTheme } from "../../hooks/useTheme";
 
 const baseOptions = {
@@ -48,7 +48,7 @@ const HomeSlider = () => {
       index: 0,
       banner_path: theme == "Dark" ? homeImage1 : homeImage1Dark,
       title: `Complete your KYC verification to unlock all account features and ensure a seamless trading experience.`,
-      onPress: () => NavigationService.navigate(KYC_STEP_ONE_SCREEN),
+      onPress: () => openKycDraft(kycDraftOwnerFromUser(userData)),
       isKyc: true,
     },
     {

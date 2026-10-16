@@ -13,7 +13,7 @@ import KeyBoardAware from "../../shared/components/KeyboardAware";
 import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { colors } from "../../theme/colors";
 import PickerSelect from "../../shared/components/PickerSelect";
-import { useKycForm } from "../../context/KycFormContext";
+import { useKycForm, useKycDraftStep } from "../../context/KycFormContext";
 import NavigationService from "../../navigation/NavigationService";
 import { KYC_STEP_THREE_SCREEN } from "../../navigation/routes";
 import KycStepHeader from "./KycStepHeader";
@@ -21,6 +21,7 @@ import { useTheme } from "../../hooks/useTheme";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 const KycStepTwo = () => {
+  useKycDraftStep(2);
   const { colors: themeColors, isDark } = useTheme();
   const accentColor = isDark ? colors.white : (colors.buttonBg || "#F3BB2B");
 

@@ -11,7 +11,7 @@ import KeyBoardAware from "../../shared/components/KeyboardAware";
 import { StyleSheet, View, ScrollView, TouchableOpacity, Platform } from "react-native";
 import FastImage from "react-native-fast-image";
 import { colors } from "../../theme/colors";
-import { useKycForm } from "../../context/KycFormContext";
+import { useKycForm, useKycDraftStep } from "../../context/KycFormContext";
 import NavigationService from "../../navigation/NavigationService";
 import { KYC_VERIFICATION_SCREEN } from "../../navigation/routes";
 import { appBg, DEMO_USER } from "../../helper/ImageAssets";
@@ -19,6 +19,7 @@ import KycStepHeader from "./KycStepHeader";
 import { useTheme } from "../../hooks/useTheme";
 
 const KycStepReview = () => {
+  useKycDraftStep(6);
   const { colors: themeColors, isDark } = useTheme();
   const accentColor = isDark ? colors.white : (colors.buttonBg || "#F3BB2B");
 

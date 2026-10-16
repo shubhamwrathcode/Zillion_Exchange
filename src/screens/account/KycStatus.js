@@ -34,7 +34,8 @@ import { borderWidth, universalPaddingHorizontal, universalPaddingHorizontalHigh
 import { colors } from "../../theme/colors";
 import { commonStyles } from "../../theme/commonStyles";
 import NavigationService from "../../navigation/NavigationService";
-import { KYC_STEP_ONE_SCREEN, KYC_RESUBMIT_SCREEN, TRADE_SCREEN, NAVIGATION_BOTTOM_TAB_STACK, NAVIGATION_TRADE_STACK } from "../../navigation/routes";
+import { KYC_RESUBMIT_SCREEN, TRADE_SCREEN, NAVIGATION_BOTTOM_TAB_STACK, NAVIGATION_TRADE_STACK } from "../../navigation/routes";
+import { openKycDraft, kycDraftOwnerFromUser } from "../../context/KycFormContext";
 import { useFocusEffect } from "@react-navigation/native";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import { setLoading } from "../../slices/authSlice";
@@ -346,7 +347,7 @@ const KycStatus = () => {
   };
 
   const openVerifyModal = () => {
-    NavigationService.navigate(KYC_STEP_ONE_SCREEN, { resetForm: true });
+    openKycDraft(kycDraftOwnerFromUser(userData));
   };
 
   const openResubmitModal = () => {

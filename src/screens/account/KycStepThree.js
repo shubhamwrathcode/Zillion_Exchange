@@ -13,7 +13,7 @@ import KeyBoardAware from "../../shared/components/KeyboardAware";
 import { StyleSheet, View, ScrollView, Platform } from "react-native";
 import FastImage from "react-native-fast-image";
 import { colors } from "../../theme/colors";
-import { useKycForm } from "../../context/KycFormContext";
+import { useKycForm, useKycDraftStep } from "../../context/KycFormContext";
 import NavigationService from "../../navigation/NavigationService";
 import { KYC_STEP_FOUR_SCREEN } from "../../navigation/routes";
 import { appBg, uploadIcon, checkIc, PHOTO_ID_MINI_ICON1, PHOTO_ID_MINI_ICON2, PHOTO_ID_MINI_ICON3, PHOTO_ID_VECTOR, KYC_IDENTITY } from "../../helper/ImageAssets";
@@ -25,6 +25,7 @@ import { showError } from "../../helper/logger";
 import { useTheme } from "../../hooks/useTheme";
 
 const KycStepThree = () => {
+  useKycDraftStep(3);
   const [pictureModalVisible, setPictureModalVisible] = useState(false);
   const [pictureType, setPictureType] = useState("doc_front");
   const { colors: themeColors, isDark } = useTheme();

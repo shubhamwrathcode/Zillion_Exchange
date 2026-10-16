@@ -22,7 +22,7 @@ import {
 import RBSheet from "react-native-raw-bottom-sheet";
 import FastImage from "react-native-fast-image";
 import { colors } from "../../theme/colors";
-import { useKycForm } from "../../context/KycFormContext";
+import { useKycForm, useKycDraftStep } from "../../context/KycFormContext";
 import NavigationService from "../../navigation/NavigationService";
 import { KYC_STEP_SIX_SCREEN, KYC_STATUS_SCREEN } from "../../navigation/routes";
 import { appBg, back_ic, closeIcon, EMAIL, KEY_ICON, PHONE, SHARE_NEW_ICON } from "../../helper/ImageAssets";
@@ -54,6 +54,7 @@ const getMethodDescription = (type) => {
 };
 
 const KycVerificationScreen = () => {
+  useKycDraftStep(7);
   const dispatch = useAppDispatch();
   const { colors: themeColors, isDark } = useTheme();
   const isSubmittingKyc = useAppSelector((state) => state.auth.isLoading);

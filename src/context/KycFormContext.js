@@ -1,11 +1,88 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { getCountries, getKycConfig, kycVerification } from "../actions/accountActions";
 import { setLoading } from "../slices/authSlice";
 import { showError, showSuccess } from "../helper/logger";
 import { countryList as fallbackCountryList } from "../helper/dummydata";
 import { appOperation } from "../appOperation";
+import NavigationService from "../navigation/NavigationService";
+import {
+  KYC_STEP_FIVE_SCREEN,
+  KYC_STEP_FOUR_SCREEN,
+  KYC_STEP_ONE_SCREEN,
+  KYC_STEP_SIX_SCREEN,
+  KYC_STEP_THREE_SCREEN,
+  KYC_STEP_TWO_SCREEN,
+  KYC_VERIFICATION_SCREEN,
+} from "../navigation/routes";
+
+const KYC_DRAFT_PREFIX = "kyc_form_draft_v1";
+
+export const kycDraftStorageKey = (owner) => `${KYC_DRAFT_PREFIX}:${owner || "guest"}`;
+
+export const kycDraftOwnerFromUser = (userData) =>
+  userData?._id || userData?.userId || userData?.user_id || userData?.emailId || "";
+
+const KYC_STEP_SCREENS = {
+  1: KYC_STEP_ONE_SCREEN,
+  2: KYC_STEP_TWO_SCREEN,
+  3: KYC_STEP_THREE_SCREEN,
+  4: KYC_STEP_FOUR_SCREEN,
+  5: KYC_STEP_FIVE_SCREEN,
+  6: KYC_STEP_SIX_SCREEN,
+  7: KYC_VERIFICATION_SCREEN,
+};
+
+const toDraftPhoto = (photo) => {
+  if (!photo?.uri) return null;
+  return {
+    uri: String(photo.uri),
+    name: photo.name ? String(photo.name) : "",
+    type: photo.type ? String(photo.type) : "image/jpeg",
+  };
+};
+
+const KYC_STEP_ORDER = [
+  KYC_STEP_ONE_SCREEN,
+  KYC_STEP_TWO_SCREEN,
+  KYC_STEP_THREE_SCREEN,
+  KYC_STEP_FOUR_SCREEN,
+  KYC_STEP_FIVE_SCREEN,
+  KYC_STEP_SIX_SCREEN,
+  KYC_VERIFICATION_SCREEN,
+];
+
+export async function openKycDraft(owner) {
+  const screen = await getSavedKycStepScreen(owner);
+  const index = Math.max(0, KYC_STEP_ORDER.indexOf(screen));
+  KYC_STEP_ORDER.slice(0, index + 1).forEach((name) => NavigationService.push(name));
+}
+
+export async function getSavedKycStepScreen(owner) {
+  try {
+    const raw = await AsyncStorage.getItem(kycDraftStorageKey(owner));
+    if (!raw) return KYC_STEP_ONE_SCREEN;
+    const draft = JSON.parse(raw);
+    const hasProgress = !!(
+      draft?.modalCountry ||
+      draft?.infoDob ||
+      draft?.address ||
+      draft?.aadhar ||
+      draft?.docFront ||
+      draft?.panCard ||
+      draft?.panCardImage ||
+      draft?.selfieImage
+    );
+    if (!hasProgress) return KYC_STEP_ONE_SCREEN;
+    const step = Number(draft?.draftStep) || 1;
+    return KYC_STEP_SCREENS[step] || KYC_STEP_ONE_SCREEN;
+  } catch {
+    return KYC_STEP_ONE_SCREEN;
+  }
+}
 
 const KycFormContext = createContext(null);
 
@@ -80,6 +157,10 @@ export function KycFormProvider({ children }) {
   const [existingTaxDocNumber, setExistingTaxDocNumber] = useState("");
   const [resubmitIdNumber, setResubmitIdNumber] = useState("");
   const [resubmitTaxNumber, setResubmitTaxNumber] = useState("");
+  const [draftStep, setDraftStep] = useState(1);
+  const prevCountryRef = useRef(null);
+  const hydratedForRef = useRef("");
+  const draftOwner = kycDraftOwnerFromUser(userData);
 
   const countriesList = useMemo(() => (countries?.length ? countries : fallbackCountryList), [countries]);
   const pickerCountries = useMemo(() => countriesList.map((c) => ({ value: c.code || c.value, label: c.name || c.label, flag: c.flag })), [countriesList]);
@@ -96,8 +177,8 @@ export function KycFormProvider({ children }) {
 
   useEffect(() => {
     if (!userData) return;
-    setFirstName(userData.firstName || "");
-    setLastName(userData.lastName || "");
+    setFirstName((prev) => (prev && String(prev).trim() ? prev : (userData.firstName || "")));
+    setLastName((prev) => (prev && String(prev).trim() ? prev : (userData.lastName || "")));
     const methods = [];
     if (userData.emailId) methods.push({ type: 1, label: "Email OTP" });
     if (userData["2fa"]) methods.push({ type: 2, label: "Google Authenticator" });
@@ -118,22 +199,28 @@ export function KycFormProvider({ children }) {
   useEffect(() => {
     if (!modalCountry) {
       setKycConfig(null);
-      setModalIdType("");
-      setModalTaxType("");
       return;
     }
     let mounted = true;
+    const previous = prevCountryRef.current;
+    const countryChanged = !!previous && previous !== modalCountry;
+    prevCountryRef.current = modalCountry;
+    if (countryChanged) {
+      setModalIdType("");
+      setModalTaxType("");
+      setAadhar("");
+      setPanCard("");
+      setDocFront(null);
+      setDocBack(null);
+      setPanCardImage(null);
+      setDocumentNumberError("");
+      setTaxDocumentError("");
+    }
     setLoadingConfig(true);
     dispatch(getKycConfig(modalCountry))
       .then((data) => {
         if (!mounted) return;
         setKycConfig(data || null);
-        setModalIdType("");
-        setModalTaxType("");
-        setAadhar("");
-        setPanCard("");
-        setDocumentNumberError("");
-        setTaxDocumentError("");
       })
       .catch(() => mounted && setKycConfig(null))
       .finally(() => mounted && setLoadingConfig(false));
@@ -224,6 +311,8 @@ export function KycFormProvider({ children }) {
   };
 
   const resetForm = useCallback(() => {
+    prevCountryRef.current = null;
+    setDraftStep(1);
     setModalCountry("");
     setModalIdType("");
     setModalTaxType("");
@@ -246,7 +335,93 @@ export function KycFormProvider({ children }) {
     setemailOtp("");
     setModalOtpTimer(0);
     setKycConfig(null);
+    AsyncStorage.removeItem(kycDraftStorageKey(kycDraftOwnerFromUser(userData))).catch(() => {});
   }, [userData]);
+
+  const markDraftStep = useCallback((step) => {
+    const next = Number(step) || 1;
+    setDraftStep((prev) => (prev === next ? prev : next));
+  }, []);
+
+  useEffect(() => {
+    if (!draftOwner) return undefined;
+    let mounted = true;
+    hydratedForRef.current = "";
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(kycDraftStorageKey(draftOwner));
+        if (!mounted) return;
+        if (raw) {
+          const draft = JSON.parse(raw);
+          if (draft?.modalCountry) {
+            prevCountryRef.current = draft.modalCountry;
+            setModalCountry(draft.modalCountry);
+          }
+          if (draft?.modalIdType) setModalIdType(draft.modalIdType);
+          if (draft?.modalTaxType) setModalTaxType(draft.modalTaxType);
+          if (draft?.firstName) setFirstName(draft.firstName);
+          if (draft?.lastName) setLastName(draft.lastName);
+          if (draft?.infoDob) setInfoDob(draft.infoDob);
+          if (draft?.gender) setGender(draft.gender);
+          if (draft?.address) setAddress(draft.address);
+          if (draft?.city) setCity(draft.city);
+          if (draft?.infoState) setInfoState(draft.infoState);
+          if (draft?.zipCode) setZipCode(draft.zipCode);
+          if (draft?.aadhar) setAadhar(draft.aadhar);
+          if (draft?.panCard) setPanCard(draft.panCard);
+          if (draft?.docFront) setDocFront(toDraftPhoto(draft.docFront));
+          if (draft?.docBack) setDocBack(toDraftPhoto(draft.docBack));
+          if (draft?.panCardImage) setPanCardImage(toDraftPhoto(draft.panCardImage));
+          if (draft?.selfieImage) setSelfieImage(toDraftPhoto(draft.selfieImage));
+          if (draft?.draftStep) setDraftStep(Number(draft.draftStep) || 1);
+        }
+      } catch {
+        // Keep the in-memory form if the saved draft cannot be read.
+      } finally {
+        if (mounted) hydratedForRef.current = draftOwner;
+      }
+    })();
+    return () => { mounted = false; };
+  }, [draftOwner]);
+
+  useEffect(() => {
+    if (!draftOwner || hydratedForRef.current !== draftOwner) return undefined;
+    const hasProgress = !!(
+      modalCountry || infoDob || address || city || infoState || zipCode ||
+      aadhar || docFront || panCard || panCardImage || selfieImage || modalIdType || modalTaxType
+    );
+    const timer = setTimeout(() => {
+      if (!hasProgress) {
+        AsyncStorage.removeItem(kycDraftStorageKey(draftOwner)).catch(() => {});
+        return;
+      }
+      const draft = {
+        modalCountry,
+        modalIdType,
+        modalTaxType,
+        firstName,
+        lastName,
+        infoDob,
+        gender,
+        address,
+        city,
+        infoState,
+        zipCode,
+        aadhar,
+        panCard,
+        docFront: toDraftPhoto(docFront),
+        docBack: toDraftPhoto(docBack),
+        panCardImage: toDraftPhoto(panCardImage),
+        selfieImage: toDraftPhoto(selfieImage),
+        draftStep,
+      };
+      AsyncStorage.setItem(kycDraftStorageKey(draftOwner), JSON.stringify(draft)).catch(() => {});
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [
+    draftOwner, modalCountry, modalIdType, modalTaxType, firstName, lastName, infoDob, gender,
+    address, city, infoState, zipCode, aadhar, panCard, docFront, docBack, panCardImage, selfieImage, draftStep,
+  ]);
 
   // Pre-fill from resubmit params (same sources as web: kyc_status API + userDetails for name)
   const setInitialFromResubmit = useCallback((params) => {
@@ -553,6 +728,7 @@ export function KycFormProvider({ children }) {
     needsSelfieResubmit,
     getRejectReason,
     resetForm,
+    markDraftStep,
     setInitialFromResubmit,
     validateStep0,
     validateStep1,
@@ -568,5 +744,14 @@ export function KycFormProvider({ children }) {
     <KycFormContext.Provider value={value}>
       {children}
     </KycFormContext.Provider>
+  );
+}
+
+export function useKycDraftStep(step) {
+  const { markDraftStep } = useKycForm();
+  useFocusEffect(
+    useCallback(() => {
+      markDraftStep(step);
+    }, [markDraftStep, step])
   );
 }
